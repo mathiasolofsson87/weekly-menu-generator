@@ -77,3 +77,70 @@ add_to_shopping:
       default: false
       selector:
         boolean:
+set_member:
+  fields:
+    name:
+      required: false
+      example: "Anna"
+      selector:
+        text:
+    id:
+      required: false
+      selector:
+        text:
+    person:
+      required: false
+      selector:
+        entity:
+          domain: person
+    allergies:
+      required: false
+      example: '["milk", "kiwi"]'
+      selector:
+        object:
+    dislikes:
+      required: false
+      example: '["svamp"]'
+      selector:
+        object:
+    likes:
+      required: false
+      selector:
+        object:
+    diet:
+      required: false
+      selector:
+        select:
+          options:
+            - omnivore
+            - vegetarian
+            - vegan
+            - pescatarian
+    portion:
+      required: false
+      selector:
+        select:
+          options:
+            - small
+            - normal
+            - large
+    attends:
+      required: false
+      example: '["mon", "tue", "wed"]'
+      selector:
+        object:
+    cook_separately:
+      required: false
+      selector:
+        boolean:
+remove_member:
+  fields:
+    name:
+      required: false
+      example: "Anna"
+      selector:
+        text:
+    id:
+      required: false
+      selector:
+        text:

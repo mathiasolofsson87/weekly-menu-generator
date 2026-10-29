@@ -346,6 +346,9 @@
       },
       "shopping": {
         "name": "Inköp"
+      },
+      "family": {
+        "name": "Familj"
       }
     },
     "calendar": {
@@ -395,6 +398,18 @@
     },
     "no_confirmed_menu": {
       "message": "Det finns ingen bekräftad meny att handla för."
+    },
+    "member_not_found": {
+      "message": "Det finns ingen familjemedlem {member}."
+    },
+    "member_name_required": {
+      "message": "En familjemedlem behöver ett namn."
+    },
+    "member_name_exists": {
+      "message": "Det finns redan en familjemedlem som heter {name}."
+    },
+    "member_no_days": {
+      "message": "{name} måste äta middag minst en dag."
     }
   },
   "services": {
@@ -489,6 +504,66 @@
         "everything": {
           "name": "Allt",
           "description": "Skicka hela listan igen, vilket kan ge dubbletter på listorna."
+        }
+      }
+    },
+    "set_member": {
+      "name": "Spara familjemedlem",
+      "description": "Lägger till en familjemedlem eller ändrar en. Hittas via id, annars via namn. Fält du utelämnar behåller sitt värde. Gäller menyer som skapas från nu.",
+      "fields": {
+        "name": {
+          "name": "Namn",
+          "description": "Medlemmens namn. Krävs för en ny medlem."
+        },
+        "id": {
+          "name": "ID",
+          "description": "Pekar ut en befintlig medlem, så att den kan döpas om."
+        },
+        "person": {
+          "name": "Person",
+          "description": "En person i Home Assistant att koppla till."
+        },
+        "allergies": {
+          "name": "Allergier",
+          "description": "Allergennycklar (gluten, milk, lactose, egg, fish, crustaceans, molluscs, peanuts, tree_nuts, soy, sesame, celery, mustard, lupin, sulphites) eller egna ord."
+        },
+        "dislikes": {
+          "name": "Ogillar",
+          "description": "Undviks när det går."
+        },
+        "likes": {
+          "name": "Gillar",
+          "description": "Föredras när det går."
+        },
+        "diet": {
+          "name": "Kost",
+          "description": "omnivore, vegetarian, vegan eller pescatarian."
+        },
+        "portion": {
+          "name": "Portionsstorlek",
+          "description": "small, normal eller large."
+        },
+        "attends": {
+          "name": "Äter middag på",
+          "description": "Veckodagar: mon, tue, wed, thu, fri, sat, sun."
+        },
+        "cook_separately": {
+          "name": "Allergener kan lagas separat",
+          "description": "Av betyder att recept med personens allergener aldrig föreslås."
+        }
+      }
+    },
+    "remove_member": {
+      "name": "Ta bort familjemedlem",
+      "description": "Tar bort en familjemedlem, hittas via id eller namn.",
+      "fields": {
+        "name": {
+          "name": "Namn",
+          "description": "Medlemmens namn."
+        },
+        "id": {
+          "name": "ID",
+          "description": "Medlemmens id."
         }
       }
     }

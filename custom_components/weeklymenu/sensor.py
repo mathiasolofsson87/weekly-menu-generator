@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 from . import WeeklyMenuConfigEntry
 from .const import DOMAIN, WEEKDAYS
 from .coordinator import WeeklyMenuCoordinator
-from .planner.models import MenuDay
+from .planner.models import MenuDay, dinner_days_from_options, members_from_options
 from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
 
 
@@ -118,6 +118,26 @@ class ShoppingSensor(_MenuSensor):
         }
 
 
+class FamilySensor(_MenuSensor):
+    """The people the menu is planned for. Read by the family card, which edits them through
+    the set_member and remove_member services."""
+
+    def __init__(self, coordinator: WeeklyMenuCoordinator) -> None:
+        super().__init__(coordinator, "family")
+
+    @property
+    def native_value(self) -> int:
+        return len(members_from_options(self.coordinator.config))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        config = self.coordinator.config
+        return {
+            "members": [m.as_dict() for m in members_from_options(config)],
+            "dinner_days": dinner_days_from_options(config),
+        }
+
+
 class DinnerSensor(_MenuSensor):
     """Title of one dinner. `lookup` picks the day from the stored menus."""
 
@@ -183,6 +203,7 @@ async def async_setup_entry(
             StatusSensor(coordinator),
             TodaySensor(coordinator),
             ShoppingSensor(coordinator),
+            FamilySensor(coordinator),
             *(
                 DinnerSensor(
                     coordinator, f"weekday_{wd}", _weekday_lookup(coordinator, wd)

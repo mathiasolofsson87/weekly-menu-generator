@@ -15,8 +15,9 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DIETS, DOMAIN, PORTIONS, WEEKDAYS
 from .coordinator import WeeklyMenuCoordinator
+from .family import async_remove_member, async_set_member
 from .planner.models import Menu
 from .scheduler import next_week_start
 
@@ -27,6 +28,8 @@ SERVICE_SWAP_DAYS = "swap_days"
 SERVICE_LOCK_DAY = "lock_day"
 SERVICE_CONFIRM_MENU = "confirm_menu"
 SERVICE_ADD_TO_SHOPPING = "add_to_shopping"
+SERVICE_SET_MEMBER = "set_member"
+SERVICE_REMOVE_MEMBER = "remove_member"
 
 
 def _coordinator(hass: HomeAssistant) -> WeeklyMenuCoordinator:
@@ -87,6 +90,23 @@ def async_register_services(hass: HomeAssistant) -> None:
         )
         return {"counts": result.counts, "errors": result.errors}
 
+    async def set_member(call: ServiceCall) -> ServiceResponse:
+        return async_set_member(hass, _coordinator(hass).config_entry, call.data)
+
+    async def remove_member(call: ServiceCall) -> None:
+        async_remove_member(hass, _coordinator(hass).config_entry, call.data)
+
+    terms = vol.All(cv.ensure_list, [cv.string])
+    member_fields = {
+        vol.Optional("person"): vol.Any(None, cv.entity_id),
+        vol.Optional("allergies"): terms,
+        vol.Optional("dislikes"): terms,
+        vol.Optional("likes"): terms,
+        vol.Optional("diet"): vol.In(DIETS),
+        vol.Optional("portion"): vol.In(PORTIONS),
+        vol.Optional("attends"): vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
+        vol.Optional("cook_separately"): cv.boolean,
+    }
     day = {vol.Required("date"): cv.date}
     for name, handler, schema, response in (
         (
@@ -124,6 +144,22 @@ def async_register_services(hass: HomeAssistant) -> None:
             confirm_menu,
             {vol.Optional("week_start"): cv.date},
             True,
+        ),
+        (
+            SERVICE_SET_MEMBER,
+            set_member,
+            {
+                vol.Optional("id"): cv.string,
+                vol.Optional("name"): cv.string,
+                **member_fields,
+            },
+            True,
+        ),
+        (
+            SERVICE_REMOVE_MEMBER,
+            remove_member,
+            {vol.Optional("id"): cv.string, vol.Optional("name"): cv.string},
+            False,
         ),
         (
             SERVICE_ADD_TO_SHOPPING,

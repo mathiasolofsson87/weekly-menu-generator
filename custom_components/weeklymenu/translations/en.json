@@ -346,6 +346,9 @@
       },
       "shopping": {
         "name": "Shopping"
+      },
+      "family": {
+        "name": "Family"
       }
     },
     "calendar": {
@@ -395,6 +398,18 @@
     },
     "no_confirmed_menu": {
       "message": "There is no confirmed menu to shop for."
+    },
+    "member_not_found": {
+      "message": "There is no family member {member}."
+    },
+    "member_name_required": {
+      "message": "A family member needs a name."
+    },
+    "member_name_exists": {
+      "message": "There is already a family member called {name}."
+    },
+    "member_no_days": {
+      "message": "{name} must eat dinner on at least one day."
     }
   },
   "services": {
@@ -489,6 +504,66 @@
         "everything": {
           "name": "Everything",
           "description": "Send the whole list again, which can create duplicates on the lists."
+        }
+      }
+    },
+    "set_member": {
+      "name": "Set family member",
+      "description": "Adds a family member, or changes one. Found by id, otherwise by name. Fields you leave out keep their value. Applies to menus made from now on.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "The member's name. Required for a new member."
+        },
+        "id": {
+          "name": "ID",
+          "description": "Identifies an existing member, so it can be renamed."
+        },
+        "person": {
+          "name": "Person",
+          "description": "A Home Assistant person to link to."
+        },
+        "allergies": {
+          "name": "Allergies",
+          "description": "Allergen keys (gluten, milk, lactose, egg, fish, crustaceans, molluscs, peanuts, tree_nuts, soy, sesame, celery, mustard, lupin, sulphites) or your own words."
+        },
+        "dislikes": {
+          "name": "Dislikes",
+          "description": "Avoided when possible."
+        },
+        "likes": {
+          "name": "Likes",
+          "description": "Preferred when possible."
+        },
+        "diet": {
+          "name": "Diet",
+          "description": "omnivore, vegetarian, vegan or pescatarian."
+        },
+        "portion": {
+          "name": "Portion size",
+          "description": "small, normal or large."
+        },
+        "attends": {
+          "name": "Eats dinner on",
+          "description": "Weekdays: mon, tue, wed, thu, fri, sat, sun."
+        },
+        "cook_separately": {
+          "name": "Allergens can be cooked separately",
+          "description": "Off means recipes with this person's allergens are never suggested."
+        }
+      }
+    },
+    "remove_member": {
+      "name": "Remove family member",
+      "description": "Removes a family member, found by id or by name.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "The member's name."
+        },
+        "id": {
+          "name": "ID",
+          "description": "The member's id."
         }
       }
     }
