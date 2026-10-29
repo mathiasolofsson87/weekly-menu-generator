@@ -20,10 +20,17 @@ The integration gradually learns what is in the kitchen and uses it when plannin
 - **Corrections:** a dashboard card to view and edit the inventory, plus a quick "I'm out of this" action.
 - **Data model groundwork in v1:** ingredients are stored as structured data (name, amount, unit) rather than raw strings, and each shopping push records what was bought, so the inventory can be built from history later.
 
+## v4: Other stores and recipe sources (Coop, Willys, ...)
+ICA is the v1 provider because it is the largest chain. The v1 architecture keeps providers pluggable (see "Provider-neutral design" in `PLAN.md` section 4), so a new store is a new provider module and not a rewrite.
+
+- **Candidates:** Coop, Willys, Hemköp, Mat.se. Each needs its own spike first (like Phase 0 for ICA): is there a usable recipe source, a way to log in, and a list or cart to write to.
+- **Replace or combine:** a store can fully replace ICA (recipes and shopping from Coop, say) or be mixed, for example ICA recipes with a Willys shopping list.
+- **Per provider:** its own auth and re-auth flow, config step, translations, parsing into the neutral `Recipe` and `Ingredient` models, and capability flags (cart, list, product matching, offers, prices).
+- **Done when:** a second provider passes the same contract tests as ICA with no change to the planner, entities, services or cards.
+
 ## Later ideas
 - Recipe ratings and history feeding back into the planner.
 - Budget tracking over time: weekly spend history based on actual purchases, and trends. (v1 already includes budget-aware planning with estimated costs.)
 - Nutrition summary per day and week.
-- Additional shopping providers (Willys, Coop, Mat.se).
 - Additional languages.
 - Voice announcements and Assist intents ("what's for dinner?").

@@ -1,6 +1,6 @@
 # Weekly Menu Generator: HACS Integration Plan
 
-A Home Assistant custom integration (distributed through HACS) that suggests a weekly dinner menu every Friday morning, respects each family member's allergies and preferences, lets the user swap individual recipes, and on confirmation puts the needed ingredients on a shopping list (ICA Handla cart and/or any HA to-do list).
+A Home Assistant custom integration (distributed through HACS) that suggests a weekly dinner menu every Friday morning, respects each family member's allergies and preferences, lets the user swap individual recipes, and on confirmation puts the needed ingredients on a shopping list (a store provider and/or any HA to-do list). ICA is the first store provider because it is the largest in Sweden, but the integration is built so any store (Coop, Willys and others) can be added or can replace ICA.
 
 ## 1. Key risks
 
@@ -25,11 +25,11 @@ A Home Assistant custom integration (distributed through HACS) that suggests a w
 - Schedule: generation day/time, dinner weekdays.
 - Family members: pick HA users; per person allergies (hard), dislikes/likes (soft), diet, portion size, per-day attendance.
 - Meal styles: multi-select tags (vegetarian, quick, easy, fancy, family-friendly, budget...), defaults and per weekday; vegetarian days per week; fish at least once.
-- Recipe sources: enable/disable and reorder (ICA recipes, AI, curated/scraped last resort).
-- Shopping targets: one or more `todo.*` entities and/or ICA cart; separate "needs review" list.
+- Recipe sources: enable/disable and reorder (store recipes such as ICA, AI, curated/scraped last resort).
+- Shopping targets: one or more `todo.*` entities and/or a store provider's list or cart (ICA in v1); separate "needs review" list.
 - Pantry staples (never added).
 - Notifications: `notify.*` targets and which events.
-- ICA: credentials/token setup, store.
+- Providers: each enabled recipe source and shopping provider contributes its own setup and re-auth step, owned by the provider (ICA in v1: credentials, store).
 
 ## 4. Architecture
 
@@ -37,8 +37,8 @@ A Home Assistant custom integration (distributed through HACS) that suggests a w
 custom_components/weeklymenu/
   __init__.py, manifest.json, config_flow.py, coordinator.py, scheduler.py
   planner/   generator.py, constraints.py, models.py
-  sources/   base.py (RecipeSource), ica.py, ai_task.py, curated.py
-  shopping/  base.py (ShoppingProvider), ica.py, todo.py, matcher.py
+  sources/   base.py (RecipeSource), registry.py, ica.py, ai_task.py, curated.py
+  shopping/  base.py (ShoppingProvider), registry.py, ica.py, todo.py, matcher.py
   store.py
   sensor.py, calendar.py, button.py, select.py, todo.py
   services.yaml, strings.json, translations/{en,sv}.json
@@ -46,8 +46,20 @@ frontend/    custom Lovelace cards (Lit + TypeScript)
 hacs.json, README, brand assets, .github/workflows (hassfest, HACS validate, ruff, pytest)
 ```
 
+### Provider-neutral design (ICA is a plugin, not the core)
+
+ICA ships first, but nothing outside `sources/ica.py` and `shopping/ica.py` may know it exists. Another store (Coop, Willys, Hemköp, Mat.se) must be addable, or able to replace ICA completely, without touching the planner, storage, services, entities or cards.
+
+- **Interfaces with capabilities.** `RecipeSource` and `ShoppingProvider` are the only things the core talks to. Optional features are declared as capability flags (cart, plain list, product matching, offers, prices) and the core checks the flag instead of the provider name.
+- **Registry.** Providers register under an id (`ica`, later `coop`, `willys`). Config and storage hold provider ids; the source chain and shopping targets are lists of ids. Only the registry imports concrete providers.
+- **Provider-owned pieces.** Each provider owns its auth (ICA: OAuth with personnummer and password; others may use BankID or API keys), its config schema and options/re-auth step, its translations, its API client, and the conversion of its recipe and ingredient formats into the neutral `Recipe` and `Ingredient` models. The core only learns "needs re-auth" and raises the repair issue.
+- **Recipe and shopping providers are independent.** A user can take recipes from one store and shop at another, or use several recipe sources at once.
+- **Neutral naming.** Entities, services, events, storage keys and card options never contain "ica". Provider-specific data (tokens, product match cache, store id) is namespaced by provider id.
+- **Neutral models.** A `Recipe` carries `source` (provider id), `external_id` and `url`; the shopping push returns a neutral result (added, unmatched, link to the list or cart).
+- **Proof it holds.** The test suite includes a fake second provider that runs through the same contract tests as ICA, so a hardcoded assumption fails a test.
+
 ### Recipe source chain (priority order)
-1. ICA recipes
+1. Store recipe sources (ICA in v1; Coop, Willys and others later)
 2. LLM through HA `ai_task` (Gemini configured) or conversation agent
 3. Curated/scraped (opt-in, last resort)
 
@@ -62,7 +74,7 @@ Per day the planner asks sources in order for candidates, filters them through t
 ### Shopping pipeline on confirm
 1. Merge duplicates, normalize units (dl, msk, st, g).
 2. Remove pantry staples.
-3. Push to each configured target. For ICA: match each item to a product, remember corrections.
+3. Push to each configured target. For providers that need product matching: match each item to a product, remember corrections (stored per provider).
 4. Unmatched items go to the review list; nothing is dropped silently.
 
 ## 5. Entities and services
@@ -77,17 +89,17 @@ Events: `weeklymenu_menu_ready`, `weeklymenu_confirmed`.
 
 1. **Menu card**: day rows with title, time, tags, source badge; regenerate / lock / hint per day; expandable ingredients; Regenerate all and Confirm buttons; status banner.
 2. **Today card**: tonight's dinner, compact.
-3. **Shopping result card**: added items, unmatched items, link to ICA.
+3. **Shopping result card**: added items, unmatched items, link to the store's list or cart.
 4. **Family and preferences card**: edit allergies and preferences from the dashboard.
 5. Stock-card YAML examples as an alternative.
 
 ## 7. Notifications
 
-Menu ready (actionable), confirmed summary, problems (ICA token expired via HA repair/re-auth, AI failure, unmatched items), and a reminder if the draft is unconfirmed Saturday noon.
+Menu ready (actionable), confirmed summary, problems (a provider's login expired, via HA repair/re-auth, AI failure, unmatched items), and a reminder if the draft is unconfirmed Saturday noon.
 
 ## 8. Language
 
-Integration language (sv/en) is a user setting independent of HA's language. It drives UI strings, LLM prompt language, ICA site/filters and allergen synonym lists.
+Integration language (sv/en) is a user setting independent of HA's language. It drives UI strings, LLM prompt language, provider site/filters and allergen synonym lists.
 
 ## 9. HACS packaging
 
@@ -99,17 +111,18 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 |---|---|
 | 0 | ICA spike: login, recipe search, product search, cart add. Go/no-go |
 | 1 | Scaffold, config/options flow, family members, schedule (**done 2026-10-29**; options flow so far has general, schedule and family; the other option pages arrive with the phase that uses them) |
-| 2 | Source chain, generator, allergen validation, storage, services, entities |
+| 2 | Provider interfaces, registry and fake-provider contract tests; source chain, generator, allergen validation, storage, services, entities |
 | 3 | Notifications with actions, per-day regenerate, lock, swap |
 | 4 | Shopping aggregation, to-do provider, confirm flow |
-| 5 | ICA shopping provider, product matching, re-auth |
+| 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
 | 6 | Custom cards |
 | 7 | Tests, translations, docs, HACS release |
 
 ## 11. Decisions made
 
-- Recipe sources: ICA first, then ai_task/conversation, then curated/scraped last.
-- Shopping targets are user-defined `todo.*` entities and/or ICA cart.
+- Recipe sources: store recipes first (ICA in v1), then ai_task/conversation, then curated/scraped last.
+- ICA is the first store provider but is replaceable: Coop, Willys and others plug in through the same `RecipeSource` and `ShoppingProvider` interfaces and a registry (see "Provider-neutral design" in section 4). Nothing outside the ICA modules may hardcode ICA.
+- Shopping targets are user-defined `todo.*` entities and/or a store provider (ICA list in v1).
 - Custom Lovelace cards.
 - Language user-defined (sv/en).
 - AI backend: Gemini via Google Generative AI integration in HA.
@@ -149,8 +162,8 @@ The generator plans the whole week at once rather than picking each day independ
 
 **Budget (v1):**
 - Optional weekly budget (SEK) and a per-meal ceiling in the options flow, with a "cheap", "normal", "no limit" preset.
-- Cost estimate per recipe: ICA store offers (`offerservice/v1/offersdiscounts/{storeId}`, endpoint seen in ica-mcp, to be verified) for discounted items, and AI-estimated or manually maintained prices for the rest. Estimates are labelled as estimates in the UI.
-- Offer-aware picks: prefer recipes using items on offer at the user's favourite ICA store this week.
+- Cost estimate per recipe: store offers from the shopping provider's optional `offers` capability (ICA: `offerservice/v1/offersdiscounts/{storeId}`, endpoint seen in ica-mcp, to be verified) for discounted items, and AI-estimated or manually maintained prices for the rest. Estimates are labelled as estimates in the UI.
+- Offer-aware picks: prefer recipes using items on offer at the user's chosen store this week (when the provider supports offers).
 - The menu card shows estimated total cost against budget; over-budget menus are flagged and the generator tries cheaper candidates first.
 
 **Stock-aware planning (needs the inventory in ROADMAP v3):**
