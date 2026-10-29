@@ -236,6 +236,7 @@ class MenuDay:
     candidates: list[Recipe] = field(default_factory=list)
     locked: bool = False
     split: Split | None = None
+    rejected: list[str] = field(default_factory=list)  # ids replaced on this day
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -245,6 +246,7 @@ class MenuDay:
             "recipe": self.recipe.as_dict() if self.recipe else None,
             "candidates": [r.as_dict() for r in self.candidates],
             "locked": self.locked,
+            "rejected": list(self.rejected),
         }
 
     @classmethod
@@ -257,6 +259,7 @@ class MenuDay:
             candidates=[Recipe.from_dict(r) for r in data.get("candidates", [])],
             locked=data.get("locked", False),
             split=Split.from_dict(data["split"]) if data.get("split") else None,
+            rejected=list(data.get("rejected", [])),
         )
 
 

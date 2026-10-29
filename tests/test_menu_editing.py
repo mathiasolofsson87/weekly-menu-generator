@@ -73,6 +73,30 @@ async def test_regenerating_a_day_does_not_reuse_its_old_alternatives() -> None:
     assert new is None or new.recipe.id not in old
 
 
+async def test_new_dinner_never_cycles_back_to_earlier_suggestions() -> None:
+    source = FakeSource(MANY)
+    cfg = settings(dinner_days=["mon"])
+    menu = await async_generate_menu([source], cfg, date(2026, 11, 2), set())
+    seen = {c.id for c in menu.days[0].candidates}
+    for _ in range(3):
+        new, _ = await async_generate_day([source], cfg, menu, "mon", set())
+        assert new is not None
+        offered = {c.id for c in new.candidates}
+        assert not offered & seen  # nothing shown on this day before comes back
+        seen |= offered
+        menu.days = [new]
+
+
+async def test_rejected_dinners_are_forgotten_when_nothing_else_is_left() -> None:
+    source = FakeSource(MANY[:8])
+    cfg = settings(dinner_days=["mon"])
+    menu = await async_generate_menu([source], cfg, date(2026, 11, 2), set())
+    for _ in range(6):  # more presses than the pool has recipes
+        new, _ = await async_generate_day([source], cfg, menu, "mon", set())
+        assert new is not None and new.recipe
+        menu.days = [new]
+
+
 async def test_nothing_new_means_none_so_the_old_dinner_stays() -> None:
     source = FakeSource([PASTA])
     menu = await async_generate_menu(

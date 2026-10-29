@@ -145,7 +145,42 @@ def test_preferences_are_soft() -> None:
         ("4 st hamburgerbröd", False),
         ("4 st hamburgare", True),
         ("1 pkt vegofärs", False),
+        ("1 kruka färsk timjan", False),
+        ("1 kruka färsk oregano", False),
+        ("2 msk färska örter", False),
+        ("500 g färsk spenat", False),
+        ("500 g färs", True),
+        ("500 g blandfärs", True),
+        ("500 g färsk nötfärs", True),
+        ("2 st färsk kyckling", True),
     ],
 )
 def test_meat_cuts_and_lookalikes(text, is_meat) -> None:
     assert (MEAT.match(text) is not None) is is_meat
+
+
+@pytest.mark.parametrize(
+    ("wish", "wanted", "unwanted"),
+    [
+        ("not fish", (), ("fish",)),
+        ("inte fisk", (), ("fisk",)),
+        ("gärna något med pasta, men inte fisk", ("pasta",), ("fisk",)),
+        ("something with chicken and no shellfish", ("chicken",), ("shellfish",)),
+        ("", (), ()),
+        (None, (), ()),
+    ],
+)
+def test_wishes_are_split_into_wanted_and_unwanted(wish, wanted, unwanted) -> None:
+    from custom_components.weeklymenu.planner.wishes import Wishes
+
+    parsed = Wishes.parse(wish)
+    assert (parsed.wanted, parsed.unwanted) == (wanted, unwanted)
+
+
+def test_wish_groups_use_the_food_rules() -> None:
+    from custom_components.weeklymenu.planner.wishes import Wishes
+
+    assert not Wishes.parse("no fish").allows(recipe("Gryta", "400 g torsk"))
+    assert not Wishes.parse("inte kött").allows(recipe("Gryta", "400 g nötfärs"))
+    assert Wishes.parse("inte fisk").allows(recipe("Gryta", "400 g nötfärs"))
+    assert Wishes.parse("pasta").bonus(recipe("Pastagratäng", "400 g pasta")) > 0

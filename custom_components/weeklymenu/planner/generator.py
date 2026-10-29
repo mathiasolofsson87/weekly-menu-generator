@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -15,8 +16,13 @@ from .constraints import has_fish, is_vegetarian
 from .eligibility import assess
 from .models import FamilyMember, Menu, MenuDay, Recipe, Split
 from .scoring import SPLIT_PENALTY, ScoreContext, score
+from .wishes import Wishes
 
 _LOGGER = logging.getLogger(__name__)
+
+JITTER = 0.3  # random spread added to scores, so near-equal recipes take turns
+QUOTA_BONUS = 1.0  # for a recipe that fills a vegetarian or fish day still owed
+MAX_REJECTED = 100
 
 
 @dataclass
@@ -31,6 +37,7 @@ class PlannerSettings:
     fish_min: int = 0
     candidates_per_day: int = 3
     max_split_days: int = 0  # dinners where some members get a substitute protein
+    rng: random.Random = field(default_factory=random.Random, repr=False)
 
 
 def attendees_for(settings: PlannerSettings, weekday: str) -> list[FamilyMember] | None:
@@ -73,9 +80,10 @@ async def _plan(
     Kept days count towards variety, shared ingredients, the vegetarian and fish
     quotas and the split limit, so a regenerated day fits the rest of the week."""
     everyone = settings.members
+    wishes = Wishes.parse(hint)
     kept_recipes = [d.recipe for d in kept if d.recipe]
     request = CandidateRequest(
-        count=max(len(targets), 2) * settings.candidates_per_day,
+        count=max(len(targets), 4) * settings.candidates_per_day,
         language=settings.language,
         tags=settings.style_tags,
         avoid=sorted({t for m in everyone for t in (*m.allergies, *m.dislikes)}),
@@ -89,7 +97,9 @@ async def _plan(
         exclude_ids=set(recent_ids)
         | {r.id for r in kept_recipes}
         | (avoid_ids or set()),
-        accept=lambda recipe: any(assess(recipe, who).ok for _, who in targets),
+        accept=lambda recipe: (
+            wishes.allows(recipe) and any(assess(recipe, who).ok for _, who in targets)
+        ),
     )
 
     # Ask sources in priority order; fall through while the days cannot be filled.
@@ -120,7 +130,7 @@ async def _plan(
         options = [
             (r, a.split)
             for r in pool.values()
-            if r.id not in taken and (a := assess(r, who)).ok
+            if r.id not in taken and wishes.allows(r) and (a := assess(r, who)).ok
         ]
         # The split limit is kept unless it would leave the day empty.
         within_limit = [
@@ -138,7 +148,17 @@ async def _plan(
         ranked = sorted(
             options,
             key=lambda o: (
-                -(score(o[0], who, ctx) - (SPLIT_PENALTY if o[1] else 0)),
+                -(
+                    score(o[0], who, ctx)
+                    - (SPLIT_PENALTY if o[1] else 0)
+                    + wishes.bonus(o[0])
+                    + QUOTA_BONUS
+                    * (
+                        (veg_left > 0 and is_vegetarian(o[0]))
+                        + (fish_left > 0 and has_fish(o[0]))
+                    )
+                    + settings.rng.random() * JITTER
+                ),
                 o[0].title,
             ),
         )
@@ -158,12 +178,23 @@ async def _plan(
         alternatives = [
             r
             for r in pool.values()
-            if r.id not in {p.id for p in picked} and assess(r, who).ok
+            if r.id not in {p.id for p in picked}
+            and wishes.allows(r)
+            and assess(r, who).ok
         ]
         ctx = ScoreContext(
             settings.style_tags, recent_ids, [p for p in picked if p is not recipe]
         )
-        alternatives.sort(key=lambda r: (-score(r, who, ctx), r.title))
+        alternatives.sort(
+            key=lambda r: (
+                -(
+                    score(r, who, ctx)
+                    + wishes.bonus(r)
+                    + settings.rng.random() * JITTER
+                ),
+                r.title,
+            )
+        )
         planned[weekday] = _Planned(
             recipe,
             split,
@@ -243,18 +274,26 @@ async def async_generate_day(
     if who is None:
         return None, ["no_days"]
     warnings: list[str] = []
-    planned = await _plan(
-        sources,
-        settings,
-        [(weekday, who)],
-        [d for d in menu.days if d.weekday != weekday],
-        recent_ids,
-        warnings,
-        hint,
-        avoid_ids={c.id for c in current.candidates},
-    )
-    result = planned[weekday]
-    if result.recipe is None:
+    shown = {c.id for c in current.candidates}
+    # Everything this day has already offered stays out, so pressing "new dinner" again
+    # never cycles back. When that leaves nothing, start over with only what is shown.
+    result = None
+    for avoid in (set(current.rejected) | shown, shown):
+        warnings = []
+        planned = await _plan(
+            sources,
+            settings,
+            [(weekday, who)],
+            [d for d in menu.days if d.weekday != weekday],
+            recent_ids,
+            warnings,
+            hint,
+            avoid_ids=avoid,
+        )
+        result = planned[weekday]
+        if result.recipe is not None:
+            break
+    if result is None or result.recipe is None:
         return None, warnings
     return (
         MenuDay(
@@ -263,6 +302,7 @@ async def async_generate_day(
             recipe=result.recipe,
             candidates=result.candidates,
             split=result.split,
+            rejected=sorted(avoid)[-MAX_REJECTED:],
         ),
         warnings,
     )

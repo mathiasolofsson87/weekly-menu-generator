@@ -1,5 +1,6 @@
 """Week planning."""
 
+import random
 from datetime import date
 
 from custom_components.weeklymenu.planner.generator import (
@@ -22,6 +23,11 @@ from tests.helpers import (
 
 MONDAY = date(2026, 11, 2)
 ALL = [PASTA, TACOS, CURRY, LAX, SOUP, STEW, STIR]
+
+
+class _NoJitter(random.Random):
+    def random(self) -> float:
+        return 0.0
 
 
 def _settings(**kwargs) -> PlannerSettings:
@@ -123,6 +129,7 @@ async def test_shared_ingredients_are_preferred_to_cut_waste() -> None:
     b = recipe("B", "2 st gul lök", "300 g tofu", "1 st morot")
     c = recipe("C", "1 st fänkål", "2 dl bulgur")
     settings = _settings(dinner_days=["mon", "tue"], candidates_per_day=2)
+    settings.rng = _NoJitter()  # monday is a tie, so it goes by title
     menu = await async_generate_menu([FakeSource([a, c, b])], settings, MONDAY, set())
     assert {d.recipe.title for d in menu.days} == {"A", "B"}
 
@@ -265,3 +272,42 @@ async def test_source_is_told_to_keep_proteins_separable_only_when_diets_differ(
     )
     assert mixed.requests[0].separable is True
     assert same.requests[0].separable is False
+
+
+async def test_equal_recipes_take_turns() -> None:
+    same = [recipe(f"Rätt {n}", "1 st lök") for n in range(8)]
+    settings = _settings(dinner_days=["mon"])
+    first_picks = set()
+    for seed in range(12):
+        settings.rng = random.Random(seed)
+        menu = await async_generate_menu([FakeSource(same)], settings, MONDAY, set())
+        first_picks.add(menu.days[0].recipe.title)
+    assert len(first_picks) > 3  # not always the first by title
+
+
+async def test_a_wish_rules_out_what_it_names() -> None:
+    fish = [recipe(f"Fisk {n}", "400 g torsk", "1 st lök") for n in range(6)]
+    other = [recipe("Pasta", "400 g pasta"), recipe("Gryta", "500 g nötfärs")]
+    settings = _settings(dinner_days=["mon", "tue"])
+    for wish in ("not fish", "inte fisk", "utan fisk, tack"):
+        menu = await async_generate_menu(
+            [FakeSource(fish + other)], settings, MONDAY, set(), hint=wish
+        )
+        titles = {d.recipe.title for d in menu.days}
+        assert titles == {"Pasta", "Gryta"}, wish
+        assert all(
+            not c.title.startswith("Fisk") for d in menu.days for c in d.candidates
+        )
+
+
+async def test_a_wish_can_ask_for_something() -> None:
+    pool = [recipe(f"Rätt {n}", "1 st lök") for n in range(6)] + [
+        recipe("Pastagratäng", "400 g pasta")
+    ]
+    settings = _settings(dinner_days=["mon"])
+    for seed in range(8):
+        settings.rng = random.Random(seed)
+        menu = await async_generate_menu(
+            [FakeSource(pool)], settings, MONDAY, set(), hint="gärna pasta"
+        )
+        assert menu.days[0].recipe.title == "Pastagratäng"

@@ -330,7 +330,7 @@ ALLERGEN_RULES: dict[str, Rule] = {
 MEAT = Rule(
     terms=(
         "kött",
-        "färs",
+        r"färs(?!k)",  # not "färsk" (fresh): färsk timjan
         "biff",
         "fläsk",
         "skinka",
