@@ -113,7 +113,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 1 | Scaffold, config/options flow, family members, schedule (**done 2026-10-29**; options flow so far has general, schedule and family; the other option pages arrive with the phase that uses them) |
 | 2a | Provider interfaces, registry and fake-provider contract tests; AI Task source, generator, allergen validation, storage, `generate_menu`/`set_recipe` services, sensors (**done 2026-10-29**) |
 | 2b | ICA recipe source (dish-type pages, JSON-LD, persistent cache), calendar and generate button (**done 2026-10-29**) |
-| 3 | Notifications with actions, per-day regenerate, lock, swap |
+| 3 | Notifications with actions, per-day regenerate, lock, swap, confirm (**done 2026-10-29**) |
 | 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow |
 | 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
 | 6 | Custom cards |
@@ -141,6 +141,22 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Phase 3: editing the menu and notifications (2026-10-29)
+
+- **Services:** `regenerate_day` (optional hint), `swap_days`, `lock_day`, `set_recipe` (pick one of a day's alternatives, which also locks it) and `confirm_menu`, besides `generate_menu`. All operations live in the coordinator and run under one lock, so a notification button and a dashboard click cannot collide.
+- **Regenerating a day** plans the new dinner around the rest of the week: the others count for variety, shared ingredients, the vegetarian and fish quotas and the split limit. The day's old alternatives are excluded so the result is genuinely new. If nothing better is found, the old dinner stays and an error says so. Locked days refuse it.
+- **Regenerating the whole menu** keeps locked days (recipe and split) and plans only the rest. A kept day whose weekday is no longer a dinner day is dropped.
+- **Swap** needs two unlocked dinners in the same week. Each recipe is re-checked against who eats on its new day (allergies, diets, new split). If either does not suit, nothing changes.
+- **Confirm** marks the latest draft (or a given week) as confirmed, stores `confirmed_at` and fires `weeklymenu_confirmed`. A confirmed menu refuses every edit, including regenerating the week. Building the shopping lists on confirm is phase 4. Missing days are allowed through confirm and are reported in the warnings.
+- **Notifications** go through `notify.<target>` services chosen in Options (the mobile app, for example) and are driven by the integration's own events, so automations see the same things:
+  - *Menu ready* (`weeklymenu_menu_ready`): a day-by-day summary, a note on dinners cooked in several versions, and the buttons Open (a dashboard path from Options), Confirm and Regenerate.
+  - *Problems*, sent separately: a recipe source failed, a day got no recipe, no source is active.
+  - *Confirmed*, and a *reminder* on Saturday at 12:00 when next week's draft is still unconfirmed.
+  - Each of the four can be switched off. Text follows the integration language, not Home Assistant's, including error messages from the buttons.
+- **Buttons** on a notification arrive as `mobile_app_notification_action` events with the action `WEEKLYMENU_CONFIRM:<week>` or `WEEKLYMENU_REGENERATE:<week>`. Other actions are ignored. Using Confirm on an already confirmed week sends a problem notification instead of failing silently.
+- **Entities:** a *Confirm menu* button next to *Generate menu*.
+- **Not done:** the dashboard cards (phase 6) will call these services; notification text for ICA login problems arrives with phase 5; the hint is only used by AI Task (ICA ignores it).
 
 ## Phase 2b: ICA recipe source (2026-10-29)
 

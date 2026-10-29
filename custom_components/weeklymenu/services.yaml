@@ -5,6 +5,47 @@ generate_menu:
       example: "2026-11-02"
       selector:
         date:
+    hint:
+      required: false
+      example: "more vegetarian this week"
+      selector:
+        text:
+regenerate_day:
+  fields:
+    date:
+      required: true
+      example: "2026-11-03"
+      selector:
+        date:
+    hint:
+      required: false
+      example: "something with fish"
+      selector:
+        text:
+swap_days:
+  fields:
+    date:
+      required: true
+      example: "2026-11-03"
+      selector:
+        date:
+    other_date:
+      required: true
+      example: "2026-11-05"
+      selector:
+        date:
+lock_day:
+  fields:
+    date:
+      required: true
+      example: "2026-11-03"
+      selector:
+        date:
+    locked:
+      required: false
+      default: true
+      selector:
+        boolean:
 set_recipe:
   fields:
     date:
@@ -17,3 +58,10 @@ set_recipe:
       example: "ai_task:3f2a9c1b7d4e"
       selector:
         text:
+confirm_menu:
+  fields:
+    week_start:
+      required: false
+      example: "2026-11-02"
+      selector:
+        date:

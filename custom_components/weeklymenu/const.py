@@ -18,6 +18,9 @@ CONF_STYLE_TAGS = "style_tags"
 CONF_VEGETARIAN_DAYS = "vegetarian_days"
 CONF_FISH_MIN = "fish_min"
 CONF_MAX_SPLIT_DAYS = "max_split_days"
+CONF_NOTIFY_TARGETS = "notify_targets"
+CONF_NOTIFY_EVENTS = "notify_events"
+CONF_OPEN_PATH = "open_path"
 
 # Family member keys
 MEMBER_ID = "id"
@@ -74,3 +77,8 @@ HISTORY_WEEKS = 6  # weeks of past menus used to avoid repeats; older ones are d
 
 EVENT_GENERATION_DUE = "weeklymenu_generation_due"
 EVENT_MENU_READY = "weeklymenu_menu_ready"
+EVENT_CONFIRMED = "weeklymenu_confirmed"
+
+# What can be notified about
+NOTIFY_EVENTS = ["menu_ready", "confirmed", "problems", "reminder"]
+DEFAULT_OPEN_PATH = "/"

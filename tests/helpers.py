@@ -63,3 +63,42 @@ STIR = recipe(
 )
 
 ALL_RECIPES = [PASTA, TACOS, CURRY, LAX, SOUP, STEW, STIR]
+
+
+def entity_id(hass, entry, domain: str, key: str) -> str:
+    from homeassistant.helpers import entity_registry as er
+
+    found = er.async_get(hass).async_get_entity_id(
+        domain, "weeklymenu", f"{entry.entry_id}_{key}"
+    )
+    assert found, key
+    return found
+
+
+def state(hass, entry, key: str):
+    """State of one of the integration's sensors."""
+    return hass.states.get(entity_id(hass, entry, "sensor", key))
+
+
+async def generate(hass, week="2026-11-02", **extra):
+    """Call weeklymenu.generate_menu and return its response."""
+    return await hass.services.async_call(
+        "weeklymenu",
+        "generate_menu",
+        {"week_start": week, **extra},
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def call(hass, service: str, **data):
+    """Call a weeklymenu service; returns its response if it has one."""
+    from homeassistant.core import SupportsResponse
+
+    has_response = (
+        hass.services.supports_response("weeklymenu", service)
+        is not SupportsResponse.NONE
+    )
+    return await hass.services.async_call(
+        "weeklymenu", service, data, blocking=True, return_response=has_response
+    )

@@ -1,15 +1,12 @@
 """Setup, services, sensors and scheduling, end to end with a fake provider."""
 
 from datetime import UTC, datetime
-from unittest.mock import patch
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
 )
@@ -19,63 +16,11 @@ from custom_components.weeklymenu.const import (
     EVENT_GENERATION_DUE,
     EVENT_MENU_READY,
 )
-from custom_components.weeklymenu.sources.registry import SourceRegistry
-from tests.helpers import ALL_RECIPES, FakeSource, recipe
+from tests.helpers import entity_id, generate, recipe, state
 
-OPTIONS = {
-    "dinner_days": ["mon", "tue", "wed"],
-    "vegetarian_days": 0,
-    "fish_min": 0,
-    "members": [
-        {
-            "id": "1",
-            "name": "Anna",
-            "allergies": ["fish"],
-            "attends": ["mon", "tue", "wed"],
-        }
-    ],
-}
-
-
-@pytest.fixture
-def fake() -> FakeSource:
-    return FakeSource(ALL_RECIPES)
-
-
-@pytest.fixture
-async def entry(hass: HomeAssistant, fake: FakeSource, freezer: FrozenDateTimeFactory):
-    await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2026-11-04 12:00:00+00:00")  # Wednesday
-    registry = SourceRegistry()
-    registry.register("fake", lambda hass, config: fake)
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"language": "sv", "units": "swedish"}, options=OPTIONS
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "custom_components.weeklymenu.build_default_registry", return_value=registry
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        yield entry
-
-
-def _state(hass: HomeAssistant, entry, key: str):
-    entity_id = er.async_get(hass).async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.entry_id}_{key}"
-    )
-    assert entity_id, key
-    return hass.states.get(entity_id)
-
-
-async def _generate(hass: HomeAssistant, week="2026-11-02"):
-    return await hass.services.async_call(
-        DOMAIN,
-        "generate_menu",
-        {"week_start": week},
-        blocking=True,
-        return_response=True,
-    )
+_state = state
+_generate = generate
+_entity_id = entity_id
 
 
 async def test_sensors_start_empty(hass: HomeAssistant, entry) -> None:
@@ -91,7 +36,7 @@ async def test_generate_menu_service(hass: HomeAssistant, entry) -> None:
     assert response["week_start"] == "2026-11-02"
     assert set(response["days"]) == {"2026-11-02", "2026-11-03", "2026-11-04"}
     assert all(response["days"].values()) and response["warnings"] == []
-    assert [e.data for e in ready] == [{"week_start": "2026-11-02"}]
+    assert [e.data for e in ready] == [{"week_start": "2026-11-02", "warnings": []}]
 
     status = _state(hass, entry, "status")
     assert status.state == "draft" and status.attributes["week_start"] == "2026-11-02"
@@ -157,7 +102,7 @@ async def test_set_recipe_picks_a_candidate_and_locks(
 async def test_confirmed_menu_is_not_overwritten(hass: HomeAssistant, entry) -> None:
     await _generate(hass)
     entry.runtime_data.coordinator.latest.status = "confirmed"
-    with pytest.raises(HomeAssistantError, match="already confirmed"):
+    with pytest.raises(ServiceValidationError, match="confirmed"):
         await _generate(hass)
 
 
@@ -220,14 +165,6 @@ async def test_split_shows_up_on_the_weekday_sensor(
     [group] = monday.attributes["split"]["groups"]
     assert group["members"] == ["Anna"] and group["share"] == 0.5
     assert group["substitutions"][0]["replacement"]["raw"] == "600 g tofu"
-
-
-def _entity_id(hass: HomeAssistant, entry, domain: str, key: str) -> str:
-    entity_id = er.async_get(hass).async_get_entity_id(
-        domain, DOMAIN, f"{entry.entry_id}_{key}"
-    )
-    assert entity_id, key
-    return entity_id
 
 
 async def test_button_generates_next_weeks_menu(hass: HomeAssistant, entry) -> None:

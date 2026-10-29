@@ -269,6 +269,7 @@ class Menu:
     days: list[MenuDay] = field(default_factory=list)
     generated_at: str = ""
     warnings: list[str] = field(default_factory=list)
+    confirmed_at: str | None = None
 
     def day(self, iso_date: str) -> MenuDay | None:
         return next((d for d in self.days if d.date == iso_date), None)
@@ -280,6 +281,7 @@ class Menu:
             "days": [d.as_dict() for d in self.days],
             "generated_at": self.generated_at,
             "warnings": list(self.warnings),
+            "confirmed_at": self.confirmed_at,
         }
 
     @classmethod
@@ -290,4 +292,5 @@ class Menu:
             days=[MenuDay.from_dict(d) for d in data.get("days", [])],
             generated_at=data.get("generated_at", ""),
             warnings=list(data.get("warnings", [])),
+            confirmed_at=data.get("confirmed_at"),
         )

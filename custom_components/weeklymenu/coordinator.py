@@ -9,7 +9,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -26,15 +26,25 @@ from .const import (
     DEFAULT_MAX_SPLIT_DAYS,
     DEFAULT_VEGETARIAN_DAYS,
     DOMAIN,
+    EVENT_CONFIRMED,
     EVENT_MENU_READY,
 )
-from .planner.generator import PlannerSettings, async_generate_menu, week_start_of
+from .planner.eligibility import assess
+from .planner.generator import (
+    PlannerSettings,
+    async_generate_day,
+    async_generate_menu,
+    attendees_for,
+    week_start_of,
+)
 from .planner.models import (
     Menu,
     MenuDay,
+    Recipe,
     dinner_days_from_options,
     members_from_options,
 )
+from .sources.base import RecipeSource
 from .sources.registry import SourceRegistry
 from .store import MenuStore
 
@@ -96,25 +106,198 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             max_split_days=int(config.get(CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS)),
         )
 
-    async def async_generate(self, week_start: date) -> Menu:
-        """Draft a menu for the week starting on Monday `week_start`, replacing any draft."""
+    # --- helpers -------------------------------------------------------------
+
+    def _sources(self) -> list[RecipeSource]:
+        return self.registry.create(
+            self.hass, self.config, self.config.get(CONF_SOURCES)
+        )
+
+    def _find(self, day: date) -> tuple[Menu, MenuDay]:
+        """The menu and dinner for a date, or a validation error."""
+        iso = day.isoformat()
+        for menu in self.store.menus.values():
+            if found := menu.day(iso):
+                return menu, found
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_such_day",
+            translation_placeholders={"date": iso},
+        )
+
+    @staticmethod
+    def _editable(menu: Menu) -> None:
+        if menu.status == "confirmed":
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="menu_confirmed",
+                translation_placeholders={"week": menu.week_start},
+            )
+
+    @staticmethod
+    def _unlocked(day: MenuDay) -> None:
+        if day.locked:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="day_locked",
+                translation_placeholders={"date": day.date},
+            )
+
+    async def _commit(self, menu: Menu) -> None:
+        await self.store.async_save(menu, dt_util.now().date())
+        self.async_set_updated_data(dict(self.store.menus))
+
+    def _place(
+        self, target: MenuDay, recipe: Recipe, alternatives: list[Recipe]
+    ) -> None:
+        """Put `recipe` on `target`, re-checking it against who eats that day."""
+        who = attendees_for(self._settings(), target.weekday) or []
+        eligibility = assess(recipe, who)
+        if not eligibility.ok:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_allowed",
+                translation_placeholders={"recipe_id": recipe.id, "date": target.date},
+            )
+        target.recipe = recipe
+        target.split = eligibility.split
+        target.candidates = [recipe] + [c for c in alternatives if c.id != recipe.id]
+
+    # --- operations ----------------------------------------------------------
+
+    async def async_generate(self, week_start: date, hint: str | None = None) -> Menu:
+        """Draft a menu for the week of `week_start`. Locked days of an earlier draft stay."""
         week = week_start_of(week_start).isoformat()
         async with self._lock:
             existing = self.store.menus.get(week)
-            if existing and existing.status == "confirmed":
-                raise HomeAssistantError(
-                    f"The menu for the week of {week} is already confirmed"
-                )
-            sources = self.registry.create(
-                self.hass, self.config, self.config.get(CONF_SOURCES)
-            )
+            if existing:
+                self._editable(existing)
             menu = await async_generate_menu(
-                sources,
+                self._sources(),
                 self._settings(),
                 date.fromisoformat(week),
                 self.store.recent_recipe_ids(before=week),
+                keep=[d for d in existing.days if d.locked and d.recipe]
+                if existing
+                else (),
+                hint=hint,
             )
-            await self.store.async_save(menu, dt_util.now().date())
-            self.async_set_updated_data(dict(self.store.menus))
-        self.hass.bus.async_fire(EVENT_MENU_READY, {"week_start": week})
+            await self._commit(menu)
+        self.hass.bus.async_fire(
+            EVENT_MENU_READY, {"week_start": week, "warnings": list(menu.warnings)}
+        )
+        return menu
+
+    async def async_regenerate_day(self, day: date, hint: str | None = None) -> MenuDay:
+        """Replace one dinner with a new one that fits the rest of the week."""
+        async with self._lock:
+            menu, current = self._find(day)
+            self._editable(menu)
+            self._unlocked(current)
+            new, warnings = await async_generate_day(
+                self._sources(),
+                self._settings(),
+                menu,
+                current.weekday,
+                self.store.recent_recipe_ids(before=menu.week_start),
+                hint,
+            )
+            if new is None:
+                raise HomeAssistantError(
+                    f"No other recipe was found for {current.date}"
+                )
+            menu.days = [new if d.date == current.date else d for d in menu.days]
+            menu.warnings += [w for w in warnings if w not in menu.warnings]
+            await self._commit(menu)
+            return new
+
+    async def async_lock_day(self, day: date, locked: bool = True) -> MenuDay:
+        """Lock a dinner so that regenerating the menu keeps it."""
+        async with self._lock:
+            menu, current = self._find(day)
+            self._editable(menu)
+            current.locked = locked
+            await self._commit(menu)
+            return current
+
+    async def async_set_recipe(self, day: date, recipe_id: str) -> MenuDay:
+        """Pick one of the day's alternatives. This locks the day."""
+        async with self._lock:
+            menu, current = self._find(day)
+            self._editable(menu)
+            recipe = next((r for r in current.candidates if r.id == recipe_id), None)
+            if recipe is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_a_candidate",
+                    translation_placeholders={
+                        "recipe_id": recipe_id,
+                        "date": current.date,
+                    },
+                )
+            self._place(current, recipe, current.candidates)
+            current.locked = True
+            await self._commit(menu)
+            return current
+
+    async def async_swap_days(self, first: date, second: date) -> None:
+        """Swap two dinners of the same week. Both are re-checked for their new day."""
+        if first == second:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="swap_same_day"
+            )
+        async with self._lock:
+            menu_a, a = self._find(first)
+            menu_b, b = self._find(second)
+            if menu_a is not menu_b:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="swap_other_week"
+                )
+            self._editable(menu_a)
+            for day in (a, b):
+                self._unlocked(day)
+                if day.recipe is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="swap_empty_day",
+                        translation_placeholders={"date": day.date},
+                    )
+            recipe_a, recipe_b = a.recipe, b.recipe
+            before = (a.recipe, a.split, a.candidates, b.recipe, b.split, b.candidates)
+            try:
+                self._place(a, recipe_b, a.candidates)
+                self._place(b, recipe_a, b.candidates)
+            except ServiceValidationError:
+                a.recipe, a.split, a.candidates = before[:3]
+                b.recipe, b.split, b.candidates = before[3:]
+                raise
+            await self._commit(menu_a)
+
+    async def async_confirm(self, week_start: date | None = None) -> Menu:
+        """Lock the menu. Shopping lists are built from a confirmed menu (phase 4)."""
+        async with self._lock:
+            if week_start is None:
+                drafts = [m for m in self.store.menus.values() if m.status == "draft"]
+                if not drafts:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN, translation_key="no_draft"
+                    )
+                menu = max(drafts, key=lambda m: m.week_start)
+            else:
+                found = self.store.menus.get(week_start_of(week_start).isoformat())
+                if found is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="no_such_day",
+                        translation_placeholders={"date": week_start.isoformat()},
+                    )
+                menu = found
+            self._editable(menu)
+            menu.status = "confirmed"
+            menu.confirmed_at = dt_util.utcnow().isoformat()
+            await self._commit(menu)
+        self.hass.bus.async_fire(
+            EVENT_CONFIRMED,
+            {"week_start": menu.week_start, "warnings": list(menu.warnings)},
+        )
         return menu

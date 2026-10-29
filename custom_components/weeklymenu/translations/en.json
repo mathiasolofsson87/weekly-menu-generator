@@ -29,7 +29,8 @@
           "family": "Family members",
           "finish": "Save and close",
           "styles": "Meal styles",
-          "sources": "Recipe sources"
+          "sources": "Recipe sources",
+          "notifications": "Notifications"
         }
       },
       "general": {
@@ -126,6 +127,19 @@
         "data_description": {
           "sources": "Sources are asked in a fixed order: store recipes first, then AI."
         }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "data": {
+          "notify_targets": "Notify through",
+          "notify_events": "Notify about",
+          "open_path": "Open button leads to"
+        },
+        "data_description": {
+          "notify_targets": "Notify services such as mobile_app_your_phone. Buttons for Open, Confirm and Regenerate work with the Home Assistant app.",
+          "notify_events": "Problems are sent separately, for example when a recipe source fails.",
+          "open_path": "A dashboard path, for example /lovelace/menu."
+        }
       }
     },
     "error": {
@@ -206,6 +220,14 @@
         "family_friendly": "Family friendly",
         "budget": "Budget"
       }
+    },
+    "notify_event": {
+      "options": {
+        "menu_ready": "Menu ready",
+        "confirmed": "Menu confirmed",
+        "problems": "Problems",
+        "reminder": "Saturday reminder"
+      }
     }
   },
   "entity": {
@@ -251,6 +273,9 @@
     "button": {
       "generate": {
         "name": "Generate menu"
+      },
+      "confirm": {
+        "name": "Confirm menu"
       }
     }
   },
@@ -266,6 +291,24 @@
     },
     "not_allowed": {
       "message": "{recipe_id} cannot be served on {date} with the current family settings."
+    },
+    "menu_confirmed": {
+      "message": "The menu for the week of {week} is confirmed and can no longer be changed."
+    },
+    "day_locked": {
+      "message": "The dinner on {date} is locked. Unlock it first."
+    },
+    "swap_same_day": {
+      "message": "Pick two different days."
+    },
+    "swap_other_week": {
+      "message": "Only days in the same week can be swapped."
+    },
+    "swap_empty_day": {
+      "message": "There is no dinner on {date} to swap."
+    },
+    "no_draft": {
+      "message": "There is no draft menu to confirm."
     }
   },
   "services": {
@@ -276,6 +319,10 @@
         "week_start": {
           "name": "Week start",
           "description": "Any date in the week. Defaults to next week."
+        },
+        "hint": {
+          "name": "Hint",
+          "description": "A wish for the whole menu. Only some sources use it (AI Task does)."
         }
       }
     },
@@ -290,6 +337,58 @@
         "recipe_id": {
           "name": "Recipe ID",
           "description": "Id of one of the day's alternatives (see the weekday sensor)."
+        }
+      }
+    },
+    "regenerate_day": {
+      "name": "Regenerate day",
+      "description": "Replaces one dinner with a new one that fits the rest of the week. Locked days are refused.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The dinner to replace."
+        },
+        "hint": {
+          "name": "Hint",
+          "description": "What you would like instead, for example 'something with fish'. Only some sources use it."
+        }
+      }
+    },
+    "swap_days": {
+      "name": "Swap days",
+      "description": "Swaps two dinners of the same week. Both must suit who eats on their new day.",
+      "fields": {
+        "date": {
+          "name": "First date",
+          "description": "One of the dinners."
+        },
+        "other_date": {
+          "name": "Second date",
+          "description": "The other dinner."
+        }
+      }
+    },
+    "lock_day": {
+      "name": "Lock day",
+      "description": "Locks a dinner so regenerating the menu keeps it, or unlocks it.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The dinner."
+        },
+        "locked": {
+          "name": "Locked",
+          "description": "Off unlocks the day."
+        }
+      }
+    },
+    "confirm_menu": {
+      "name": "Confirm menu",
+      "description": "Locks the menu. Defaults to the latest draft.",
+      "fields": {
+        "week_start": {
+          "name": "Week start",
+          "description": "Any date in the week to confirm."
         }
       }
     }

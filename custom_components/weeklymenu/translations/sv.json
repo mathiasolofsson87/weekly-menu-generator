@@ -29,7 +29,8 @@
           "family": "Familjemedlemmar",
           "finish": "Spara och stäng",
           "styles": "Måltidsstilar",
-          "sources": "Receptkällor"
+          "sources": "Receptkällor",
+          "notifications": "Notiser"
         }
       },
       "general": {
@@ -126,6 +127,19 @@
         "data_description": {
           "sources": "Källorna frågas i fast ordning: butikens recept först, sedan AI."
         }
+      },
+      "notifications": {
+        "title": "Notiser",
+        "data": {
+          "notify_targets": "Skicka via",
+          "notify_events": "Meddela om",
+          "open_path": "Öppna-knappen leder till"
+        },
+        "data_description": {
+          "notify_targets": "Notifieringstjänster som mobile_app_din_telefon. Knapparna Öppna, Bekräfta och Skapa om fungerar med Home Assistant-appen.",
+          "notify_events": "Problem skickas separat, till exempel när en receptkälla inte fungerar.",
+          "open_path": "En dashboardsökväg, till exempel /lovelace/menu."
+        }
       }
     },
     "error": {
@@ -206,6 +220,14 @@
         "family_friendly": "Barnvänligt",
         "budget": "Billigt"
       }
+    },
+    "notify_event": {
+      "options": {
+        "menu_ready": "Menyn är klar",
+        "confirmed": "Menyn bekräftad",
+        "problems": "Problem",
+        "reminder": "Påminnelse på lördag"
+      }
     }
   },
   "entity": {
@@ -251,6 +273,9 @@
     "button": {
       "generate": {
         "name": "Skapa meny"
+      },
+      "confirm": {
+        "name": "Bekräfta meny"
       }
     }
   },
@@ -266,6 +291,24 @@
     },
     "not_allowed": {
       "message": "{recipe_id} kan inte serveras {date} med nuvarande familjeinställningar."
+    },
+    "menu_confirmed": {
+      "message": "Menyn för veckan {week} är bekräftad och kan inte längre ändras."
+    },
+    "day_locked": {
+      "message": "Middagen {date} är låst. Lås upp den först."
+    },
+    "swap_same_day": {
+      "message": "Välj två olika dagar."
+    },
+    "swap_other_week": {
+      "message": "Bara dagar i samma vecka kan bytas."
+    },
+    "swap_empty_day": {
+      "message": "Det finns ingen middag {date} att byta."
+    },
+    "no_draft": {
+      "message": "Det finns inget menyutkast att bekräfta."
     }
   },
   "services": {
@@ -276,6 +319,10 @@
         "week_start": {
           "name": "Veckostart",
           "description": "Valfritt datum i veckan. Standard är nästa vecka."
+        },
+        "hint": {
+          "name": "Önskemål",
+          "description": "Ett önskemål för hela menyn. Bara vissa källor använder det (AI-uppgift gör det)."
         }
       }
     },
@@ -290,6 +337,58 @@
         "recipe_id": {
           "name": "Recept-ID",
           "description": "Id för ett av dagens alternativ (se veckodagssensorn)."
+        }
+      }
+    },
+    "regenerate_day": {
+      "name": "Skapa om dag",
+      "description": "Byter en middag mot en ny som passar resten av veckan. Låsta dagar nekas.",
+      "fields": {
+        "date": {
+          "name": "Datum",
+          "description": "Middagen som ska bytas."
+        },
+        "hint": {
+          "name": "Önskemål",
+          "description": "Vad du vill ha istället, till exempel 'något med fisk'. Bara vissa källor använder det."
+        }
+      }
+    },
+    "swap_days": {
+      "name": "Byt dagar",
+      "description": "Byter två middagar i samma vecka. Båda måste passa dem som äter den nya dagen.",
+      "fields": {
+        "date": {
+          "name": "Första datum",
+          "description": "Den ena middagen."
+        },
+        "other_date": {
+          "name": "Andra datum",
+          "description": "Den andra middagen."
+        }
+      }
+    },
+    "lock_day": {
+      "name": "Lås dag",
+      "description": "Låser en middag så att den behålls när menyn skapas om, eller låser upp den.",
+      "fields": {
+        "date": {
+          "name": "Datum",
+          "description": "Middagen."
+        },
+        "locked": {
+          "name": "Låst",
+          "description": "Av låser upp dagen."
+        }
+      }
+    },
+    "confirm_menu": {
+      "name": "Bekräfta meny",
+      "description": "Låser menyn. Standard är det senaste utkastet.",
+      "fields": {
+        "week_start": {
+          "name": "Veckostart",
+          "description": "Valfritt datum i veckan som ska bekräftas."
         }
       }
     }

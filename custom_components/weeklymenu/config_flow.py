@@ -37,6 +37,9 @@ from .const import (
     CONF_LANGUAGE,
     CONF_MAX_SPLIT_DAYS,
     CONF_MEMBERS,
+    CONF_NOTIFY_EVENTS,
+    CONF_NOTIFY_TARGETS,
+    CONF_OPEN_PATH,
     CONF_SHOPPING_TARGETS,
     CONF_SOURCES,
     CONF_STYLE_TAGS,
@@ -48,6 +51,7 @@ from .const import (
     DEFAULT_GENERATION_TIME,
     DEFAULT_LANGUAGE,
     DEFAULT_MAX_SPLIT_DAYS,
+    DEFAULT_OPEN_PATH,
     DEFAULT_UNITS,
     DEFAULT_VEGETARIAN_DAYS,
     DIETS,
@@ -63,6 +67,7 @@ from .const import (
     MEMBER_NAME,
     MEMBER_PERSON,
     MEMBER_PORTION,
+    NOTIFY_EVENTS,
     PORTIONS,
     STYLE_TAGS,
     UNITS,
@@ -226,6 +231,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                 "family",
                 "styles",
                 "sources",
+                "notifications",
                 "finish",
             ],
         )
@@ -315,6 +321,52 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="styles",
             data_schema=self.add_suggested_values_to_schema(STYLES_SCHEMA, current),
+        )
+
+    async def async_step_notifications(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Who gets notified, about what, and where "Open" leads."""
+        services = self.hass.services.async_services_for_domain("notify")
+        targets = sorted(set(services) - {"send_message", "persistent_notification"})
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_NOTIFY_TARGETS): SelectSelector(
+                    SelectSelectorConfig(
+                        options=targets,
+                        multiple=True,
+                        custom_value=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(CONF_NOTIFY_EVENTS): _select(
+                    NOTIFY_EVENTS, "notify_event", multiple=True
+                ),
+                vol.Required(CONF_OPEN_PATH): TextSelector(),
+            }
+        )
+        if user_input is not None:
+            self._save(
+                **{
+                    CONF_NOTIFY_TARGETS: [
+                        t.removeprefix("notify.")
+                        for t in user_input.get(CONF_NOTIFY_TARGETS, [])
+                    ],
+                    CONF_NOTIFY_EVENTS: user_input[CONF_NOTIFY_EVENTS],
+                    CONF_OPEN_PATH: user_input[CONF_OPEN_PATH].strip()
+                    or DEFAULT_OPEN_PATH,
+                }
+            )
+            return await self.async_step_init()
+        config = self._config()
+        current = {
+            CONF_NOTIFY_TARGETS: config.get(CONF_NOTIFY_TARGETS, []),
+            CONF_NOTIFY_EVENTS: config.get(CONF_NOTIFY_EVENTS, NOTIFY_EVENTS),
+            CONF_OPEN_PATH: config.get(CONF_OPEN_PATH, DEFAULT_OPEN_PATH),
+        }
+        return self.async_show_form(
+            step_id="notifications",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
     async def async_step_sources(

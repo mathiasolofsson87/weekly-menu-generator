@@ -13,6 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, EVENT_GENERATION_DUE
 from .coordinator import WeeklyMenuCoordinator
+from .notifications import Notifier
 from .scheduler import MenuScheduler
 from .services import async_register_services
 from .sources.registry import SourceRegistry, build_default_registry
@@ -28,6 +29,7 @@ class WeeklyMenuData:
 
     coordinator: WeeklyMenuCoordinator
     scheduler: MenuScheduler
+    notifier: Notifier
 
 
 type WeeklyMenuConfigEntry = ConfigEntry[WeeklyMenuData]
@@ -51,7 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeeklyMenuConfigEntry) -
     scheduler = MenuScheduler(hass, entry)
     scheduler.async_start()
     entry.async_on_unload(scheduler.async_stop)
-    entry.runtime_data = WeeklyMenuData(coordinator, scheduler)
+    notifier = Notifier(hass, entry, coordinator)
+    notifier.async_start()
+    entry.runtime_data = WeeklyMenuData(coordinator, scheduler, notifier)
 
     async def _generation_due(event: Event) -> None:
         if event.data.get("entry_id") == entry.entry_id:
