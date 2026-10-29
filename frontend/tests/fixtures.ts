@@ -43,7 +43,15 @@ export const SPLIT = {
   ],
 };
 
+export interface FamilyMemberSpec {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
 export interface HassOptions {
+  shopping?: { state?: string; attrs?: Record<string, unknown> } | null;
+  family?: { members: FamilyMemberSpec[]; dinner_days?: string[] } | null;
   status?: "none" | "draft" | "confirmed";
   weekStart?: string;
   warnings?: string[];
@@ -70,6 +78,14 @@ export function makeHass(options: HassOptions = {}): HomeAssistant & { callServi
   }
   if (options.today) add("today", options.today.title, dinnerAttrs(MON, options.today.attrs));
   else add("today", "unknown");
+  if (options.shopping) add("shopping", options.shopping.state ?? "0", options.shopping.attrs ?? {});
+  else add("shopping", "unknown");
+  if (options.family) {
+    add("family", String(options.family.members.length), {
+      members: options.family.members,
+      dinner_days: options.family.dinner_days ?? ["mon", "tue", "wed", "thu", "fri"],
+    });
+  } else add("family", "unavailable");
   // somebody else's entity that must be ignored
   entities["sensor.other"] = { entity_id: "sensor.other", platform: "other", translation_key: "status" };
   states["sensor.other"] = { entity_id: "sensor.other", state: "x", attributes: {} };
@@ -94,3 +110,30 @@ export async function settle(element: { updateComplete: Promise<unknown> }): Pro
   await Promise.resolve();
   await element.updateComplete;
 }
+
+export const SHOPPING = {
+  week_start: "2026-11-02",
+  counts: { added: 3, review: 1, failed: 2, skipped: 2, pending: 0 },
+  added: ["400 g pasta", "2 dl grädde", "230 g nötfärs"],
+  review: ["1 kg okänd vara"],
+  failed: ["3 ägg", "1 st gul lök"],
+  pending: [],
+  skipped: ["salt", "olivolja"],
+  targets: ["todo.groceries", "ICA: Veckomeny vecka 45"],
+  errors: ["ica: auth_failed", "reauth_required"],
+};
+
+export const FAMILY: FamilyMemberSpec[] = [
+  {
+    id: "1",
+    name: "Anna",
+    allergies: ["milk", "kiwi"],
+    dislikes: ["svamp"],
+    likes: [],
+    diet: "vegetarian",
+    portion: "small",
+    attends: ["mon", "tue", "wed", "thu", "fri"],
+    cook_separately: false,
+  },
+  { id: "2", name: "Olle", allergies: [], dislikes: [], likes: ["pasta"], diet: "omnivore", portion: "normal", attends: ["mon", "wed"], cook_separately: true },
+];

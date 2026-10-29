@@ -18,7 +18,14 @@ export const cardStyles = css`
     color: var(--secondary-text-color);
     font-size: 0.9em;
   }
+  .head {
+    flex-wrap: wrap;
+  }
+  .head.chips {
+    justify-content: flex-start;
+  }
   .chip {
+    white-space: nowrap;
     border-radius: 12px;
     padding: 2px 10px;
     font-size: 0.8em;
@@ -200,6 +207,73 @@ export const cardStyles = css`
     justify-content: flex-end;
     padding: 12px 16px;
     border-top: 1px solid var(--divider-color);
+  }
+
+  .member {
+    padding: 10px 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+  .member .main {
+    align-items: flex-start;
+  }
+  .tag.allergy {
+    background: var(--error-color, #db4437);
+    color: var(--text-primary-color, #fff);
+  }
+  .form {
+    display: grid;
+    gap: 10px;
+    padding-top: 10px;
+  }
+  .field {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 140px;
+  }
+  .field > span,
+  legend {
+    font-size: 0.85em;
+    color: var(--secondary-text-color);
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+    min-width: 0;
+  }
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .check {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 0.9em;
+  }
+  .hint-error {
+    color: var(--error-color, #db4437);
+  }
+  .group {
+    padding: 4px 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+  .group summary {
+    cursor: pointer;
+    padding: 6px 0;
+    font-weight: 500;
+  }
+  .group.warning summary {
+    color: var(--warning-color, #ffa600);
+  }
+  .group.error summary {
+    color: var(--error-color, #db4437);
+  }
+  .group ul {
+    margin: 0 0 8px;
+    padding-left: 18px;
   }
 
   /* A narrow card (a phone, or a small grid cell): give the text all the room. */

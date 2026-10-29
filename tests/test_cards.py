@@ -71,7 +71,11 @@ def test_the_built_bundle_is_in_the_repository() -> None:
     for element in (
         "weeklymenu-menu-card",
         "weeklymenu-today-card",
+        "weeklymenu-shopping-card",
+        "weeklymenu-family-card",
         "weeklymenu-menu-card-editor",
+        "weeklymenu-shopping-card-editor",
+        "weeklymenu-family-card-editor",
     ):
         assert element in bundle
     assert len(bundle) > 10_000

@@ -27,3 +27,10 @@ export function weekdayKeyName(hass: LangSource | undefined, key: string): strin
   // 2026-11-02 is a Monday
   return weekdayName(hass, `2026-11-${String(2 + index).padStart(2, "0")}`);
 }
+
+/** A short, language-aware name for a weekday key ("tue" -> "Tue" / "tis"). */
+export function weekdayShort(hass: LangSource | undefined, key: string): string {
+  const index = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].indexOf(key);
+  if (index < 0) return key;
+  return dayLabel(hass, `2026-11-${String(2 + index).padStart(2, "0")}`).weekday;
+}

@@ -264,7 +264,12 @@ describe("a confirmed menu and read-only dashboards", () => {
 describe("registration", () => {
   it("is a custom element and lists itself for the card picker", () => {
     expect(customElements.get("weeklymenu-menu-card")).toBeDefined();
-    expect(window.customCards?.map((c) => c.type)).toEqual(["weeklymenu-menu-card", "weeklymenu-today-card"]);
+    expect(window.customCards?.map((c) => c.type)).toEqual([
+      "weeklymenu-menu-card",
+      "weeklymenu-today-card",
+      "weeklymenu-shopping-card",
+      "weeklymenu-family-card",
+    ]);
     expect(document.createElement("weeklymenu-menu-card").constructor).toHaveProperty("getStubConfig");
     const editor = (customElements.get("weeklymenu-menu-card") as unknown as typeof WeeklyMenuCard).getConfigElement();
     expect(editor.tagName.toLowerCase()).toBe("weeklymenu-menu-card-editor");

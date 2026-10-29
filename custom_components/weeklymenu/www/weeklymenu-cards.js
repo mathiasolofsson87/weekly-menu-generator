@@ -1,4 +1,4 @@
-const R = {
+const M = {
   en: {
     menuTitle: "Weekly menu",
     todayTitle: "Tonight's dinner",
@@ -53,7 +53,71 @@ const R = {
     cardMenuName: "Weekly menu",
     cardMenuDescription: "The week's dinners, with buttons to regenerate, lock, swap and confirm.",
     cardTodayName: "Tonight's dinner",
-    cardTodayDescription: "Today's dinner, compact."
+    cardTodayDescription: "Today's dinner, compact.",
+    shoppingTitle: "Shopping",
+    shopNothing: "Nothing has been bought yet. Confirm a menu to build the list.",
+    shopTargets: "To: {targets}",
+    shopAdded: "Added",
+    shopReview: "Needs a look",
+    shopFailed: "Not delivered",
+    shopPending: "Waiting",
+    shopSkipped: "Pantry (not bought)",
+    shopRetry: "Try again",
+    err_reauth_required: "A sign-in no longer works. Sign in again under Settings.",
+    err_no_targets: "No shopping list is set up.",
+    err_no_review_list: "Items that could not be placed had no review list to go to.",
+    err_auth_failed: "The sign-in to {store} no longer works. Sign in again under Settings.",
+    err_geo_blocked: "{store} only answers connections from Sweden.",
+    familyTitle: "Family",
+    famNoFamily: "The family is not available yet.",
+    famNone: "Nobody has been added yet.",
+    famAdd: "Add person",
+    famEdit: "Edit",
+    famSave: "Save",
+    famCancel: "Cancel",
+    famRemove: "Remove",
+    famRemoveAsk: "Remove {name}?",
+    famName: "Name",
+    famAllergies: "Allergies",
+    famOtherAllergies: "Other allergies (separate with commas)",
+    famDislikes: "Dislikes (separate with commas)",
+    famLikes: "Likes (separate with commas)",
+    famDiet: "Diet",
+    famPortion: "Portion size",
+    famDays: "Eats dinner on",
+    famNoDays: "Pick at least one day.",
+    famCookSeparately: "Allergens can be cooked separately (turn off for severe allergies)",
+    famAppliesLater: "Changes apply to menus made from now on.",
+    famEveryDay: "Every dinner",
+    allergen_gluten: "Gluten",
+    allergen_milk: "Milk",
+    allergen_lactose: "Lactose",
+    allergen_egg: "Egg",
+    allergen_fish: "Fish",
+    allergen_crustaceans: "Crustaceans",
+    allergen_molluscs: "Molluscs",
+    allergen_peanuts: "Peanuts",
+    allergen_tree_nuts: "Tree nuts",
+    allergen_soy: "Soy",
+    allergen_sesame: "Sesame",
+    allergen_celery: "Celery",
+    allergen_mustard: "Mustard",
+    allergen_lupin: "Lupin",
+    allergen_sulphites: "Sulphites",
+    diet_omnivore: "Eats everything",
+    diet_vegetarian: "Vegetarian",
+    diet_vegan: "Vegan",
+    diet_pescatarian: "Pescatarian",
+    portion_small: "Small",
+    portion_normal: "Normal",
+    portion_large: "Large",
+    editor_show_added: "List the added items",
+    editor_show_skipped: "List the skipped pantry items",
+    editor_editable: "Allow editing",
+    cardShoppingName: "Shopping result",
+    cardShoppingDescription: "What was put on the shopping lists, what needs a look and what failed.",
+    cardFamilyName: "Family",
+    cardFamilyDescription: "The people the menu is planned for, with their allergies and preferences."
   },
   sv: {
     menuTitle: "Veckomeny",
@@ -109,42 +173,110 @@ const R = {
     cardMenuName: "Veckomeny",
     cardMenuDescription: "Veckans middagar, med knappar för att skapa om, låsa, byta plats och bekräfta.",
     cardTodayName: "Kvällens middag",
-    cardTodayDescription: "Dagens middag, kompakt."
+    cardTodayDescription: "Dagens middag, kompakt.",
+    shoppingTitle: "Inköp",
+    shopNothing: "Inget har handlats än. Bekräfta en meny för att bygga listan.",
+    shopTargets: "Till: {targets}",
+    shopAdded: "Tillagda",
+    shopReview: "Behöver granskas",
+    shopFailed: "Inte levererade",
+    shopPending: "Väntar",
+    shopSkipped: "Skafferi (köps inte)",
+    shopRetry: "Försök igen",
+    err_reauth_required: "En inloggning fungerar inte längre. Logga in igen under Inställningar.",
+    err_no_targets: "Ingen inköpslista är inställd.",
+    err_no_review_list: "Varor som inte kunde placeras hade ingen granskningslista att hamna på.",
+    err_auth_failed: "Inloggningen till {store} fungerar inte längre. Logga in igen under Inställningar.",
+    err_geo_blocked: "{store} svarar bara på anslutningar från Sverige.",
+    familyTitle: "Familj",
+    famNoFamily: "Familjen är inte tillgänglig än.",
+    famNone: "Ingen har lagts till än.",
+    famAdd: "Lägg till person",
+    famEdit: "Ändra",
+    famSave: "Spara",
+    famCancel: "Avbryt",
+    famRemove: "Ta bort",
+    famRemoveAsk: "Ta bort {name}?",
+    famName: "Namn",
+    famAllergies: "Allergier",
+    famOtherAllergies: "Andra allergier (separera med kommatecken)",
+    famDislikes: "Ogillar (separera med kommatecken)",
+    famLikes: "Gillar (separera med kommatecken)",
+    famDiet: "Kost",
+    famPortion: "Portionsstorlek",
+    famDays: "Äter middag på",
+    famNoDays: "Välj minst en dag.",
+    famCookSeparately: "Allergener kan lagas separat (stäng av vid svåra allergier)",
+    famAppliesLater: "Ändringar gäller menyer som skapas från nu.",
+    famEveryDay: "Alla middagar",
+    allergen_gluten: "Gluten",
+    allergen_milk: "Mjölk",
+    allergen_lactose: "Laktos",
+    allergen_egg: "Ägg",
+    allergen_fish: "Fisk",
+    allergen_crustaceans: "Kräftdjur",
+    allergen_molluscs: "Blötdjur",
+    allergen_peanuts: "Jordnötter",
+    allergen_tree_nuts: "Trädnötter",
+    allergen_soy: "Soja",
+    allergen_sesame: "Sesam",
+    allergen_celery: "Selleri",
+    allergen_mustard: "Senap",
+    allergen_lupin: "Lupin",
+    allergen_sulphites: "Sulfiter",
+    diet_omnivore: "Äter allt",
+    diet_vegetarian: "Vegetarian",
+    diet_vegan: "Vegan",
+    diet_pescatarian: "Pescetarian",
+    portion_small: "Liten",
+    portion_normal: "Normal",
+    portion_large: "Stor",
+    editor_show_added: "Lista de tillagda varorna",
+    editor_show_skipped: "Lista de överhoppade skafferivarorna",
+    editor_editable: "Tillåt ändringar",
+    cardShoppingName: "Inköpsresultat",
+    cardShoppingDescription: "Vad som lades på inköpslistorna, vad som behöver granskas och vad som misslyckades.",
+    cardFamilyName: "Familj",
+    cardFamilyDescription: "Personerna menyn planeras för, med allergier och önskemål."
   }
 };
-function z(r) {
+function H(r) {
   return (r?.locale?.language ?? r?.language ?? "en").slice(0, 2) === "sv" ? "sv" : "en";
 }
-function a(r, e, t = {}) {
-  return (R[z(r)][e] ?? R.en[e]).replace(/\{(\w+)\}/g, (i, n) => String(t[n] ?? `{${n}}`));
+function o(r, e, t = {}) {
+  return (M[H(r)][e] ?? M.en[e]).replace(/\{(\w+)\}/g, (i, a) => String(t[a] ?? `{${a}}`));
 }
-function Ae(r, e, t) {
-  const [s, i = ""] = e.split(":"), n = `warn_${s}`;
-  if (!(n in R.en)) return e;
-  const o = s === "no_recipe" || s === "split_limit_exceeded" ? t(i) : i;
-  return a(r, n, { detail: o });
+function Ue(r, e, t) {
+  const [s, i = ""] = e.split(":"), a = `warn_${s}`;
+  if (!(a in M.en)) return e;
+  const n = s === "no_recipe" || s === "split_limit_exceeded" ? t(i) : i;
+  return o(r, a, { detail: n });
 }
-function Se(r, e) {
+function Oe(r, e) {
   const t = `tag_${e}`;
-  return t in R.en ? a(r, t) : e.replace(/_/g, " ");
+  return t in M.en ? o(r, t) : e.replace(/_/g, " ");
+}
+function Ie(r, e) {
+  const [t, s] = e.includes(": ") ? e.split(": ", 2) : ["", e], i = `err_${s}`;
+  return i in M.en ? o(r, i, { store: t.toUpperCase() }) : e;
 }
 /**
  * @license
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const O = globalThis, q = O.ShadowRoot && (O.ShadyCSS === void 0 || O.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, K = Symbol(), Y = /* @__PURE__ */ new WeakMap();
-let de = class {
+const j = globalThis, ee = j.ShadowRoot && (j.ShadyCSS === void 0 || j.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, te = Symbol(), ne = /* @__PURE__ */ new WeakMap();
+let be = class {
   constructor(e, t, s) {
-    if (this._$cssResult$ = !0, s !== K) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    if (this._$cssResult$ = !0, s !== te) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = t;
   }
   get styleSheet() {
     let e = this.o;
     const t = this.t;
-    if (q && e === void 0) {
+    if (ee && e === void 0) {
       const s = t !== void 0 && t.length === 1;
-      s && (e = Y.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), s && Y.set(t, e));
+      s && (e = ne.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), s && ne.set(t, e));
     }
     return e;
   }
@@ -152,33 +284,33 @@ let de = class {
     return this.cssText;
   }
 };
-const Ee = (r) => new de(typeof r == "string" ? r : r + "", void 0, K), Ce = (r, ...e) => {
-  const t = r.length === 1 ? r[0] : e.reduce((s, i, n) => s + ((o) => {
-    if (o._$cssResult$ === !0) return o.cssText;
-    if (typeof o == "number") return o;
-    throw Error("Value passed to 'css' function must be a 'css' function result: " + o + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(i) + r[n + 1], r[0]);
-  return new de(t, r, K);
-}, Te = (r, e) => {
-  if (q) r.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
+const Le = (r) => new be(typeof r == "string" ? r : r + "", void 0, te), je = (r, ...e) => {
+  const t = r.length === 1 ? r[0] : e.reduce((s, i, a) => s + ((n) => {
+    if (n._$cssResult$ === !0) return n.cssText;
+    if (typeof n == "number") return n;
+    throw Error("Value passed to 'css' function must be a 'css' function result: " + n + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+  })(i) + r[a + 1], r[0]);
+  return new be(t, r, te);
+}, Fe = (r, e) => {
+  if (ee) r.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
   else for (const t of e) {
-    const s = document.createElement("style"), i = O.litNonce;
+    const s = document.createElement("style"), i = j.litNonce;
     i !== void 0 && s.setAttribute("nonce", i), s.textContent = t.cssText, r.appendChild(s);
   }
-}, Q = q ? (r) => r : (r) => r instanceof CSSStyleSheet ? ((e) => {
+}, oe = ee ? (r) => r : (r) => r instanceof CSSStyleSheet ? ((e) => {
   let t = "";
   for (const s of e.cssRules) t += s.cssText;
-  return Ee(t);
+  return Le(t);
 })(r) : r;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Ne, defineProperty: Me, getOwnPropertyDescriptor: Pe, getOwnPropertyNames: Ue, getOwnPropertySymbols: De, getPrototypeOf: Oe } = Object, j = globalThis, X = j.trustedTypes, Re = X ? X.emptyScript : "", He = j.reactiveElementPolyfillSupport, C = (r, e) => r, V = { toAttribute(r, e) {
+const { is: He, defineProperty: ze, getOwnPropertyDescriptor: We, getOwnPropertyNames: Ve, getOwnPropertySymbols: Be, getPrototypeOf: qe } = Object, z = globalThis, le = z.trustedTypes, Ke = le ? le.emptyScript : "", Ge = z.reactiveElementPolyfillSupport, P = (r, e) => r, J = { toAttribute(r, e) {
   switch (e) {
     case Boolean:
-      r = r ? Re : null;
+      r = r ? Ke : null;
       break;
     case Object:
     case Array:
@@ -203,44 +335,44 @@ const { is: Ne, defineProperty: Me, getOwnPropertyDescriptor: Pe, getOwnProperty
       }
   }
   return t;
-} }, he = (r, e) => !Ne(r, e), ee = { attribute: !0, type: String, converter: V, reflect: !1, useDefault: !1, hasChanged: he };
-Symbol.metadata ??= Symbol("metadata"), j.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let x = class extends HTMLElement {
+} }, ke = (r, e) => !He(r, e), de = { attribute: !0, type: String, converter: J, reflect: !1, useDefault: !1, hasChanged: ke };
+Symbol.metadata ??= Symbol("metadata"), z.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
+let C = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(e, t = ee) {
+  static createProperty(e, t = de) {
     if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
       const s = Symbol(), i = this.getPropertyDescriptor(e, s, t);
-      i !== void 0 && Me(this.prototype, e, i);
+      i !== void 0 && ze(this.prototype, e, i);
     }
   }
   static getPropertyDescriptor(e, t, s) {
-    const { get: i, set: n } = Pe(this.prototype, e) ?? { get() {
+    const { get: i, set: a } = We(this.prototype, e) ?? { get() {
       return this[t];
-    }, set(o) {
-      this[t] = o;
+    }, set(n) {
+      this[t] = n;
     } };
-    return { get: i, set(o) {
-      const h = i?.call(this);
-      n?.call(this, o), this.requestUpdate(e, h, s);
+    return { get: i, set(n) {
+      const c = i?.call(this);
+      a?.call(this, n), this.requestUpdate(e, c, s);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(e) {
-    return this.elementProperties.get(e) ?? ee;
+    return this.elementProperties.get(e) ?? de;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(C("elementProperties"))) return;
-    const e = Oe(this);
+    if (this.hasOwnProperty(P("elementProperties"))) return;
+    const e = qe(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(C("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(C("properties"))) {
-      const t = this.properties, s = [...Ue(t), ...De(t)];
+    if (this.hasOwnProperty(P("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(P("properties"))) {
+      const t = this.properties, s = [...Ve(t), ...Be(t)];
       for (const i of s) this.createProperty(i, t[i]);
     }
     const e = this[Symbol.metadata];
@@ -259,8 +391,8 @@ let x = class extends HTMLElement {
     const t = [];
     if (Array.isArray(e)) {
       const s = new Set(e.flat(1 / 0).reverse());
-      for (const i of s) t.unshift(Q(i));
-    } else e !== void 0 && t.push(Q(e));
+      for (const i of s) t.unshift(oe(i));
+    } else e !== void 0 && t.push(oe(e));
     return t;
   }
   static _$Eu(e, t) {
@@ -286,7 +418,7 @@ let x = class extends HTMLElement {
   }
   createRenderRoot() {
     const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Te(e, this.constructor.elementStyles), e;
+    return Fe(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((e) => e.hostConnected?.());
@@ -302,29 +434,29 @@ let x = class extends HTMLElement {
   _$ET(e, t) {
     const s = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, s);
     if (i !== void 0 && s.reflect === !0) {
-      const n = (s.converter?.toAttribute !== void 0 ? s.converter : V).toAttribute(t, s.type);
-      this._$Em = e, n == null ? this.removeAttribute(i) : this.setAttribute(i, n), this._$Em = null;
+      const a = (s.converter?.toAttribute !== void 0 ? s.converter : J).toAttribute(t, s.type);
+      this._$Em = e, a == null ? this.removeAttribute(i) : this.setAttribute(i, a), this._$Em = null;
     }
   }
   _$AK(e, t) {
     const s = this.constructor, i = s._$Eh.get(e);
     if (i !== void 0 && this._$Em !== i) {
-      const n = s.getPropertyOptions(i), o = typeof n.converter == "function" ? { fromAttribute: n.converter } : n.converter?.fromAttribute !== void 0 ? n.converter : V;
+      const a = s.getPropertyOptions(i), n = typeof a.converter == "function" ? { fromAttribute: a.converter } : a.converter?.fromAttribute !== void 0 ? a.converter : J;
       this._$Em = i;
-      const h = o.fromAttribute(t, n.type);
-      this[i] = h ?? this._$Ej?.get(i) ?? h, this._$Em = null;
+      const c = n.fromAttribute(t, a.type);
+      this[i] = c ?? this._$Ej?.get(i) ?? c, this._$Em = null;
     }
   }
-  requestUpdate(e, t, s, i = !1, n) {
+  requestUpdate(e, t, s, i = !1, a) {
     if (e !== void 0) {
-      const o = this.constructor;
-      if (i === !1 && (n = this[e]), s ??= o.getPropertyOptions(e), !((s.hasChanged ?? he)(n, t) || s.useDefault && s.reflect && n === this._$Ej?.get(e) && !this.hasAttribute(o._$Eu(e, s)))) return;
+      const n = this.constructor;
+      if (i === !1 && (a = this[e]), s ??= n.getPropertyOptions(e), !((s.hasChanged ?? ke)(a, t) || s.useDefault && s.reflect && a === this._$Ej?.get(e) && !this.hasAttribute(n._$Eu(e, s)))) return;
       this.C(e, t, s);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
   }
-  C(e, t, { useDefault: s, reflect: i, wrapped: n }, o) {
-    s && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(e) && (this._$Ej.set(e, o ?? t ?? this[e]), n !== !0 || o !== void 0) || (this._$AL.has(e) || (this.hasUpdated || s || (t = void 0), this._$AL.set(e, t)), i === !0 && this._$Em !== e && (this._$Eq ??= /* @__PURE__ */ new Set()).add(e));
+  C(e, t, { useDefault: s, reflect: i, wrapped: a }, n) {
+    s && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(e) && (this._$Ej.set(e, n ?? t ?? this[e]), a !== !0 || n !== void 0) || (this._$AL.has(e) || (this.hasUpdated || s || (t = void 0), this._$AL.set(e, t)), i === !0 && this._$Em !== e && (this._$Eq ??= /* @__PURE__ */ new Set()).add(e));
   }
   async _$EP() {
     this.isUpdatePending = !0;
@@ -343,13 +475,13 @@ let x = class extends HTMLElement {
     if (!this.isUpdatePending) return;
     if (!this.hasUpdated) {
       if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
-        for (const [i, n] of this._$Ep) this[i] = n;
+        for (const [i, a] of this._$Ep) this[i] = a;
         this._$Ep = void 0;
       }
       const s = this.constructor.elementProperties;
-      if (s.size > 0) for (const [i, n] of s) {
-        const { wrapped: o } = n, h = this[i];
-        o !== !0 || this._$AL.has(i) || h === void 0 || this.C(i, void 0, n, h);
+      if (s.size > 0) for (const [i, a] of s) {
+        const { wrapped: n } = a, c = this[i];
+        n !== !0 || this._$AL.has(i) || c === void 0 || this.C(i, void 0, a, c);
       }
     }
     let e = !1;
@@ -386,75 +518,75 @@ let x = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-x.elementStyles = [], x.shadowRootOptions = { mode: "open" }, x[C("elementProperties")] = /* @__PURE__ */ new Map(), x[C("finalized")] = /* @__PURE__ */ new Map(), He?.({ ReactiveElement: x }), (j.reactiveElementVersions ??= []).push("2.1.2");
+C.elementStyles = [], C.shadowRootOptions = { mode: "open" }, C[P("elementProperties")] = /* @__PURE__ */ new Map(), C[P("finalized")] = /* @__PURE__ */ new Map(), Ge?.({ ReactiveElement: C }), (z.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Z = globalThis, te = (r) => r, H = Z.trustedTypes, se = H ? H.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, pe = "$lit$", _ = `lit$${Math.random().toFixed(9).slice(2)}$`, ue = "?" + _, Ie = `<${ue}>`, b = document, T = () => b.createComment(""), N = (r) => r === null || typeof r != "object" && typeof r != "function", G = Array.isArray, ze = (r) => G(r) || typeof r?.[Symbol.iterator] == "function", B = `[ 	
-\f\r]`, S = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ie = /-->/g, re = />/g, y = RegExp(`>|${B}(?:([^\\s"'>=/]+)(${B}*=${B}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), ne = /'/g, oe = /"/g, ge = /^(?:script|style|textarea|title)$/i, je = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), l = je(1), k = Symbol.for("lit-noChange"), c = Symbol.for("lit-nothing"), ae = /* @__PURE__ */ new WeakMap(), v = b.createTreeWalker(b, 129);
-function fe(r, e) {
-  if (!G(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return se !== void 0 ? se.createHTML(e) : e;
+const se = globalThis, ce = (r) => r, F = se.trustedTypes, he = F ? F.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, xe = "$lit$", w = `lit$${Math.random().toFixed(9).slice(2)}$`, Ae = "?" + w, Ze = `<${Ae}>`, E = document, R = () => E.createComment(""), U = (r) => r === null || typeof r != "object" && typeof r != "function", ie = Array.isArray, Je = (r) => ie(r) || typeof r?.[Symbol.iterator] == "function", G = `[ 	
+\f\r]`, D = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, pe = /-->/g, ue = />/g, x = RegExp(`>|${G}(?:([^\\s"'>=/]+)(${G}*=${G}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), ge = /'/g, me = /"/g, Se = /^(?:script|style|textarea|title)$/i, Ye = (r) => (e, ...t) => ({ _$litType$: r, strings: e, values: t }), l = Ye(1), T = Symbol.for("lit-noChange"), d = Symbol.for("lit-nothing"), fe = /* @__PURE__ */ new WeakMap(), A = E.createTreeWalker(E, 129);
+function Ee(r, e) {
+  if (!ie(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return he !== void 0 ? he.createHTML(e) : e;
 }
-const Le = (r, e) => {
+const Qe = (r, e) => {
   const t = r.length - 1, s = [];
-  let i, n = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = S;
-  for (let h = 0; h < t; h++) {
-    const d = r[h];
-    let u, g, p = -1, f = 0;
-    for (; f < d.length && (o.lastIndex = f, g = o.exec(d), g !== null); ) f = o.lastIndex, o === S ? g[1] === "!--" ? o = ie : g[1] !== void 0 ? o = re : g[2] !== void 0 ? (ge.test(g[2]) && (i = RegExp("</" + g[2], "g")), o = y) : g[3] !== void 0 && (o = y) : o === y ? g[0] === ">" ? (o = i ?? S, p = -1) : g[1] === void 0 ? p = -2 : (p = o.lastIndex - g[2].length, u = g[1], o = g[3] === void 0 ? y : g[3] === '"' ? oe : ne) : o === oe || o === ne ? o = y : o === ie || o === re ? o = S : (o = y, i = void 0);
-    const m = o === y && r[h + 1].startsWith("/>") ? " " : "";
-    n += o === S ? d + Ie : p >= 0 ? (s.push(u), d.slice(0, p) + pe + d.slice(p) + _ + m) : d + _ + (p === -2 ? h : m);
+  let i, a = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", n = D;
+  for (let c = 0; c < t; c++) {
+    const h = r[c];
+    let p, g, u = -1, _ = 0;
+    for (; _ < h.length && (n.lastIndex = _, g = n.exec(h), g !== null); ) _ = n.lastIndex, n === D ? g[1] === "!--" ? n = pe : g[1] !== void 0 ? n = ue : g[2] !== void 0 ? (Se.test(g[2]) && (i = RegExp("</" + g[2], "g")), n = x) : g[3] !== void 0 && (n = x) : n === x ? g[0] === ">" ? (n = i ?? D, u = -1) : g[1] === void 0 ? u = -2 : (u = n.lastIndex - g[2].length, p = g[1], n = g[3] === void 0 ? x : g[3] === '"' ? me : ge) : n === me || n === ge ? n = x : n === pe || n === ue ? n = D : (n = x, i = void 0);
+    const y = n === x && r[c + 1].startsWith("/>") ? " " : "";
+    a += n === D ? h + Ze : u >= 0 ? (s.push(p), h.slice(0, u) + xe + h.slice(u) + w + y) : h + w + (u === -2 ? c : y);
   }
-  return [fe(r, n + (r[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
+  return [Ee(r, a + (r[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
 };
-class M {
+class O {
   constructor({ strings: e, _$litType$: t }, s) {
     let i;
     this.parts = [];
-    let n = 0, o = 0;
-    const h = e.length - 1, d = this.parts, [u, g] = Le(e, t);
-    if (this.el = M.createElement(u, s), v.currentNode = this.el.content, t === 2 || t === 3) {
-      const p = this.el.content.firstChild;
-      p.replaceWith(...p.childNodes);
+    let a = 0, n = 0;
+    const c = e.length - 1, h = this.parts, [p, g] = Qe(e, t);
+    if (this.el = O.createElement(p, s), A.currentNode = this.el.content, t === 2 || t === 3) {
+      const u = this.el.content.firstChild;
+      u.replaceWith(...u.childNodes);
     }
-    for (; (i = v.nextNode()) !== null && d.length < h; ) {
+    for (; (i = A.nextNode()) !== null && h.length < c; ) {
       if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const p of i.getAttributeNames()) if (p.endsWith(pe)) {
-          const f = g[o++], m = i.getAttribute(p).split(_), U = /([.?@])?(.*)/.exec(f);
-          d.push({ type: 1, index: n, name: U[2], strings: m, ctor: U[1] === "." ? Be : U[1] === "?" ? Ve : U[1] === "@" ? Fe : L }), i.removeAttribute(p);
-        } else p.startsWith(_) && (d.push({ type: 6, index: n }), i.removeAttribute(p));
-        if (ge.test(i.tagName)) {
-          const p = i.textContent.split(_), f = p.length - 1;
-          if (f > 0) {
-            i.textContent = H ? H.emptyScript : "";
-            for (let m = 0; m < f; m++) i.append(p[m], T()), v.nextNode(), d.push({ type: 2, index: ++n });
-            i.append(p[f], T());
+        if (i.hasAttributes()) for (const u of i.getAttributeNames()) if (u.endsWith(xe)) {
+          const _ = g[n++], y = i.getAttribute(u).split(w), L = /([.?@])?(.*)/.exec(_);
+          h.push({ type: 1, index: a, name: L[2], strings: y, ctor: L[1] === "." ? et : L[1] === "?" ? tt : L[1] === "@" ? st : W }), i.removeAttribute(u);
+        } else u.startsWith(w) && (h.push({ type: 6, index: a }), i.removeAttribute(u));
+        if (Se.test(i.tagName)) {
+          const u = i.textContent.split(w), _ = u.length - 1;
+          if (_ > 0) {
+            i.textContent = F ? F.emptyScript : "";
+            for (let y = 0; y < _; y++) i.append(u[y], R()), A.nextNode(), h.push({ type: 2, index: ++a });
+            i.append(u[_], R());
           }
         }
-      } else if (i.nodeType === 8) if (i.data === ue) d.push({ type: 2, index: n });
+      } else if (i.nodeType === 8) if (i.data === Ae) h.push({ type: 2, index: a });
       else {
-        let p = -1;
-        for (; (p = i.data.indexOf(_, p + 1)) !== -1; ) d.push({ type: 7, index: n }), p += _.length - 1;
+        let u = -1;
+        for (; (u = i.data.indexOf(w, u + 1)) !== -1; ) h.push({ type: 7, index: a }), u += w.length - 1;
       }
-      n++;
+      a++;
     }
   }
   static createElement(e, t) {
-    const s = b.createElement("template");
+    const s = E.createElement("template");
     return s.innerHTML = e, s;
   }
 }
-function A(r, e, t = r, s) {
-  if (e === k) return e;
+function N(r, e, t = r, s) {
+  if (e === T) return e;
   let i = s !== void 0 ? t._$Co?.[s] : t._$Cl;
-  const n = N(e) ? void 0 : e._$litDirective$;
-  return i?.constructor !== n && (i?._$AO?.(!1), n === void 0 ? i = void 0 : (i = new n(r), i._$AT(r, t, s)), s !== void 0 ? (t._$Co ??= [])[s] = i : t._$Cl = i), i !== void 0 && (e = A(r, i._$AS(r, e.values), i, s)), e;
+  const a = U(e) ? void 0 : e._$litDirective$;
+  return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(r), i._$AT(r, t, s)), s !== void 0 ? (t._$Co ??= [])[s] = i : t._$Cl = i), i !== void 0 && (e = N(r, i._$AS(r, e.values), i, s)), e;
 }
-class We {
+class Xe {
   constructor(e, t) {
     this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
   }
@@ -465,29 +597,29 @@ class We {
     return this._$AM._$AU;
   }
   u(e) {
-    const { el: { content: t }, parts: s } = this._$AD, i = (e?.creationScope ?? b).importNode(t, !0);
-    v.currentNode = i;
-    let n = v.nextNode(), o = 0, h = 0, d = s[0];
-    for (; d !== void 0; ) {
-      if (o === d.index) {
-        let u;
-        d.type === 2 ? u = new P(n, n.nextSibling, this, e) : d.type === 1 ? u = new d.ctor(n, d.name, d.strings, this, e) : d.type === 6 && (u = new qe(n, this, e)), this._$AV.push(u), d = s[++h];
+    const { el: { content: t }, parts: s } = this._$AD, i = (e?.creationScope ?? E).importNode(t, !0);
+    A.currentNode = i;
+    let a = A.nextNode(), n = 0, c = 0, h = s[0];
+    for (; h !== void 0; ) {
+      if (n === h.index) {
+        let p;
+        h.type === 2 ? p = new I(a, a.nextSibling, this, e) : h.type === 1 ? p = new h.ctor(a, h.name, h.strings, this, e) : h.type === 6 && (p = new it(a, this, e)), this._$AV.push(p), h = s[++c];
       }
-      o !== d?.index && (n = v.nextNode(), o++);
+      n !== h?.index && (a = A.nextNode(), n++);
     }
-    return v.currentNode = b, i;
+    return A.currentNode = E, i;
   }
   p(e) {
     let t = 0;
     for (const s of this._$AV) s !== void 0 && (s.strings !== void 0 ? (s._$AI(e, s, t), t += s.strings.length - 2) : s._$AI(e[t])), t++;
   }
 }
-class P {
+class I {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
   constructor(e, t, s, i) {
-    this.type = 2, this._$AH = c, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = s, this.options = i, this._$Cv = i?.isConnected ?? !0;
+    this.type = 2, this._$AH = d, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = s, this.options = i, this._$Cv = i?.isConnected ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -501,7 +633,7 @@ class P {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    e = A(this, e, t), N(e) ? e === c || e == null || e === "" ? (this._$AH !== c && this._$AR(), this._$AH = c) : e !== this._$AH && e !== k && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : ze(e) ? this.k(e) : this._(e);
+    e = N(this, e, t), U(e) ? e === d || e == null || e === "" ? (this._$AH !== d && this._$AR(), this._$AH = d) : e !== this._$AH && e !== T && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Je(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -510,92 +642,92 @@ class P {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== c && N(this._$AH) ? this._$AA.nextSibling.data = e : this.T(b.createTextNode(e)), this._$AH = e;
+    this._$AH !== d && U(this._$AH) ? this._$AA.nextSibling.data = e : this.T(E.createTextNode(e)), this._$AH = e;
   }
   $(e) {
-    const { values: t, _$litType$: s } = e, i = typeof s == "number" ? this._$AC(e) : (s.el === void 0 && (s.el = M.createElement(fe(s.h, s.h[0]), this.options)), s);
+    const { values: t, _$litType$: s } = e, i = typeof s == "number" ? this._$AC(e) : (s.el === void 0 && (s.el = O.createElement(Ee(s.h, s.h[0]), this.options)), s);
     if (this._$AH?._$AD === i) this._$AH.p(t);
     else {
-      const n = new We(i, this), o = n.u(this.options);
-      n.p(t), this.T(o), this._$AH = n;
+      const a = new Xe(i, this), n = a.u(this.options);
+      a.p(t), this.T(n), this._$AH = a;
     }
   }
   _$AC(e) {
-    let t = ae.get(e.strings);
-    return t === void 0 && ae.set(e.strings, t = new M(e)), t;
+    let t = fe.get(e.strings);
+    return t === void 0 && fe.set(e.strings, t = new O(e)), t;
   }
   k(e) {
-    G(this._$AH) || (this._$AH = [], this._$AR());
+    ie(this._$AH) || (this._$AH = [], this._$AR());
     const t = this._$AH;
     let s, i = 0;
-    for (const n of e) i === t.length ? t.push(s = new P(this.O(T()), this.O(T()), this, this.options)) : s = t[i], s._$AI(n), i++;
+    for (const a of e) i === t.length ? t.push(s = new I(this.O(R()), this.O(R()), this, this.options)) : s = t[i], s._$AI(a), i++;
     i < t.length && (this._$AR(s && s._$AB.nextSibling, i), t.length = i);
   }
   _$AR(e = this._$AA.nextSibling, t) {
     for (this._$AP?.(!1, !0, t); e !== this._$AB; ) {
-      const s = te(e).nextSibling;
-      te(e).remove(), e = s;
+      const s = ce(e).nextSibling;
+      ce(e).remove(), e = s;
     }
   }
   setConnected(e) {
     this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
   }
 }
-class L {
+class W {
   get tagName() {
     return this.element.tagName;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(e, t, s, i, n) {
-    this.type = 1, this._$AH = c, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = n, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = c;
+  constructor(e, t, s, i, a) {
+    this.type = 1, this._$AH = d, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = a, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = d;
   }
   _$AI(e, t = this, s, i) {
-    const n = this.strings;
-    let o = !1;
-    if (n === void 0) e = A(this, e, t, 0), o = !N(e) || e !== this._$AH && e !== k, o && (this._$AH = e);
+    const a = this.strings;
+    let n = !1;
+    if (a === void 0) e = N(this, e, t, 0), n = !U(e) || e !== this._$AH && e !== T, n && (this._$AH = e);
     else {
-      const h = e;
-      let d, u;
-      for (e = n[0], d = 0; d < n.length - 1; d++) u = A(this, h[s + d], t, d), u === k && (u = this._$AH[d]), o ||= !N(u) || u !== this._$AH[d], u === c ? e = c : e !== c && (e += (u ?? "") + n[d + 1]), this._$AH[d] = u;
+      const c = e;
+      let h, p;
+      for (e = a[0], h = 0; h < a.length - 1; h++) p = N(this, c[s + h], t, h), p === T && (p = this._$AH[h]), n ||= !U(p) || p !== this._$AH[h], p === d ? e = d : e !== d && (e += (p ?? "") + a[h + 1]), this._$AH[h] = p;
     }
-    o && !i && this.j(e);
+    n && !i && this.j(e);
   }
   j(e) {
-    e === c ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+    e === d ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class Be extends L {
+class et extends W {
   constructor() {
     super(...arguments), this.type = 3;
   }
   j(e) {
-    this.element[this.name] = e === c ? void 0 : e;
+    this.element[this.name] = e === d ? void 0 : e;
   }
 }
-class Ve extends L {
+class tt extends W {
   constructor() {
     super(...arguments), this.type = 4;
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== c);
+    this.element.toggleAttribute(this.name, !!e && e !== d);
   }
 }
-class Fe extends L {
-  constructor(e, t, s, i, n) {
-    super(e, t, s, i, n), this.type = 5;
+class st extends W {
+  constructor(e, t, s, i, a) {
+    super(e, t, s, i, a), this.type = 5;
   }
   _$AI(e, t = this) {
-    if ((e = A(this, e, t, 0) ?? c) === k) return;
-    const s = this._$AH, i = e === c && s !== c || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, n = e !== c && (s === c || i);
-    i && this.element.removeEventListener(this.name, this, s), n && this.element.addEventListener(this.name, this, e), this._$AH = e;
+    if ((e = N(this, e, t, 0) ?? d) === T) return;
+    const s = this._$AH, i = e === d && s !== d || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, a = e !== d && (s === d || i);
+    i && this.element.removeEventListener(this.name, this, s), a && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class qe {
+class it {
   constructor(e, t, s) {
     this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = s;
   }
@@ -603,17 +735,17 @@ class qe {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    A(this, e);
+    N(this, e);
   }
 }
-const Ke = Z.litHtmlPolyfillSupport;
-Ke?.(M, P), (Z.litHtmlVersions ??= []).push("3.3.3");
-const Ze = (r, e, t) => {
+const rt = se.litHtmlPolyfillSupport;
+rt?.(O, I), (se.litHtmlVersions ??= []).push("3.3.3");
+const at = (r, e, t) => {
   const s = t?.renderBefore ?? e;
   let i = s._$litPart$;
   if (i === void 0) {
-    const n = t?.renderBefore ?? null;
-    s._$litPart$ = i = new P(e.insertBefore(T(), n), n, void 0, t ?? {});
+    const a = t?.renderBefore ?? null;
+    s._$litPart$ = i = new I(e.insertBefore(R(), a), a, void 0, t ?? {});
   }
   return i._$AI(r), i;
 };
@@ -622,8 +754,8 @@ const Ze = (r, e, t) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const J = globalThis;
-class w extends x {
+const re = globalThis;
+class $ extends C {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -633,7 +765,7 @@ class w extends x {
   }
   update(e) {
     const t = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Ze(t, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = at(t, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -642,16 +774,16 @@ class w extends x {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return k;
+    return T;
   }
 }
-w._$litElement$ = !0, w.finalized = !0, J.litElementHydrateSupport?.({ LitElement: w });
-const Ge = J.litElementPolyfillSupport;
-Ge?.({ LitElement: w });
-(J.litElementVersions ??= []).push("4.2.2");
-class me extends w {
+$._$litElement$ = !0, $.finalized = !0, re.litElementHydrateSupport?.({ LitElement: $ });
+const nt = re.litElementPolyfillSupport;
+nt?.({ LitElement: $ });
+(re.litElementVersions ??= []).push("4.2.2");
+class V extends $ {
   constructor() {
-    super(...arguments), this._label = (e) => a(this.hass, `editor_${e.name}`);
+    super(...arguments), this._label = (e) => o(this.hass, `editor_${e.name}`);
   }
   static {
     this.properties = {
@@ -681,7 +813,7 @@ class me extends w {
     ></ha-form>`;
   }
 }
-class Je extends me {
+class ot extends V {
   constructor() {
     super(...arguments), this.fields = [
       { name: "title", selector: { text: {} } },
@@ -690,7 +822,7 @@ class Je extends me {
     ], this.defaults = { show_images: !0, show_actions: !0 };
   }
 }
-class Ye extends me {
+class lt extends V {
   constructor() {
     super(...arguments), this.fields = [
       { name: "title", selector: { text: {} } },
@@ -699,138 +831,215 @@ class Ye extends me {
     ], this.defaults = { show_image: !0, show_ingredients: !1 };
   }
 }
-const Qe = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], _e = "weeklymenu";
-function $e(r) {
+class dt extends V {
+  constructor() {
+    super(...arguments), this.fields = [
+      { name: "title", selector: { text: {} } },
+      { name: "show_added", selector: { boolean: {} } },
+      { name: "show_skipped", selector: { boolean: {} } }
+    ], this.defaults = { show_added: !0, show_skipped: !1 };
+  }
+}
+class ct extends V {
+  constructor() {
+    super(...arguments), this.fields = [
+      { name: "title", selector: { text: {} } },
+      { name: "editable", selector: { boolean: {} } }
+    ], this.defaults = { editable: !0 };
+  }
+}
+const Y = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], Ce = [
+  "gluten",
+  "milk",
+  "lactose",
+  "egg",
+  "fish",
+  "crustaceans",
+  "molluscs",
+  "peanuts",
+  "tree_nuts",
+  "soy",
+  "sesame",
+  "celery",
+  "mustard",
+  "lupin",
+  "sulphites"
+], ht = ["omnivore", "vegetarian", "vegan", "pescatarian"], pt = ["small", "normal", "large"], B = "weeklymenu";
+function q(r) {
   const e = /* @__PURE__ */ new Map();
   for (const t of Object.values(r.entities ?? {}))
-    t.platform === _e && t.translation_key && e.set(t.translation_key, t.entity_id);
+    t.platform === B && t.translation_key && e.set(t.translation_key, t.entity_id);
   return e;
 }
-const $ = (r) => typeof r == "string" && r !== "" ? r : void 0, F = (r) => typeof r == "number" && Number.isFinite(r) ? r : void 0, I = (r) => Array.isArray(r) ? r.filter((e) => typeof e == "string") : [], E = (r) => typeof r == "object" && r !== null;
-function Xe(r) {
-  return (E(r) && Array.isArray(r.groups) ? r.groups : []).filter(E).map((t) => {
-    const s = Array.isArray(t.substitutions) ? t.substitutions : [], i = (n) => E(n) ? $(n.raw) ?? $(n.name) ?? "" : "";
+const f = (r) => typeof r == "string" && r !== "" ? r : void 0, b = (r) => typeof r == "number" && Number.isFinite(r) ? r : void 0, m = (r) => Array.isArray(r) ? r.filter((e) => typeof e == "string") : [], S = (r) => typeof r == "object" && r !== null;
+function ut(r) {
+  return (S(r) && Array.isArray(r.groups) ? r.groups : []).filter(S).map((t) => {
+    const s = Array.isArray(t.substitutions) ? t.substitutions : [], i = (a) => S(a) ? f(a.raw) ?? f(a.name) ?? "" : "";
     return {
-      members: I(t.members),
-      share: F(t.share) ?? 0,
+      members: m(t.members),
+      share: b(t.share) ?? 0,
       separatePans: t.separate_pans === !0,
-      swaps: s.filter(E).map((n) => ({
-        original: i(n.original),
-        replacement: i(n.replacement)
+      swaps: s.filter(S).map((a) => ({
+        original: i(a.original),
+        replacement: i(a.replacement)
       }))
     };
   });
 }
-function et(r) {
-  return Array.isArray(r) ? r.filter(E).filter((e) => typeof e.id == "string" && typeof e.title == "string").map((e) => ({ id: e.id, title: e.title })) : [];
+function gt(r) {
+  return Array.isArray(r) ? r.filter(S).filter((e) => typeof e.id == "string" && typeof e.title == "string").map((e) => ({ id: e.id, title: e.title })) : [];
 }
-function ye(r, e, t = "") {
+function Te(r, e, t = "") {
   const s = e ? r.states[e] : void 0;
   if (!s || ["unknown", "unavailable", ""].includes(s.state)) return;
-  const i = s.attributes, n = $(i.date);
-  if (n)
+  const i = s.attributes, a = f(i.date);
+  if (a)
     return {
       entityId: s.entity_id,
       weekday: t,
-      date: n,
+      date: a,
       title: s.state,
-      recipeId: $(i.recipe_id) ?? "",
-      url: $(i.url),
-      image: $(i.image),
-      source: $(i.source),
-      totalTime: F(i.total_time),
-      servings: F(i.servings),
-      tags: I(i.tags),
-      ingredients: I(i.ingredients),
+      recipeId: f(i.recipe_id) ?? "",
+      url: f(i.url),
+      image: f(i.image),
+      source: f(i.source),
+      totalTime: b(i.total_time),
+      servings: b(i.servings),
+      tags: m(i.tags),
+      ingredients: m(i.ingredients),
       locked: i.locked === !0,
-      alternatives: et(i.alternatives),
-      split: Xe(i.split)
+      alternatives: gt(i.alternatives),
+      split: ut(i.split)
     };
 }
-function le(r) {
-  const e = $e(r), t = r.states[e.get("status") ?? ""], s = t?.state, i = t?.attributes ?? {}, n = [];
-  for (const o of Qe) {
-    const h = ye(r, e.get(`weekday_${o}`), o);
-    h && n.push(h);
+function _e(r) {
+  const e = q(r), t = r.states[e.get("status") ?? ""], s = t?.state, i = t?.attributes ?? {}, a = [];
+  for (const n of Y) {
+    const c = Te(r, e.get(`weekday_${n}`), n);
+    c && a.push(c);
   }
   return {
     status: s === "draft" || s === "confirmed" ? s : "none",
-    weekStart: $(i.week_start),
-    warnings: I(i.warnings),
-    days: n
+    weekStart: f(i.week_start),
+    warnings: m(i.warnings),
+    days: a
   };
 }
-function tt(r) {
-  return ye(r, $e(r).get("today"));
+function mt(r) {
+  return Te(r, q(r).get("today"));
 }
-function st(r) {
-  const [e, t, s] = r.split("-").map(Number), i = new Date(Date.UTC(e, t - 1, s)), n = i.getUTCDay() || 7;
-  i.setUTCDate(i.getUTCDate() + 4 - n);
-  const o = Date.UTC(i.getUTCFullYear(), 0, 1);
-  return Math.ceil(((i.getTime() - o) / 864e5 + 1) / 7);
+function Ne(r) {
+  const [e, t, s] = r.split("-").map(Number), i = new Date(Date.UTC(e, t - 1, s)), a = i.getUTCDay() || 7;
+  i.setUTCDate(i.getUTCDate() + 4 - a);
+  const n = Date.UTC(i.getUTCFullYear(), 0, 1);
+  return Math.ceil(((i.getTime() - n) / 864e5 + 1) / 7);
 }
-function it(r) {
+function ft(r) {
   return `${Math.round(r * 100)} %`;
 }
-function ve(r) {
+function _t(r) {
+  const e = r.states[q(r).get("shopping") ?? ""], t = e?.attributes ?? {}, s = S(t.counts) ? t.counts : {};
+  return {
+    hasResult: !!e && !["unknown", "unavailable", ""].includes(e.state),
+    weekStart: f(t.week_start),
+    counts: {
+      added: b(s.added) ?? 0,
+      review: b(s.review) ?? 0,
+      failed: b(s.failed) ?? 0,
+      skipped: b(s.skipped) ?? 0,
+      pending: b(s.pending) ?? 0
+    },
+    added: m(t.added),
+    review: m(t.review),
+    failed: m(t.failed),
+    pending: m(t.pending),
+    skipped: m(t.skipped),
+    targets: m(t.targets),
+    errors: m(t.errors)
+  };
+}
+function $e(r) {
+  const e = r.states[q(r).get("family") ?? ""];
+  return !e || ["unknown", "unavailable", ""].includes(e.state) ? { available: !1, members: [], dinnerDays: [] } : {
+    available: !0,
+    members: (Array.isArray(e.attributes.members) ? e.attributes.members : []).filter(S).map((i) => ({
+      id: f(i.id) ?? "",
+      name: f(i.name) ?? "",
+      person: f(i.person),
+      allergies: m(i.allergies),
+      dislikes: m(i.dislikes),
+      likes: m(i.likes),
+      diet: f(i.diet) ?? "omnivore",
+      portion: f(i.portion) ?? "normal",
+      attends: m(i.attends),
+      cookSeparately: i.cook_separately !== !1
+    })).filter((i) => i.id && i.name),
+    dinnerDays: m(e.attributes.dinner_days)
+  };
+}
+function De(r) {
   const [e, t, s] = r.split("-").map(Number);
   return new Date(Date.UTC(e, t - 1, s));
 }
-function ce(r, e) {
-  const t = z(r), s = ve(e), i = { timeZone: "UTC" };
+function Q(r, e) {
+  const t = H(r), s = De(e), i = { timeZone: "UTC" };
   return {
     weekday: new Intl.DateTimeFormat(t, { ...i, weekday: "short" }).format(s),
     date: new Intl.DateTimeFormat(t, { ...i, day: "numeric", month: "short" }).format(s)
   };
 }
-function rt(r, e) {
-  return new Intl.DateTimeFormat(z(r), { timeZone: "UTC", weekday: "long" }).format(ve(e));
+function $t(r, e) {
+  return new Intl.DateTimeFormat(H(r), { timeZone: "UTC", weekday: "long" }).format(De(e));
 }
-function nt(r, e) {
+function yt(r, e) {
   const t = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].indexOf(e);
-  return t < 0 ? e : rt(r, `2026-11-${String(2 + t).padStart(2, "0")}`);
+  return t < 0 ? e : $t(r, `2026-11-${String(2 + t).padStart(2, "0")}`);
 }
-function we(r, e) {
-  const t = `source_${e.source}`, s = e.source ? a(r, t) : "";
+function ye(r, e) {
+  const t = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].indexOf(e);
+  return t < 0 ? e : Q(r, `2026-11-${String(2 + t).padStart(2, "0")}`).weekday;
+}
+function Pe(r, e) {
+  const t = `source_${e.source}`, s = e.source ? o(r, t) : "";
   return l`<div class="meta">
-    ${e.totalTime ? l`<span>${a(r, "minutes", { n: e.totalTime })}</span>` : c}
-    ${e.tags.map((i) => l`<span class="tag">${Se(r, i)}</span>`)}
-    ${s && !s.startsWith("source_") ? l`<span class="badge">${s}</span>` : c}
-    ${e.split.length ? l`<span class="badge split" title=${a(r, "split")}>${a(r, "split")}</span>` : c}
-    ${e.locked ? l`<span class="badge">${a(r, "locked")}</span>` : c}
+    ${e.totalTime ? l`<span>${o(r, "minutes", { n: e.totalTime })}</span>` : d}
+    ${e.tags.map((i) => l`<span class="tag">${Oe(r, i)}</span>`)}
+    ${s && !s.startsWith("source_") ? l`<span class="badge">${s}</span>` : d}
+    ${e.split.length ? l`<span class="badge split" title=${o(r, "split")}>${o(r, "split")}</span>` : d}
+    ${e.locked ? l`<span class="badge">${o(r, "locked")}</span>` : d}
   </div>`;
 }
-function be(r, e) {
+function Me(r, e) {
   return e.length ? l`<div class="split-note">
-    <strong>${a(r, "split")}</strong>
+    <strong>${o(r, "split")}</strong>
     ${e.map(
     (t) => l`<div>
         ${t.swaps.map(
       (s) => l`<div>
-              ${a(r, "splitNote", {
-        members: t.members.join(", ") + ` (${it(t.share)})`,
+              ${o(r, "splitNote", {
+        members: t.members.join(", ") + ` (${ft(t.share)})`,
         from: s.original,
         to: s.replacement
       })}
             </div>`
     )}
-        ${t.separatePans ? l`<em>${a(r, "cleanPans")}</em>` : c}
+        ${t.separatePans ? l`<em>${o(r, "cleanPans")}</em>` : d}
       </div>`
   )}
-  </div>` : c;
+  </div>` : d;
 }
-function xe(r, e) {
+function Re(r, e) {
   return e.length ? l`<div>
-    <h4>${a(r, "ingredients")}</h4>
+    <h4>${o(r, "ingredients")}</h4>
     <ul>
       ${e.map((t) => l`<li>${t}</li>`)}
     </ul>
-  </div>` : c;
+  </div>` : d;
 }
-function ot(r) {
+function ae(r) {
   return r && typeof r == "object" && "message" in r ? String(r.message) : String(r);
 }
-const ke = Ce`
+const K = je`
   :host {
     display: block;
     container-type: inline-size;
@@ -847,7 +1056,14 @@ const ke = Ce`
     color: var(--secondary-text-color);
     font-size: 0.9em;
   }
+  .head {
+    flex-wrap: wrap;
+  }
+  .head.chips {
+    justify-content: flex-start;
+  }
   .chip {
+    white-space: nowrap;
     border-radius: 12px;
     padding: 2px 10px;
     font-size: 0.8em;
@@ -1031,6 +1247,73 @@ const ke = Ce`
     border-top: 1px solid var(--divider-color);
   }
 
+  .member {
+    padding: 10px 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+  .member .main {
+    align-items: flex-start;
+  }
+  .tag.allergy {
+    background: var(--error-color, #db4437);
+    color: var(--text-primary-color, #fff);
+  }
+  .form {
+    display: grid;
+    gap: 10px;
+    padding-top: 10px;
+  }
+  .field {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 140px;
+  }
+  .field > span,
+  legend {
+    font-size: 0.85em;
+    color: var(--secondary-text-color);
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+    min-width: 0;
+  }
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .check {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 0.9em;
+  }
+  .hint-error {
+    color: var(--error-color, #db4437);
+  }
+  .group {
+    padding: 4px 16px;
+    border-top: 1px solid var(--divider-color);
+  }
+  .group summary {
+    cursor: pointer;
+    padding: 6px 0;
+    font-weight: 500;
+  }
+  .group.warning summary {
+    color: var(--warning-color, #ffa600);
+  }
+  .group.error summary {
+    color: var(--error-color, #db4437);
+  }
+  .group ul {
+    margin: 0 0 8px;
+    padding-left: 18px;
+  }
+
   /* A narrow card (a phone, or a small grid cell): give the text all the room. */
   @container (max-width: 440px) {
     .day {
@@ -1058,8 +1341,206 @@ const ke = Ce`
       margin-right: 12px;
     }
   }
-`;
-class at extends w {
+`, X = new Set(Ce), Z = (r) => r.split(",").map((e) => e.trim()).filter(Boolean);
+function ve(r, e) {
+  return r ? {
+    id: r.id,
+    name: r.name,
+    allergies: r.allergies.filter((t) => X.has(t)),
+    otherAllergies: r.allergies.filter((t) => !X.has(t)).join(", "),
+    dislikes: r.dislikes.join(", "),
+    likes: r.likes.join(", "),
+    diet: r.diet,
+    portion: r.portion,
+    attends: [...r.attends],
+    cookSeparately: r.cookSeparately
+  } : {
+    id: "",
+    name: "",
+    allergies: [],
+    otherAllergies: "",
+    dislikes: "",
+    likes: "",
+    diet: "omnivore",
+    portion: "normal",
+    attends: [...e],
+    cookSeparately: !0
+  };
+}
+class vt extends $ {
+  static {
+    this.properties = {
+      hass: { attribute: !1 },
+      _config: { state: !0 },
+      _draft: { state: !0 },
+      _busy: { state: !0 },
+      _error: { state: !0 }
+    };
+  }
+  static {
+    this.styles = K;
+  }
+  constructor() {
+    super(), this._config = { type: "custom:weeklymenu-family-card" }, this._draft = null, this._busy = !1, this._error = "";
+  }
+  static getConfigElement() {
+    return document.createElement("weeklymenu-family-card-editor");
+  }
+  static getStubConfig() {
+    return {};
+  }
+  setConfig(e) {
+    if (!e) throw new Error("Invalid configuration");
+    this._config = { editable: !0, ...e };
+  }
+  getCardSize() {
+    return this.hass ? 2 + $e(this.hass).members.length : 3;
+  }
+  // --- actions ----------------------------------------------------------------------
+  _set(e) {
+    this._draft && (this._draft = { ...this._draft, ...e });
+  }
+  _toggle(e, t) {
+    if (!this._draft) return;
+    const s = this._draft[e];
+    this._set({ [e]: s.includes(t) ? s.filter((i) => i !== t) : [...s, t] });
+  }
+  async _run(e, t) {
+    this._busy = !0, this._error = "";
+    try {
+      return await this.hass.callService(B, e, t), !0;
+    } catch (s) {
+      return this._error = ae(s), !1;
+    } finally {
+      this._busy = !1;
+    }
+  }
+  async _save() {
+    const e = this._draft;
+    if (!e || !e.name.trim() || !e.attends.length) return;
+    const t = {
+      name: e.name.trim(),
+      allergies: [...e.allergies, ...Z(e.otherAllergies)],
+      dislikes: Z(e.dislikes),
+      likes: Z(e.likes),
+      diet: e.diet,
+      portion: e.portion,
+      attends: Y.filter((s) => e.attends.includes(s)),
+      cook_separately: e.cookSeparately
+    };
+    e.id && (t.id = e.id), await this._run("set_member", t) && (this._draft = null);
+  }
+  async _remove() {
+    const e = this._draft;
+    !e?.id || !window.confirm(o(this.hass, "famRemoveAsk", { name: e.name })) || await this._run("remove_member", { id: e.id }) && (this._draft = null);
+  }
+  // --- rendering --------------------------------------------------------------------------
+  render() {
+    if (!this.hass) return l``;
+    const e = this.hass, t = $e(e), s = this._config.title ?? o(e, "familyTitle");
+    if (!t.available)
+      return l`<ha-card .header=${s}><div class="empty">${o(e, "famNoFamily")}</div></ha-card>`;
+    const i = this._config.editable !== !1, a = t.dinnerDays.length ? t.dinnerDays : [...Y];
+    return l`<ha-card .header=${s}>
+      ${this._error ? l`<div class="banner error">${o(e, "error", { error: this._error })}</div>` : d}
+      ${t.members.length ? t.members.map((n) => this._renderMember(n, t.dinnerDays, i, a)) : l`<div class="empty">${o(e, "famNone")}</div>`}
+      ${this._draft && !this._draft.id ? this._renderForm(this._draft, a) : d}
+      ${i && !this._draft ? l`<div class="foot">
+            <button class="primary" ?disabled=${this._busy} @click=${() => this._draft = ve(void 0, a)}>
+              ${o(e, "famAdd")}
+            </button>
+          </div>` : d}
+    </ha-card>`;
+  }
+  _renderMember(e, t, s, i) {
+    const a = this.hass, n = this._draft?.id === e.id, c = i.filter((p) => e.attends.includes(p)), h = c.length === i.length;
+    return l`<div class="member">
+      <div class="main">
+        <div style="flex:1;min-width:0">
+          <div class="title">${e.name}</div>
+          <div class="meta">
+            ${e.diet !== "omnivore" ? l`<span class="badge">${o(a, `diet_${e.diet}`)}</span>` : d}
+            ${e.portion !== "normal" ? l`<span class="badge">${o(a, `portion_${e.portion}`)}</span>` : d}
+            ${e.allergies.map((p) => l`<span class="tag allergy">${X.has(p) ? o(a, `allergen_${p}`) : p}</span>`)}
+            ${e.dislikes.length ? l`<span>${e.dislikes.join(", ")}</span>` : d}
+            <span>${h ? o(a, "famEveryDay") : c.map((p) => ye(a, p)).join(", ")}</span>
+          </div>
+        </div>
+        ${s && !n ? l`<button ?disabled=${this._busy} @click=${() => this._draft = ve(e, t)}>
+              ${o(a, "famEdit")}
+            </button>` : d}
+      </div>
+      ${n && this._draft ? this._renderForm(this._draft, i) : d}
+    </div>`;
+  }
+  _renderForm(e, t) {
+    const s = this.hass, i = e.name.trim() !== "" && e.attends.length > 0, a = (n, c, h) => l`<label class="field">
+      <span>${o(s, n)}</span>
+      <input
+        type="text"
+        .value=${c}
+        @input=${(p) => this._set({ [h]: p.target.value })}
+      />
+    </label>`;
+    return l`<form class="form" @submit=${(n) => n.preventDefault()}>
+      ${a("famName", e.name, "name")}
+      <fieldset>
+        <legend>${o(s, "famAllergies")}</legend>
+        <div class="checks">
+          ${Ce.map(
+      (n) => l`<label class="check">
+              <input type="checkbox" .checked=${e.allergies.includes(n)} @change=${() => this._toggle("allergies", n)} />
+              ${o(s, `allergen_${n}`)}
+            </label>`
+    )}
+        </div>
+      </fieldset>
+      ${a("famOtherAllergies", e.otherAllergies, "otherAllergies")} ${a("famDislikes", e.dislikes, "dislikes")}
+      ${a("famLikes", e.likes, "likes")}
+      <div class="row">
+        <label class="field">
+          <span>${o(s, "famDiet")}</span>
+          <select .value=${e.diet} @change=${(n) => this._set({ diet: n.target.value })}>
+            ${ht.map((n) => l`<option value=${n} ?selected=${e.diet === n}>${o(s, `diet_${n}`)}</option>`)}
+          </select>
+        </label>
+        <label class="field">
+          <span>${o(s, "famPortion")}</span>
+          <select .value=${e.portion} @change=${(n) => this._set({ portion: n.target.value })}>
+            ${pt.map((n) => l`<option value=${n} ?selected=${e.portion === n}>${o(s, `portion_${n}`)}</option>`)}
+          </select>
+        </label>
+      </div>
+      <fieldset>
+        <legend>${o(s, "famDays")}</legend>
+        <div class="checks">
+          ${t.map(
+      (n) => l`<label class="check">
+              <input type="checkbox" .checked=${e.attends.includes(n)} @change=${() => this._toggle("attends", n)} />
+              ${ye(s, n)}
+            </label>`
+    )}
+        </div>
+        ${e.attends.length ? d : l`<small class="hint-error">${o(s, "famNoDays")}</small>`}
+      </fieldset>
+      <label class="check">
+        <input
+          type="checkbox"
+          .checked=${e.cookSeparately}
+          @change=${(n) => this._set({ cookSeparately: n.target.checked })}
+        />
+        ${o(s, "famCookSeparately")}
+      </label>
+      <small>${o(s, "famAppliesLater")}</small>
+      <div class="row">
+        <button class="primary" type="button" ?disabled=${this._busy || !i} @click=${() => this._save()}>${o(s, "famSave")}</button>
+        <button type="button" ?disabled=${this._busy} @click=${() => this._draft = null}>${o(s, "famCancel")}</button>
+        ${e.id ? l`<button type="button" ?disabled=${this._busy} @click=${() => this._remove()}>${o(s, "famRemove")}</button>` : d}
+      </div>
+    </form>`;
+  }
+}
+class wt extends $ {
   static {
     this.properties = {
       hass: { attribute: !1 },
@@ -1071,7 +1552,7 @@ class at extends w {
     };
   }
   static {
-    this.styles = ke;
+    this.styles = K;
   }
   constructor() {
     super(), this._config = { type: "custom:weeklymenu-menu-card" }, this._open = /* @__PURE__ */ new Set(), this._busy = !1, this._error = "", this._hints = {};
@@ -1087,15 +1568,15 @@ class at extends w {
     this._config = { show_images: !0, show_actions: !0, ...e };
   }
   getCardSize() {
-    return this.hass ? 2 + le(this.hass).days.length : 4;
+    return this.hass ? 2 + _e(this.hass).days.length : 4;
   }
   // --- actions ------------------------------------------------------------------
   async _call(e, t = {}) {
     this._busy = !0, this._error = "";
     try {
-      await this.hass.callService(_e, e, t);
+      await this.hass.callService(B, e, t);
     } catch (s) {
-      this._error = ot(s);
+      this._error = ae(s);
     } finally {
       this._busy = !1;
     }
@@ -1105,7 +1586,7 @@ class at extends w {
     t.delete(e) || t.add(e), this._open = t;
   }
   _confirm(e) {
-    window.confirm(a(this.hass, "confirmAsk")) && this._call("confirm_menu", e.weekStart ? { week_start: e.weekStart } : {});
+    window.confirm(o(this.hass, "confirmAsk")) && this._call("confirm_menu", e.weekStart ? { week_start: e.weekStart } : {});
   }
   _regenerateDay(e) {
     const t = (this._hints[e.date] ?? "").trim();
@@ -1122,22 +1603,22 @@ class at extends w {
   // --- rendering -------------------------------------------------------------------
   render() {
     if (!this.hass) return l``;
-    const e = this.hass, t = le(e), s = t.status === "confirmed", i = this._config.show_actions !== !1 && !s, n = [...new Set(t.warnings.map((o) => Ae(e, o, (h) => nt(e, h))))];
-    return l`<ha-card .header=${this._config.title ?? a(e, "menuTitle")}>
+    const e = this.hass, t = _e(e), s = t.status === "confirmed", i = this._config.show_actions !== !1 && !s, a = [...new Set(t.warnings.map((n) => Ue(e, n, (c) => yt(e, c))))];
+    return l`<ha-card .header=${this._config.title ?? o(e, "menuTitle")}>
       <div class="head">
-        <span>${t.weekStart ? a(e, "week", { n: st(t.weekStart) }) : ""}</span>
-        <span class="chip ${t.status}">${a(e, `status_${t.status}`)}</span>
+        <span>${t.weekStart ? o(e, "week", { n: Ne(t.weekStart) }) : ""}</span>
+        <span class="chip ${t.status}">${o(e, `status_${t.status}`)}</span>
       </div>
-      ${n.map((o) => l`<div class="banner warning">${o}</div>`)}
-      ${this._error ? l`<div class="banner error">${a(e, "error", { error: this._error })}</div>` : c}
-      ${this._busy ? l`<div class="banner">${a(e, "working")}</div>` : c}
-      ${t.days.length ? t.days.map((o) => this._renderDay(o, t, i)) : l`<div class="empty">${a(e, "noMenu")}</div>`}
-      ${s && this._config.show_actions !== !1 ? l`<div class="banner">${a(e, "confirmedNote")}</div>` : c}
+      ${a.map((n) => l`<div class="banner warning">${n}</div>`)}
+      ${this._error ? l`<div class="banner error">${o(e, "error", { error: this._error })}</div>` : d}
+      ${this._busy ? l`<div class="banner">${o(e, "working")}</div>` : d}
+      ${t.days.length ? t.days.map((n) => this._renderDay(n, t, i)) : l`<div class="empty">${o(e, "noMenu")}</div>`}
+      ${s && this._config.show_actions !== !1 ? l`<div class="banner">${o(e, "confirmedNote")}</div>` : d}
       ${this._renderFooter(t, i)}
     </ha-card>`;
   }
   _renderFooter(e, t) {
-    if (!t) return c;
+    if (!t) return d;
     const s = e.days.length === 0;
     return l`<div class="foot">
       <button
@@ -1145,94 +1626,178 @@ class at extends w {
         ?disabled=${this._busy}
         @click=${() => this._call("generate_menu", e.weekStart && !s ? { week_start: e.weekStart } : {})}
       >
-        ${s ? a(this.hass, "generate") : a(this.hass, "regenerateAll")}
+        ${s ? o(this.hass, "generate") : o(this.hass, "regenerateAll")}
       </button>
       ${e.status === "draft" && !s ? l`<button class="primary" ?disabled=${this._busy} @click=${() => this._confirm(e)}>
-            ${a(this.hass, "confirm")}
-          </button>` : c}
+            ${o(this.hass, "confirm")}
+          </button>` : d}
     </div>`;
   }
   _renderDay(e, t, s) {
-    const i = this.hass, n = ce(i, e.date), o = this._open.has(e.date), h = e.url ? l`<a href=${e.url} target="_blank" rel="noopener noreferrer" title=${a(i, "openRecipe")}>${e.title}</a>` : e.title, d = t.days.filter((u) => u.date !== e.date && !u.locked);
+    const i = this.hass, a = Q(i, e.date), n = this._open.has(e.date), c = e.url ? l`<a href=${e.url} target="_blank" rel="noopener noreferrer" title=${o(i, "openRecipe")}>${e.title}</a>` : e.title, h = t.days.filter((p) => p.date !== e.date && !p.locked);
     return l`<div class="day">
       <div class="when">
-        <div class="wd">${n.weekday}</div>
-        <div class="dt">${n.date}</div>
+        <div class="wd">${a.weekday}</div>
+        <div class="dt">${a.date}</div>
       </div>
       <div class="main">
-        ${this._config.show_images !== !1 && e.image ? l`<img src=${e.image} alt="" loading="lazy" />` : c}
+        ${this._config.show_images !== !1 && e.image ? l`<img src=${e.image} alt="" loading="lazy" />` : d}
         <div>
-          <div class="title">${h}</div>
-          ${we(i, e)}
+          <div class="title">${c}</div>
+          ${Pe(i, e)}
         </div>
       </div>
       <div class="actions">
         ${s ? l`<button
               class="icon ${e.locked ? "on" : ""}"
               ?disabled=${this._busy}
-              title=${e.locked ? a(i, "unlock") : a(i, "lock")}
-              aria-label=${e.locked ? a(i, "unlock") : a(i, "lock")}
+              title=${e.locked ? o(i, "unlock") : o(i, "lock")}
+              aria-label=${e.locked ? o(i, "unlock") : o(i, "lock")}
               aria-pressed=${e.locked ? "true" : "false"}
               @click=${() => this._call("lock_day", { date: e.date, locked: !e.locked })}
             >
               <ha-icon icon=${e.locked ? "mdi:lock" : "mdi:lock-open-variant-outline"}></ha-icon>
-            </button>` : c}
+            </button>` : d}
         <button
           class="icon"
-          title=${o ? a(i, "hide") : a(i, "show")}
-          aria-label=${o ? a(i, "hide") : a(i, "show")}
-          aria-expanded=${o ? "true" : "false"}
+          title=${n ? o(i, "hide") : o(i, "show")}
+          aria-label=${n ? o(i, "hide") : o(i, "show")}
+          aria-expanded=${n ? "true" : "false"}
           @click=${() => this._toggle(e.date)}
         >
-          <ha-icon icon=${o ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+          <ha-icon icon=${n ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
         </button>
       </div>
-      ${o ? this._renderMore(e, d, s) : c}
+      ${n ? this._renderMore(e, h, s) : d}
     </div>`;
   }
   _renderMore(e, t, s) {
     const i = this.hass;
     return l`<div class="more">
-      ${be(i, e.split)} ${xe(i, e.ingredients)}
+      ${Me(i, e.split)} ${Re(i, e.ingredients)}
       ${s ? l`<div class="row">
               <input
                 type="text"
                 .value=${this._hints[e.date] ?? ""}
-                placeholder=${a(i, "hint")}
-                aria-label=${a(i, "hint")}
-                @input=${(n) => {
-      this._hints = { ...this._hints, [e.date]: n.target.value };
+                placeholder=${o(i, "hint")}
+                aria-label=${o(i, "hint")}
+                @input=${(a) => {
+      this._hints = { ...this._hints, [e.date]: a.target.value };
     }}
               />
               <button ?disabled=${this._busy || e.locked} @click=${() => this._regenerateDay(e)}>
-                ${a(i, "newDinner")}
+                ${o(i, "newDinner")}
               </button>
             </div>
             <div class="row">
               ${e.alternatives.length ? l`<select
                     ?disabled=${this._busy}
-                    aria-label=${a(i, "alternatives")}
-                    @change=${(n) => this._pick(e, n)}
+                    aria-label=${o(i, "alternatives")}
+                    @change=${(a) => this._pick(e, a)}
                   >
-                    <option value="">${a(i, "alternatives")}: ${a(i, "choose")}</option>
-                    ${e.alternatives.map((n) => l`<option value=${n.id}>${n.title}</option>`)}
-                  </select>` : c}
+                    <option value="">${o(i, "alternatives")}: ${o(i, "choose")}</option>
+                    ${e.alternatives.map((a) => l`<option value=${a.id}>${a.title}</option>`)}
+                  </select>` : d}
               ${t.length && !e.locked ? l`<select
                     ?disabled=${this._busy}
-                    aria-label=${a(i, "swapWith")}
-                    @change=${(n) => this._swap(e, n)}
+                    aria-label=${o(i, "swapWith")}
+                    @change=${(a) => this._swap(e, a)}
                   >
-                    <option value="">${a(i, "swapWith")}</option>
-                    ${t.map((n) => {
-      const o = ce(i, n.date);
-      return l`<option value=${n.date}>${o.weekday} ${o.date}: ${n.title}</option>`;
+                    <option value="">${o(i, "swapWith")}</option>
+                    ${t.map((a) => {
+      const n = Q(i, a.date);
+      return l`<option value=${a.date}>${n.weekday} ${n.date}: ${a.title}</option>`;
     })}
-                  </select>` : c}
-            </div>` : c}
+                  </select>` : d}
+            </div>` : d}
     </div>`;
   }
 }
-class lt extends w {
+const we = [
+  { key: "review", label: "shopReview", css: "warning" },
+  { key: "failed", label: "shopFailed", css: "error" },
+  { key: "pending", label: "shopPending", css: "" },
+  { key: "added", label: "shopAdded", css: "" },
+  { key: "skipped", label: "shopSkipped", css: "" }
+];
+class bt extends $ {
+  static {
+    this.properties = {
+      hass: { attribute: !1 },
+      _config: { state: !0 },
+      _busy: { state: !0 },
+      _error: { state: !0 }
+    };
+  }
+  static {
+    this.styles = K;
+  }
+  constructor() {
+    super(), this._config = { type: "custom:weeklymenu-shopping-card" }, this._busy = !1, this._error = "";
+  }
+  static getConfigElement() {
+    return document.createElement("weeklymenu-shopping-card-editor");
+  }
+  static getStubConfig() {
+    return {};
+  }
+  setConfig(e) {
+    if (!e) throw new Error("Invalid configuration");
+    this._config = { show_added: !0, show_skipped: !1, ...e };
+  }
+  getCardSize() {
+    return 4;
+  }
+  async _retry() {
+    this._busy = !0, this._error = "";
+    try {
+      await this.hass.callService(B, "add_to_shopping", {});
+    } catch (e) {
+      this._error = ae(e);
+    } finally {
+      this._busy = !1;
+    }
+  }
+  render() {
+    if (!this.hass) return l``;
+    const e = this.hass, t = _t(e), s = this._config.title ?? o(e, "shoppingTitle");
+    if (!t.hasResult)
+      return l`<ha-card .header=${s}><div class="empty">${o(e, "shopNothing")}</div></ha-card>`;
+    const i = t.counts.failed + t.counts.pending, a = t.errors.some((c) => c.endsWith(": auth_failed")), n = [
+      ...new Set(t.errors.filter((c) => !(a && c === "reauth_required")).map((c) => Ie(e, c)))
+    ];
+    return l`<ha-card .header=${s}>
+      <div class="head">
+        <span>
+          ${t.weekStart ? o(e, "week", { n: Ne(t.weekStart) }) : ""}
+          ${t.targets.length ? ` · ${o(e, "shopTargets", { targets: t.targets.join(", ") })}` : ""}
+        </span>
+      </div>
+      <div class="head chips">
+        ${we.filter((c) => t.counts[c.key] > 0).map(
+      (c) => l`<span class="chip ${c.css === "warning" ? "draft" : ""}">${o(e, c.label)}: ${t.counts[c.key]}</span>`
+    )}
+      </div>
+      ${n.map((c) => l`<div class="banner warning">${c}</div>`)}
+      ${this._error ? l`<div class="banner error">${o(e, "error", { error: this._error })}</div>` : d}
+      ${we.map((c) => this._renderGroup(c, t[c.key]))}
+      ${i ? l`<div class="foot">
+            <button class="primary" ?disabled=${this._busy} @click=${() => this._retry()}>${o(e, "shopRetry")}</button>
+          </div>` : d}
+    </ha-card>`;
+  }
+  _renderGroup(e, t) {
+    if (!t.length || e.key === "added" && this._config.show_added === !1 || e.key === "skipped" && !this._config.show_skipped) return d;
+    const s = e.key === "review" || e.key === "failed" || e.key === "pending";
+    return l`<details class="group ${e.css}" ?open=${s}>
+      <summary>${o(this.hass, e.label)} (${t.length})</summary>
+      <ul>
+        ${t.map((i) => l`<li>${i}</li>`)}
+      </ul>
+    </details>`;
+  }
+}
+class kt extends $ {
   static {
     this.properties = {
       hass: { attribute: !1 },
@@ -1241,7 +1806,7 @@ class lt extends w {
   }
   static {
     this.styles = [
-      ke
+      K
       // only what differs from the menu card
     ];
   }
@@ -1263,47 +1828,63 @@ class lt extends w {
   }
   render() {
     if (!this.hass) return l``;
-    const e = this.hass, t = tt(e), s = this._config.title ?? a(e, "todayTitle");
+    const e = this.hass, t = mt(e), s = this._config.title ?? o(e, "todayTitle");
     if (!t)
-      return l`<ha-card .header=${s}><div class="empty">${a(e, "noDinner")}</div></ha-card>`;
-    const i = t.url ? l`<a href=${t.url} target="_blank" rel="noopener noreferrer" title=${a(e, "openRecipe")}>${t.title}</a>` : t.title;
+      return l`<ha-card .header=${s}><div class="empty">${o(e, "noDinner")}</div></ha-card>`;
+    const i = t.url ? l`<a href=${t.url} target="_blank" rel="noopener noreferrer" title=${o(e, "openRecipe")}>${t.title}</a>` : t.title;
     return l`<ha-card .header=${s}>
       <div class="day" style="grid-template-columns: 1fr">
         <div class="main">
-          ${this._config.show_image !== !1 && t.image ? l`<img src=${t.image} alt="" loading="lazy" style="width:72px;height:72px" />` : c}
+          ${this._config.show_image !== !1 && t.image ? l`<img src=${t.image} alt="" loading="lazy" style="width:72px;height:72px" />` : d}
           <div>
             <div class="title">${i}</div>
-            ${we(e, t)}
+            ${Pe(e, t)}
           </div>
         </div>
         <div class="more" style="padding-left:0">
-          ${be(e, t.split)}
-          ${this._config.show_ingredients ? xe(e, t.ingredients) : c}
+          ${Me(e, t.split)}
+          ${this._config.show_ingredients ? Re(e, t.ingredients) : d}
         </div>
       </div>
     </ha-card>`;
   }
 }
-function W(r, e) {
+function k(r, e) {
   customElements.get(r) || customElements.define(r, e);
 }
-W("weeklymenu-menu-card", at);
-W("weeklymenu-menu-card-editor", Je);
-W("weeklymenu-today-card", lt);
-W("weeklymenu-today-card-editor", Ye);
-const D = { language: z({ language: navigator.language }) };
+k("weeklymenu-menu-card", wt);
+k("weeklymenu-menu-card-editor", ot);
+k("weeklymenu-today-card", kt);
+k("weeklymenu-today-card-editor", lt);
+k("weeklymenu-shopping-card", bt);
+k("weeklymenu-shopping-card-editor", dt);
+k("weeklymenu-family-card", vt);
+k("weeklymenu-family-card-editor", ct);
+const v = { language: H({ language: navigator.language }) };
 window.customCards = window.customCards ?? [];
 window.customCards.push(
   {
     type: "weeklymenu-menu-card",
-    name: a(D, "cardMenuName"),
-    description: a(D, "cardMenuDescription"),
+    name: o(v, "cardMenuName"),
+    description: o(v, "cardMenuDescription"),
     preview: !0
   },
   {
     type: "weeklymenu-today-card",
-    name: a(D, "cardTodayName"),
-    description: a(D, "cardTodayDescription"),
+    name: o(v, "cardTodayName"),
+    description: o(v, "cardTodayDescription"),
+    preview: !0
+  },
+  {
+    type: "weeklymenu-shopping-card",
+    name: o(v, "cardShoppingName"),
+    description: o(v, "cardShoppingDescription"),
+    preview: !0
+  },
+  {
+    type: "weeklymenu-family-card",
+    name: o(v, "cardFamilyName"),
+    description: o(v, "cardFamilyDescription"),
     preview: !0
   }
 );

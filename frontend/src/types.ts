@@ -77,3 +77,56 @@ export interface MenuModel {
 
 export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
+
+/** How the last confirmed menu's shopping went (from the shopping sensor). */
+export interface ShoppingModel {
+  hasResult: boolean;
+  weekStart?: string;
+  counts: { added: number; review: number; failed: number; skipped: number; pending: number };
+  added: string[];
+  review: string[];
+  failed: string[];
+  pending: string[];
+  skipped: string[];
+  targets: string[];
+  errors: string[];
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  person?: string;
+  allergies: string[];
+  dislikes: string[];
+  likes: string[];
+  diet: string;
+  portion: string;
+  attends: string[];
+  cookSeparately: boolean;
+}
+
+export interface FamilyModel {
+  available: boolean;
+  members: Member[];
+  dinnerDays: string[];
+}
+
+export const ALLERGENS = [
+  "gluten",
+  "milk",
+  "lactose",
+  "egg",
+  "fish",
+  "crustaceans",
+  "molluscs",
+  "peanuts",
+  "tree_nuts",
+  "soy",
+  "sesame",
+  "celery",
+  "mustard",
+  "lupin",
+  "sulphites",
+] as const;
+export const DIETS = ["omnivore", "vegetarian", "vegan", "pescatarian"] as const;
+export const PORTIONS = ["small", "normal", "large"] as const;

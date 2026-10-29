@@ -1,8 +1,11 @@
 import {
   type Alternative,
   type Dinner,
+  type FamilyModel,
   type HomeAssistant,
+  type Member,
   type MenuModel,
+  type ShoppingModel,
   type SplitGroup,
   WEEKDAYS,
 } from "./types";
@@ -121,4 +124,59 @@ export function isoWeek(isoDate: string): number {
 /** Share as a whole-percent label: 0.333333 -> "33 %". */
 export function percent(share: number): string {
   return `${Math.round(share * 100)} %`;
+}
+
+const EMPTY_COUNTS = { added: 0, review: 0, failed: 0, skipped: 0, pending: 0 };
+
+/** The shopping result of the last confirmed menu. `hasResult` is false before any shopping. */
+export function readShopping(hass: HomeAssistant): ShoppingModel {
+  const state = hass.states[discover(hass).get("shopping") ?? ""];
+  const a = state?.attributes ?? {};
+  const counts = isObject(a.counts) ? a.counts : {};
+  return {
+    hasResult: !!state && !["unknown", "unavailable", ""].includes(state.state),
+    weekStart: str(a.week_start),
+    counts: {
+      added: num(counts.added) ?? 0,
+      review: num(counts.review) ?? 0,
+      failed: num(counts.failed) ?? 0,
+      skipped: num(counts.skipped) ?? 0,
+      pending: num(counts.pending) ?? 0,
+    },
+    added: strings(a.added),
+    review: strings(a.review),
+    failed: strings(a.failed),
+    pending: strings(a.pending),
+    skipped: strings(a.skipped),
+    targets: strings(a.targets),
+    errors: strings(a.errors),
+  };
+}
+
+export { EMPTY_COUNTS };
+
+/** The family from the family sensor. */
+export function readFamily(hass: HomeAssistant): FamilyModel {
+  const state = hass.states[discover(hass).get("family") ?? ""];
+  if (!state || ["unknown", "unavailable", ""].includes(state.state)) {
+    return { available: false, members: [], dinnerDays: [] };
+  }
+  const raw = Array.isArray(state.attributes.members) ? state.attributes.members : [];
+  const members: Member[] = raw.filter(isObject).map((m) => ({
+    id: str(m.id) ?? "",
+    name: str(m.name) ?? "",
+    person: str(m.person),
+    allergies: strings(m.allergies),
+    dislikes: strings(m.dislikes),
+    likes: strings(m.likes),
+    diet: str(m.diet) ?? "omnivore",
+    portion: str(m.portion) ?? "normal",
+    attends: strings(m.attends),
+    cookSeparately: m.cook_separately !== false,
+  }));
+  return {
+    available: true,
+    members: members.filter((m) => m.id && m.name),
+    dinnerDays: strings(state.attributes.dinner_days),
+  };
 }

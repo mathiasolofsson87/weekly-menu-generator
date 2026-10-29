@@ -66,3 +66,20 @@ export class WeeklyMenuTodayCardEditor extends CardEditor {
   ];
   protected readonly defaults = { show_image: true, show_ingredients: false };
 }
+
+export class WeeklyMenuShoppingCardEditor extends CardEditor {
+  protected readonly fields: Field[] = [
+    { name: "title", selector: { text: {} } },
+    { name: "show_added", selector: { boolean: {} } },
+    { name: "show_skipped", selector: { boolean: {} } },
+  ];
+  protected readonly defaults = { show_added: true, show_skipped: false };
+}
+
+export class WeeklyMenuFamilyCardEditor extends CardEditor {
+  protected readonly fields: Field[] = [
+    { name: "title", selector: { text: {} } },
+    { name: "editable", selector: { boolean: {} } },
+  ];
+  protected readonly defaults = { editable: true };
+}
