@@ -244,3 +244,11 @@ def test_split_round_trips_through_storage() -> None:
         STEAK_CREAM, [OLLE, ANNA_VEG, member("Kim", allergies=["milk"])]
     ).split
     assert Split.from_dict(split.as_dict()) == split
+
+
+def test_yoghurt_is_swapped_for_a_plant_based_one() -> None:
+    curry = recipe(
+        "Linsgryta", "2 dl röda linser", "400 ml kokosmjölk", "2 dl matyoghurt (10%)"
+    )
+    group = only_group(assess(curry, [OLLE, member("Kim", allergies=["milk"])]))
+    assert swaps(group) == [("matyoghurt", "2 dl sojayoghurt")]

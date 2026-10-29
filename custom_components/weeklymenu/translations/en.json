@@ -194,6 +194,7 @@
     },
     "source": {
       "options": {
+        "ica": "ICA recipes",
         "ai_task": "AI Task"
       }
     },
@@ -240,6 +241,16 @@
       },
       "weekday_sun": {
         "name": "Sunday"
+      }
+    },
+    "calendar": {
+      "menu": {
+        "name": "Dinner menu"
+      }
+    },
+    "button": {
+      "generate": {
+        "name": "Generate menu"
       }
     }
   },

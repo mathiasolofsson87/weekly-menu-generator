@@ -19,7 +19,7 @@ from .sources.registry import SourceRegistry, build_default_registry
 from .store import MenuStore
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
 
 
 @dataclass

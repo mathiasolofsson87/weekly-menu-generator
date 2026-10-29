@@ -112,7 +112,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 0 | ICA spike: login, recipe search, product search, cart add. Go/no-go |
 | 1 | Scaffold, config/options flow, family members, schedule (**done 2026-10-29**; options flow so far has general, schedule and family; the other option pages arrive with the phase that uses them) |
 | 2a | Provider interfaces, registry and fake-provider contract tests; AI Task source, generator, allergen validation, storage, `generate_menu`/`set_recipe` services, sensors (**done 2026-10-29**) |
-| 2b | ICA recipe source (sitemaps, JSON-LD, local cache), calendar and button entities |
+| 2b | ICA recipe source (dish-type pages, JSON-LD, persistent cache), calendar and generate button (**done 2026-10-29**) |
 | 3 | Notifications with actions, per-day regenerate, lock, swap |
 | 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow |
 | 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
@@ -141,6 +141,20 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Phase 2b: ICA recipe source (2026-10-29)
+
+Checked against ica.se on 2026-10-29. Code is in `sources/ica/` (`parser.py` is pure, `source.py` does the requests and the cache), and the registry puts it first in the chain.
+
+- **What ica.se offers:** the recipe sitemaps list ~30,000 recipes but only as slugs, and category pages do not paginate (query parameters are ignored; "load more" is client-side). Instead, `/recept/middag/` embeds ~680 filter paths, ~200 of them single-level dish types (`/recept/middag/pasta/`, `gryta`, `soppa`, `kottbullar`...), and each page lists the ~20 most popular matching recipes. Recipe pages carry a schema.org `Recipe` with title, image, `totalTime`, `recipeYield`, `recipeCategory` (for example "Huvudrätt,Middag"), cuisine and ingredient lines.
+- **Discovery:** each run reads the dish-type list (cached 30 days), then a few random dish-type pages (cached 14 days) for recipe URLs, so the pool changes week to week without crawling. Recipe pages are read once and cached for 90 days (up to 600 dinners). Desserts, baking, drinks and holiday pages are skipped by path, and by `recipeCategory` on the recipe itself (must say Middag or Huvudrätt).
+- **Politeness:** an honest `User-Agent` with the repo URL, one request per second, at most 6 listing pages and 40 recipe pages per run, a single failed page is skipped, and three failures in a row end the run. Pages are ~300-550 KB, so the first run costs a few MB and later runs usually cost nothing. `robots.txt` has no disallow for general crawlers on `/recept/` (only for AI crawlers on deep paths).
+- **What is stored:** title, image URL, time, servings, ingredient lines and a link back. Method text is not stored or shown. Add a note to the README that this uses ica.se pages without an API, may stop working, and that ICA's terms apply.
+- **Planner hook:** `CandidateRequest.accept` is a predicate from the planner. A source may use it to skip candidates nobody could eat, so it does not spend its quota on hopeless ones. The planner still re-checks every recipe.
+- **Tags:** `quick` (30 minutes or less), `easy`, `fancy`, `family_friendly`, `budget`, `vegetarian`, `fish`, derived from ICA's own labels.
+- **Known limits:** recipes are Swedish whatever the language setting; ingredient names keep ICA's trailing remarks ("nötfärs gärna ICAs nötfärs 12% eller hushållsfärs"), which phase 4 must clean before shopping; only the ~20 most popular recipes per dish type are reachable; if ica.se changes its layout the source reports it and the chain falls through to AI.
+- **Found by running it live:** `sojayoghurt` was treated as dairy, so milk-allergic members could not get a yoghurt swap. Fixed, with plant-based yoghurts added to the dairy exceptions.
+- **Entities added:** `calendar.weekly_menu_generator_dinner_menu` (all-day events, the ingredients as description) and `button.weekly_menu_generator_generate_menu`.
 
 ## Split dinners: one recipe, more than one version (2026-10-29)
 

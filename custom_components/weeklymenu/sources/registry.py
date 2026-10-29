@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from ..const import CONF_AI_TASK
 from .ai_task import AiTaskSource
 from .base import RecipeSource
+from .ica import IcaRecipeSource
 
 # Builds a source from the merged config, or returns None when it is not set up.
 SourceFactory = Callable[[HomeAssistant, Mapping[str, Any]], RecipeSource | None]
@@ -55,13 +56,18 @@ class SourceRegistry:
         return built
 
 
+def _ica(hass: HomeAssistant, config: Mapping[str, Any]) -> RecipeSource | None:
+    return IcaRecipeSource(hass)
+
+
 def _ai_task(hass: HomeAssistant, config: Mapping[str, Any]) -> RecipeSource | None:
     entity_id = config.get(CONF_AI_TASK)
     return AiTaskSource(hass, entity_id) if entity_id else None
 
 
 def build_default_registry() -> SourceRegistry:
-    """Priority: store recipes first (ICA arrives with its own module), then AI."""
+    """Priority: store recipes first, then AI."""
     registry = SourceRegistry()
+    registry.register(IcaRecipeSource.id, _ica)
     registry.register(AiTaskSource.id, _ai_task)
     return registry

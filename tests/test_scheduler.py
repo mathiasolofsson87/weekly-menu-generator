@@ -38,7 +38,7 @@ async def test_fires_only_on_generation_day(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"language": "sv", "units": "swedish"},
-        options={"generation_day": "fri", "generation_time": "06:00:00"},
+        options={"generation_day": "fri", "generation_time": "06:00:00", "sources": []},
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

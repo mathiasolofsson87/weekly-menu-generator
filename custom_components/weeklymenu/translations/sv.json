@@ -194,6 +194,7 @@
     },
     "source": {
       "options": {
+        "ica": "ICA-recept",
         "ai_task": "AI-uppgift"
       }
     },
@@ -240,6 +241,16 @@
       },
       "weekday_sun": {
         "name": "Söndag"
+      }
+    },
+    "calendar": {
+      "menu": {
+        "name": "Middagsmeny"
+      }
+    },
+    "button": {
+      "generate": {
+        "name": "Skapa meny"
       }
     }
   },

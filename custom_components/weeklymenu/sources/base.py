@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import ClassVar
 
@@ -28,6 +29,9 @@ class CandidateRequest:
     # Members differ in diet or have allergies: keep meat, fish, dairy and gluten on their own
     # ingredient lines so they can be swapped for some of the family.
     separable: bool = False
+    # Optional: tells a source whether a candidate could be used at all, so it can skip
+    # hopeless ones instead of spending its quota on them. The planner re-checks everything.
+    accept: Callable[[Recipe], bool] | None = None
 
 
 class RecipeSource(ABC):

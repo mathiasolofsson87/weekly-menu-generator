@@ -85,6 +85,7 @@ async def async_generate_menu(
             or any(m.allergies and m.cook_separately for m in everyone)
         ),
         exclude_ids=set(recent_ids),
+        accept=lambda recipe: any(assess(recipe, who).ok for _, who in days),
     )
 
     # Ask sources in priority order; fall through while the week cannot be filled.

@@ -105,6 +105,14 @@ DAIRY_EXCEPTIONS = (
     "shea butter",
     "coconut butter",
     "cream of tartar",
+    "sojayoghurt",
+    "havreyoghurt",
+    "kokosyoghurt",
+    "mandelyoghurt",
+    "soy yogurt",
+    "oat yogurt",
+    "coconut yogurt",
+    "havrefraiche",
 )
 
 ALLERGEN_RULES: dict[str, Rule] = {

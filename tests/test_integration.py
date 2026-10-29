@@ -220,3 +220,47 @@ async def test_split_shows_up_on_the_weekday_sensor(
     [group] = monday.attributes["split"]["groups"]
     assert group["members"] == ["Anna"] and group["share"] == 0.5
     assert group["substitutions"][0]["replacement"]["raw"] == "600 g tofu"
+
+
+def _entity_id(hass: HomeAssistant, entry, domain: str, key: str) -> str:
+    entity_id = er.async_get(hass).async_get_entity_id(
+        domain, DOMAIN, f"{entry.entry_id}_{key}"
+    )
+    assert entity_id, key
+    return entity_id
+
+
+async def test_button_generates_next_weeks_menu(hass: HomeAssistant, entry) -> None:
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": _entity_id(hass, entry, "button", "generate")},
+        blocking=True,
+    )
+    assert (
+        _state(hass, entry, "status").attributes["week_start"] == "2026-11-09"
+    )  # today is Wed 11-04
+
+
+async def test_calendar_lists_dinners(hass: HomeAssistant, entry) -> None:
+    response = await _generate(hass)
+    calendar_id = _entity_id(hass, entry, "calendar", "calendar")
+    result = await hass.services.async_call(
+        "calendar",
+        "get_events",
+        {
+            "entity_id": calendar_id,
+            "start_date_time": "2026-11-01T00:00:00+00:00",
+            "end_date_time": "2026-11-10T00:00:00+00:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[calendar_id]["events"]
+    assert [e["summary"] for e in events] == [
+        response["days"][d] for d in sorted(response["days"])
+    ]
+    assert events[0]["start"] == "2026-11-02" and events[0]["description"]
+
+    state = hass.states.get(calendar_id)  # the event on or after today (Wed 11-04)
+    assert state.attributes["message"] == response["days"]["2026-11-04"]

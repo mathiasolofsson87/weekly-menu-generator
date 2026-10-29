@@ -171,10 +171,13 @@ def test_registry_builds_enabled_configured_sources_in_order(
 
 def test_default_registry(hass: HomeAssistant) -> None:
     registry = build_default_registry()
-    assert registry.ids == ["ai_task"]
-    assert registry.create(hass, {}) == []  # no AI Task entity configured
-    [source] = registry.create(hass, {"ai_task_entity": "ai_task.gemini"})
-    assert isinstance(source, AiTaskSource)
+    assert registry.ids == ["ica", "ai_task"]  # store recipes first, then AI
+    assert [type(s).__name__ for s in registry.create(hass, {})] == ["IcaRecipeSource"]
+    both = registry.create(hass, {"ai_task_entity": "ai_task.gemini"})
+    assert [s.id for s in both] == ["ica", "ai_task"] and isinstance(
+        both[1], AiTaskSource
+    )
+    assert [s.id for s in registry.create(hass, {}, enabled=["ai_task"])] == []
 
 
 def test_prompt_asks_for_separable_only_when_needed() -> None:
