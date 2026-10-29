@@ -15,6 +15,9 @@ export interface FamilyCardConfig extends LovelaceCardConfig {
 interface Draft {
   id: string;
   name: string;
+  person: string; // a Home Assistant person entity id, or empty
+  hadPerson: boolean; // so that unlinking is sent as null
+  filledName: string; // the name taken from the person, replaced when the person changes
   allergies: string[]; // the known allergens that are ticked
   otherAllergies: string; // free text, comma separated
   dislikes: string;
@@ -27,6 +30,27 @@ interface Draft {
 
 const KNOWN = new Set<string>(ALLERGENS);
 
+/** The Home Assistant people, by name. */
+function persons(hass: HomeAssistant): { id: string; name: string }[] {
+  return Object.values(hass.states)
+    .filter((s) => s.entity_id.startsWith("person."))
+    .map((s) => ({ id: s.entity_id, name: personName(hass, s.entity_id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function personName(hass: HomeAssistant, entityId: string): string {
+  const name = hass.states[entityId]?.attributes?.friendly_name;
+  return typeof name === "string" && name ? name : entityId.replace(/^person\./, "").replace(/_/g, " ");
+}
+
+/** A round profile picture: the person's own when linked, else the first letter. */
+function avatar(hass: HomeAssistant, name: string, personId: string | null | undefined): TemplateResult {
+  const picture = personId ? hass.states[personId]?.attributes?.entity_picture : undefined;
+  return typeof picture === "string" && picture
+    ? html`<img class="avatar" src=${picture} alt="" />`
+    : html`<span class="avatar" aria-hidden="true">${[...name.trim()][0]?.toUpperCase() ?? "?"}</span>`;
+}
+
 const words = (text: string): string[] =>
   text
     .split(",")
@@ -38,6 +62,9 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
     return {
       id: "",
       name: "",
+      person: "",
+      hadPerson: false,
+      filledName: "",
       allergies: [],
       otherAllergies: "",
       dislikes: "",
@@ -51,6 +78,9 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
   return {
     id: member.id,
     name: member.name,
+    person: member.person ?? "",
+    hadPerson: Boolean(member.person),
+    filledName: "",
     allergies: member.allergies.filter((a) => KNOWN.has(a)),
     otherAllergies: member.allergies.filter((a) => !KNOWN.has(a)).join(", "),
     dislikes: member.dislikes.join(", "),
@@ -110,6 +140,20 @@ export class WeeklyMenuFamilyCard extends LitElement {
     if (this._draft) this._draft = { ...this._draft, ...patch };
   }
 
+  /** Pick a Home Assistant person. The name follows the person unless it was typed by hand. */
+  private _pickPerson(entityId: string): void {
+    const draft = this._draft;
+    if (!draft) return;
+    const name = entityId ? personName(this.hass, entityId) : "";
+    const followed = draft.name.trim() === "" || draft.name === draft.filledName;
+    this._draft = {
+      ...draft,
+      person: entityId,
+      name: followed && name ? name : draft.name,
+      filledName: followed && name ? name : draft.filledName,
+    };
+  }
+
   private _toggle(list: "allergies" | "attends", value: string): void {
     if (!this._draft) return;
     const current = this._draft[list];
@@ -144,6 +188,8 @@ export class WeeklyMenuFamilyCard extends LitElement {
       cook_separately: draft.cookSeparately,
     };
     if (draft.id) data.id = draft.id;
+    if (draft.person) data.person = draft.person;
+    else if (draft.hadPerson) data.person = null;
     if (await this._run("set_member", data)) this._draft = null;
   }
 
@@ -188,6 +234,7 @@ export class WeeklyMenuFamilyCard extends LitElement {
     const every = attends.length === days.length;
     return html`<div class="member">
       <div class="main">
+        ${avatar(hass, member.name, member.person)}
         <div style="flex:1;min-width:0">
           <div class="title">${member.name}</div>
           <div class="meta">
@@ -219,7 +266,20 @@ export class WeeklyMenuFamilyCard extends LitElement {
         @input=${(ev: Event) => this._set({ [key]: (ev.target as HTMLInputElement).value })}
       />
     </label>`;
+    const people = persons(hass);
     return html`<form class="form" @submit=${(ev: Event) => ev.preventDefault()}>
+      ${people.length || draft.person
+        ? html`<label class="field">
+            <span>${t(hass, "famPerson")}</span>
+            <select .value=${draft.person} @change=${(ev: Event) => this._pickPerson((ev.target as HTMLSelectElement).value)}>
+              <option value="" ?selected=${!draft.person}>${t(hass, "famNoPerson")}</option>
+              ${people.map((p) => html`<option value=${p.id} ?selected=${draft.person === p.id}>${p.name}</option>`)}
+              ${draft.person && !people.some((p) => p.id === draft.person)
+                ? html`<option value=${draft.person} selected>${draft.person}</option>`
+                : nothing}
+            </select>
+          </label>`
+        : nothing}
       ${text("famName", draft.name, "name")}
       <fieldset>
         <legend>${t(hass, "famAllergies")}</legend>

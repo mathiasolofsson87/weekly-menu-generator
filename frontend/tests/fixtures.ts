@@ -58,6 +58,7 @@ export interface HassOptions {
   days?: DinnerSpec[];
   today?: { title: string; attrs?: Record<string, unknown> } | null;
   language?: string;
+  persons?: { id: string; name?: string; picture?: string }[];
 }
 
 /** A Home Assistant object with the integration's entities in it. */
@@ -86,6 +87,13 @@ export function makeHass(options: HassOptions = {}): HomeAssistant & { callServi
       dinner_days: options.family.dinner_days ?? ["mon", "tue", "wed", "thu", "fri"],
     });
   } else add("family", "unavailable");
+  for (const p of options.persons ?? []) {
+    states[p.id] = {
+      entity_id: p.id,
+      state: "home",
+      attributes: { ...(p.name ? { friendly_name: p.name } : {}), ...(p.picture ? { entity_picture: p.picture } : {}) },
+    };
+  }
   // somebody else's entity that must be ignored
   entities["sensor.other"] = { entity_id: "sensor.other", platform: "other", translation_key: "status" };
   states["sensor.other"] = { entity_id: "sensor.other", state: "x", attributes: {} };

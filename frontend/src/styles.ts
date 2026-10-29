@@ -91,6 +91,19 @@ export const cardStyles = css`
     object-fit: cover;
     flex: none;
   }
+  .main .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: var(--text-primary-color, #fff);
+    font-weight: 500;
+  }
   .title {
     font-weight: 500;
     overflow-wrap: anywhere;

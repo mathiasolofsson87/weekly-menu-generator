@@ -78,6 +78,91 @@ describe("what it shows", () => {
   });
 });
 
+const PEOPLE = [
+  { id: "person.eva", name: "Eva Berg", picture: "/api/image/serve/abc/512x512" },
+  { id: "person.kim", name: "Kim" },
+];
+
+describe("linking a Home Assistant person", () => {
+  async function open(options: HassOptions = {}) {
+    const mounted = await mount({ persons: PEOPLE, ...options });
+    button(mounted.card, "Add person").click();
+    await settle(mounted.card);
+    return mounted;
+  }
+  const personSelect = (card: Element) => $$(card, "label.field").find((l) => l.querySelector("span")!.textContent!.startsWith("Home Assistant person"))!.querySelector("select")!;
+
+  it("offers the people in Home Assistant and fills in the name", async () => {
+    const { card, hass } = await open();
+    const select = personSelect(card);
+    expect([...select.options].map((o) => o.textContent!.trim())).toEqual(["None", "Eva Berg", "Kim"]);
+    select.value = "person.eva";
+    select.dispatchEvent(new Event("change"));
+    await settle(card);
+    expect(($$(card, "label.field input")[0] as HTMLInputElement).value).toBe("Eva Berg");
+    button(card, "Save").click();
+    await settle(card);
+    expect(hass.callService).toHaveBeenCalledWith("weeklymenu", "set_member", expect.objectContaining({ name: "Eva Berg", person: "person.eva" }));
+  });
+
+  it("keeps a name that was typed by hand", async () => {
+    const { card } = await open();
+    await type(card, "Name", "Evita");
+    personSelect(card).value = "person.eva";
+    personSelect(card).dispatchEvent(new Event("change"));
+    await settle(card);
+    expect(($$(card, "label.field input")[0] as HTMLInputElement).value).toBe("Evita");
+  });
+
+  it("changes the name along when another person is picked", async () => {
+    const { card } = await open();
+    for (const id of ["person.eva", "person.kim"]) {
+      personSelect(card).value = id;
+      personSelect(card).dispatchEvent(new Event("change"));
+      await settle(card);
+    }
+    expect(($$(card, "label.field input")[0] as HTMLInputElement).value).toBe("Kim");
+  });
+
+  it("is left out when Home Assistant has no people", async () => {
+    const { card } = await mount();
+    button(card, "Add person").click();
+    await settle(card);
+    expect($$(card, "label.field").some((l) => l.textContent!.includes("Home Assistant person"))).toBe(false);
+  });
+
+  it("shows the picture of a linked person and the first letter of others", async () => {
+    const { card } = await mount({
+      persons: PEOPLE,
+      family: { members: [{ ...FAMILY[0], person: "person.eva" }, { ...FAMILY[1], person: "person.kim" }] },
+    });
+    const [anna, olle] = $$(card, ".member");
+    expect(anna.querySelector("img.avatar")!.getAttribute("src")).toBe("/api/image/serve/abc/512x512");
+    expect(olle.querySelector("img")).toBeNull();
+    expect(olle.querySelector(".avatar")!.textContent).toBe("O"); // linked, but no picture
+  });
+
+  it("shows initials for people who are not linked", async () => {
+    const { card } = await mount();
+    expect($$(card, ".member .avatar").map((a) => a.textContent)).toEqual(["A", "O"]);
+  });
+
+  it("can unlink a person", async () => {
+    const { card, hass } = await mount({
+      persons: PEOPLE,
+      family: { members: [{ ...FAMILY[0], person: "person.eva" }] },
+    });
+    button(card, "Edit").click();
+    await settle(card);
+    personSelect(card).value = "";
+    personSelect(card).dispatchEvent(new Event("change"));
+    await settle(card);
+    button(card, "Save").click();
+    await settle(card);
+    expect(hass.callService).toHaveBeenCalledWith("weeklymenu", "set_member", expect.objectContaining({ id: "1", person: null }));
+  });
+});
+
 describe("adding a person", () => {
   it("opens an empty form with sensible defaults", async () => {
     const { card } = await mount();
