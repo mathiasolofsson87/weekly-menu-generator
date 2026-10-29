@@ -114,7 +114,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 2a | Provider interfaces, registry and fake-provider contract tests; AI Task source, generator, allergen validation, storage, `generate_menu`/`set_recipe` services, sensors (**done 2026-10-29**) |
 | 2b | ICA recipe source (sitemaps, JSON-LD, local cache), calendar and button entities |
 | 3 | Notifications with actions, per-day regenerate, lock, swap |
-| 4 | Shopping aggregation, to-do provider, confirm flow |
+| 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow |
 | 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
 | 6 | Custom cards |
 | 7 | Tests, translations, docs, HACS release |
@@ -141,6 +141,18 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Split dinners: one recipe, two proteins (2026-10-29)
+
+A meat recipe whose only obstacle for a vegetarian is the protein still counts. Members who cannot eat it get a substitute and the others get the original.
+
+- **Eligibility** (`planner/eligibility.py`): allergies are never split (a shared pan is not safe enough). A diet conflict can be split only if every offending ingredient line is a plain protein (meat, fish, shellfish) and not stock, fish sauce, anchovies, gelatin, dairy or egg. A conflict that exists only in the title never qualifies. At least one attendee must eat the original; otherwise the recipe is simply not eligible.
+- **Substitutes** (`planner/substitutes.py`): the protein kind decides the options in order (mince: vegofärs, red lentils, chickpeas; sausage: vegokorv; cured meat: smoked tofu, portobello; poultry, fish and steak: tofu, portobello, halloumi, chickpeas). Amounts are converted by weight, and counted pieces become grams (a chicken fillet is 150 g, a steak 200 g). The first option that is safe for everyone receiving it wins. Each product declares the allergens it may contain on purpose (vegofärs: soy and gluten) because its name does not show them.
+- **Stored on the day** as `MenuDay.split`: who gets the substitute, the swaps (original and replacement at full recipe scale) and the portion share, weighted by portion size. Phase 4 buys the original for the remaining share and the substitute for `share`. The weekday sensors expose it as the `split` attribute.
+- **Planner:** a split is ranked below a recipe everyone can eat as is, and `max_split_days` (default 2, in Meal styles) caps how many dinners per week need two proteins. The cap gives way only to avoid an empty day, with a warning.
+- **AI Task** is told to keep the protein on its own line and out of sauces and stocks, but only when family diets differ. Whether a recipe really is splittable is decided by the deterministic check, never by the model.
+- **Known limits:** one substitute group per dinner (a vegan and a vegetarian with different needs are served the same substitute, or the recipe is not eligible), and the swap quantities are estimates.
+- **Later:** per-person cooking instructions in the card ("for Anna: fry tofu instead"), and offering a split for dislikes.
 
 ## 12. Phase 0 findings (2026-10-25)
 

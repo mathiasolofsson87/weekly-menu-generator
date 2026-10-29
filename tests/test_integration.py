@@ -20,7 +20,7 @@ from custom_components.weeklymenu.const import (
     EVENT_MENU_READY,
 )
 from custom_components.weeklymenu.sources.registry import SourceRegistry
-from tests.helpers import ALL_RECIPES, FakeSource
+from tests.helpers import ALL_RECIPES, FakeSource, recipe
 
 OPTIONS = {
     "dinner_days": ["mon", "tue", "wed"],
@@ -192,3 +192,31 @@ async def test_service_without_entry_fails_cleanly(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(DOMAIN, "generate_menu", {}, blocking=True)
+
+
+async def test_split_shows_up_on_the_weekday_sensor(
+    hass: HomeAssistant, entry, fake
+) -> None:
+
+    steak = recipe("Biff med potatis", "600 g entrecote", "1 kg potatis")
+    fake.recipes = [steak]
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            **entry.options,
+            "dinner_days": ["mon"],
+            "max_split_days": 2,
+            "members": [
+                {"id": "1", "name": "Olle", "attends": ["mon"]},
+                {"id": "2", "name": "Anna", "diet": "vegetarian", "attends": ["mon"]},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    await _generate(hass)
+
+    monday = _state(hass, entry, "weekday_mon")
+    assert monday.state == "Biff med potatis"
+    split = monday.attributes["split"]
+    assert split["members"] == ["Anna"] and split["share"] == 0.5
+    assert split["substitutions"][0]["replacement"]["raw"] == "600 g tofu"

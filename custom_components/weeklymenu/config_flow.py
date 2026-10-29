@@ -34,6 +34,7 @@ from .const import (
     CONF_GENERATION_DAY,
     CONF_GENERATION_TIME,
     CONF_LANGUAGE,
+    CONF_MAX_SPLIT_DAYS,
     CONF_MEMBERS,
     CONF_SHOPPING_TARGETS,
     CONF_SOURCES,
@@ -45,6 +46,7 @@ from .const import (
     DEFAULT_GENERATION_DAY,
     DEFAULT_GENERATION_TIME,
     DEFAULT_LANGUAGE,
+    DEFAULT_MAX_SPLIT_DAYS,
     DEFAULT_UNITS,
     DEFAULT_VEGETARIAN_DAYS,
     DIETS,
@@ -123,6 +125,7 @@ STYLES_SCHEMA = vol.Schema(
         vol.Optional(CONF_STYLE_TAGS): _select(STYLE_TAGS, "style", multiple=True),
         vol.Required(CONF_VEGETARIAN_DAYS): _days_selector(),
         vol.Required(CONF_FISH_MIN): _days_selector(),
+        vol.Required(CONF_MAX_SPLIT_DAYS): _days_selector(),
     }
 )
 
@@ -291,6 +294,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                     CONF_STYLE_TAGS: user_input.get(CONF_STYLE_TAGS, []),
                     CONF_VEGETARIAN_DAYS: int(user_input[CONF_VEGETARIAN_DAYS]),
                     CONF_FISH_MIN: int(user_input[CONF_FISH_MIN]),
+                    CONF_MAX_SPLIT_DAYS: int(user_input[CONF_MAX_SPLIT_DAYS]),
                 }
             )
             return await self.async_step_init()
@@ -301,6 +305,9 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                 CONF_VEGETARIAN_DAYS, DEFAULT_VEGETARIAN_DAYS
             ),
             CONF_FISH_MIN: config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN),
+            CONF_MAX_SPLIT_DAYS: config.get(
+                CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS
+            ),
         }
         return self.async_show_form(
             step_id="styles",

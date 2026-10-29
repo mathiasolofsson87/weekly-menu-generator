@@ -17,11 +17,13 @@ from .const import (
     CANDIDATES_PER_DAY,
     CONF_FISH_MIN,
     CONF_LANGUAGE,
+    CONF_MAX_SPLIT_DAYS,
     CONF_SOURCES,
     CONF_STYLE_TAGS,
     CONF_VEGETARIAN_DAYS,
     DEFAULT_FISH_MIN,
     DEFAULT_LANGUAGE,
+    DEFAULT_MAX_SPLIT_DAYS,
     DEFAULT_VEGETARIAN_DAYS,
     DOMAIN,
     EVENT_MENU_READY,
@@ -63,6 +65,9 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
     def config(self) -> dict[str, Any]:
         return {**self.config_entry.data, **self.config_entry.options}
 
+    def settings(self) -> PlannerSettings:
+        return self._settings()
+
     @property
     def latest(self) -> Menu | None:
         """The menu for the furthest-ahead week."""
@@ -88,6 +93,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             ),
             fish_min=int(config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN)),
             candidates_per_day=CANDIDATES_PER_DAY,
+            max_split_days=int(config.get(CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS)),
         )
 
     async def async_generate(self, week_start: date) -> Menu:

@@ -127,3 +127,22 @@ def test_preferences_are_soft() -> None:
     assert is_allowed(CURRY, [fan])
     assert preference_hits(CURRY, [fan]) == (1, 0)
     assert preference_hits(TACOS, [fan]) == (0, 1)
+
+
+@pytest.mark.parametrize(
+    ("text", "is_meat"),
+    [
+        ("600 g entrecote", True),
+        ("2 st entrecôte", True),
+        ("500 g oxfilé", True),
+        ("800 g högrev", True),
+        ("4 st fläskkarré", True),
+        ("6 st korv", True),
+        ("6 st korvbröd", False),
+        ("4 st hamburgerbröd", False),
+        ("4 st hamburgare", True),
+        ("1 pkt vegofärs", False),
+    ],
+)
+def test_meat_cuts_and_lookalikes(text, is_meat) -> None:
+    assert (MEAT.match(text) is not None) is is_meat

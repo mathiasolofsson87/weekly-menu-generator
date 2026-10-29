@@ -36,6 +36,7 @@ def _day_attributes(day: MenuDay | None) -> dict[str, Any]:
         "tags": recipe.tags,
         "ingredients": [i.raw or i.name for i in recipe.ingredients],
         "locked": day.locked,
+        "split": day.split.as_dict() if day.split else None,
         "alternatives": [{"id": c.id, "title": c.title} for c in day.candidates[1:]],
     }
 

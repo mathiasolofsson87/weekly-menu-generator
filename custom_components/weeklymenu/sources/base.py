@@ -25,6 +25,8 @@ class CandidateRequest:
     exclude_ids: set[str] = field(default_factory=set)
     use_up: list[str] = field(default_factory=list)
     hint: str | None = None
+    # Members differ in diet: keep meat or fish on its own ingredient line so it can be swapped.
+    separable_protein: bool = False
 
 
 class RecipeSource(ABC):

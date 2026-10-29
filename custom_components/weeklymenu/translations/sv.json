@@ -106,12 +106,14 @@
         "data": {
           "style_tags": "Önskade stilar",
           "vegetarian_days": "Vegetariska middagar per vecka",
-          "fish_min": "Fiskmiddagar per vecka (minst)"
+          "fish_min": "Fiskmiddagar per vecka (minst)",
+          "max_split_days": "Middagar med separat protein (högst)"
         },
         "data_description": {
           "style_tags": "Recept som matchar fler av dessa rankas högre.",
           "vegetarian_days": "Följs när det finns tillräckligt många passande recept.",
-          "fish_min": "Följs när det finns tillräckligt många passande recept."
+          "fish_min": "Följs när det finns tillräckligt många passande recept.",
+          "max_split_days": "När någon inte äter köttet eller fisken kan middagen ändå användas om det bara är proteinet som hindrar: personen får ett alternativ som tofu. Det här begränsar hur ofta per vecka."
         }
       },
       "sources": {
@@ -248,6 +250,9 @@
     },
     "not_a_candidate": {
       "message": "{recipe_id} är inte ett av alternativen för {date}."
+    },
+    "not_allowed": {
+      "message": "{recipe_id} kan inte serveras {date} med nuvarande familjeinställningar."
     }
   },
   "services": {

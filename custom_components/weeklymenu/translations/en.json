@@ -106,12 +106,14 @@
         "data": {
           "style_tags": "Preferred styles",
           "vegetarian_days": "Vegetarian dinners per week",
-          "fish_min": "Fish dinners per week (at least)"
+          "fish_min": "Fish dinners per week (at least)",
+          "max_split_days": "Dinners with a separate protein (at most)"
         },
         "data_description": {
           "style_tags": "Recipes matching more of these are ranked higher.",
           "vegetarian_days": "Followed when enough suitable recipes exist.",
-          "fish_min": "Followed when enough suitable recipes exist."
+          "fish_min": "Followed when enough suitable recipes exist.",
+          "max_split_days": "When someone does not eat the meat or fish, a dinner can still be used if only that protein is in the way: they get a substitute such as tofu. This limits how often per week."
         }
       },
       "sources": {
@@ -248,6 +250,9 @@
     },
     "not_a_candidate": {
       "message": "{recipe_id} is not one of the candidates for {date}."
+    },
+    "not_allowed": {
+      "message": "{recipe_id} cannot be served on {date} with the current family settings."
     }
   },
   "services": {

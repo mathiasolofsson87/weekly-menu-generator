@@ -17,6 +17,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import WeeklyMenuCoordinator
+from .planner.eligibility import assess
+from .planner.generator import attendees_for
 from .scheduler import next_week_start
 
 SERVICE_GENERATE_MENU = "generate_menu"
@@ -70,7 +72,16 @@ def async_register_services(hass: HomeAssistant) -> None:
                     "date": iso,
                 },
             )
+        settings = coordinator.settings()
+        eligibility = assess(recipe, attendees_for(settings, day.weekday) or [])
+        if not eligibility.ok:  # the settings changed since this menu was drafted
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_allowed",
+                translation_placeholders={"recipe_id": recipe.id, "date": iso},
+            )
         day.recipe = recipe
+        day.split = eligibility.split
         day.locked = True
         day.candidates = [recipe] + [c for c in day.candidates if c.id != recipe.id]
         await coordinator.store.async_save(menu, dt_util.now().date())

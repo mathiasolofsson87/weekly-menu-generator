@@ -18,6 +18,7 @@ DISLIKE_PENALTY = 2.0
 LIKE_BONUS = 0.5
 REUSE_BONUS = 0.4
 REUSE_CAP = 2.0
+SPLIT_PENALTY = 1.5  # a dinner with two proteins is more work than one everyone can eat
 
 
 @dataclass

@@ -170,10 +170,16 @@ async def test_options_styles(hass: HomeAssistant) -> None:
     result = await _menu(hass, result["flow_id"], "styles")
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"style_tags": ["quick", "budget"], "vegetarian_days": 2.0, "fish_min": 1.0},
+        {
+            "style_tags": ["quick", "budget"],
+            "vegetarian_days": 2.0,
+            "fish_min": 1.0,
+            "max_split_days": 3.0,
+        },
     )
     assert result["type"] is FlowResultType.MENU
     assert entry.options["style_tags"] == ["quick", "budget"]
+    assert entry.options["max_split_days"] == 3
     assert entry.options["vegetarian_days"] == 2 and isinstance(
         entry.options["vegetarian_days"], int
     )

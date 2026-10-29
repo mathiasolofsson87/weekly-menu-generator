@@ -17,6 +17,7 @@ CONF_SOURCES = "sources"
 CONF_STYLE_TAGS = "style_tags"
 CONF_VEGETARIAN_DAYS = "vegetarian_days"
 CONF_FISH_MIN = "fish_min"
+CONF_MAX_SPLIT_DAYS = "max_split_days"
 
 # Family member keys
 MEMBER_ID = "id"
@@ -64,6 +65,9 @@ DEFAULT_GENERATION_TIME = "06:00:00"
 DEFAULT_DINNER_DAYS = ["mon", "tue", "wed", "thu", "fri"]
 DEFAULT_VEGETARIAN_DAYS = 1
 DEFAULT_FISH_MIN = 1
+DEFAULT_MAX_SPLIT_DAYS = 2
+# Relative size of a portion, used to share a split dinner between its eaters.
+PORTION_WEIGHTS = {"small": 0.6, "normal": 1.0, "large": 1.4}
 CANDIDATES_PER_DAY = 3
 HISTORY_WEEKS = 6  # weeks of past menus used to avoid repeats; older ones are dropped
 

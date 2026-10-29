@@ -155,6 +155,54 @@ class Recipe:
 
 
 @dataclass
+class Substitution:
+    """One protein swapped for another, at the recipe's full scale."""
+
+    original: Ingredient
+    replacement: Ingredient
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "original": self.original.as_dict(),
+            "replacement": self.replacement.as_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Substitution:
+        return cls(
+            Ingredient.from_dict(data["original"]),
+            Ingredient.from_dict(data["replacement"]),
+        )
+
+
+@dataclass
+class Split:
+    """Members who cannot eat the recipe's protein get a substitute instead.
+
+    `share` is the fraction of the dinner's portions eaten by `members`, so shopping
+    buys the original protein for the rest and the substitute for this share."""
+
+    members: list[str]
+    substitutions: list[Substitution]
+    share: float
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "members": list(self.members),
+            "substitutions": [s.as_dict() for s in self.substitutions],
+            "share": self.share,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Split:
+        return cls(
+            members=list(data["members"]),
+            substitutions=[Substitution.from_dict(s) for s in data["substitutions"]],
+            share=data["share"],
+        )
+
+
+@dataclass
 class MenuDay:
     """One dinner. `candidates` holds the alternatives (the chosen recipe first)."""
 
@@ -163,9 +211,11 @@ class MenuDay:
     recipe: Recipe | None = None
     candidates: list[Recipe] = field(default_factory=list)
     locked: bool = False
+    split: Split | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
+            "split": self.split.as_dict() if self.split else None,
             "date": self.date,
             "weekday": self.weekday,
             "recipe": self.recipe.as_dict() if self.recipe else None,
@@ -182,6 +232,7 @@ class MenuDay:
             recipe=Recipe.from_dict(recipe) if recipe else None,
             candidates=[Recipe.from_dict(r) for r in data.get("candidates", [])],
             locked=data.get("locked", False),
+            split=Split.from_dict(data["split"]) if data.get("split") else None,
         )
 
 

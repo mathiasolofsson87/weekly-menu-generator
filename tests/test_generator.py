@@ -174,3 +174,83 @@ async def test_no_sources_or_days_gives_warnings_not_errors() -> None:
 def test_week_start_of() -> None:
     assert week_start_of(date(2026, 11, 5)) == date(2026, 11, 2)
     assert week_start_of(date(2026, 11, 8)) == date(2026, 11, 2)
+
+
+STEAK = recipe(
+    "Biff med potatis",
+    "600 g entrecote",
+    "1 kg potatis",
+    "200 g bönor",
+    tags=("fancy",),
+)
+FAMILY = [member("Olle"), member("Anna", diet="vegetarian")]
+
+
+async def test_a_meat_recipe_is_used_with_a_split_when_it_ranks_best() -> None:
+    settings = _settings(
+        dinner_days=["mon"], members=FAMILY, max_split_days=2, style_tags=["fancy"]
+    )
+    menu = await async_generate_menu(
+        [FakeSource([STEAK, CURRY])], settings, MONDAY, set()
+    )
+    [day] = menu.days
+    assert day.recipe.title == "Biff med potatis"
+    assert day.split.members == ["Anna"]
+    assert day.split.substitutions[0].replacement.raw == "600 g tofu"
+
+
+async def test_recipes_everyone_can_eat_win_over_splits() -> None:
+    settings = _settings(
+        dinner_days=["mon"], members=FAMILY, max_split_days=2, style_tags=["fancy"]
+    )
+    plain = recipe("Fin pasta", "400 g pasta", "1 st zucchini", tags=("fancy",))
+    menu = await async_generate_menu(
+        [FakeSource([STEAK, plain])], settings, MONDAY, set()
+    )
+    assert menu.days[0].recipe.title == "Fin pasta" and menu.days[0].split is None
+
+
+async def test_split_limit_is_respected() -> None:
+    steaks = [recipe(f"Biff {n}", "600 g entrecote", "1 kg potatis") for n in "ABC"]
+    settings = _settings(
+        dinner_days=["mon", "tue", "wed"], members=FAMILY, max_split_days=1
+    )
+    menu = await async_generate_menu(
+        [FakeSource([*steaks, CURRY, STIR])], settings, MONDAY, set()
+    )
+    assert sum(d.split is not None for d in menu.days) == 1
+    assert all(d.recipe for d in menu.days)
+
+
+async def test_split_limit_is_not_allowed_to_leave_a_day_empty() -> None:
+    steaks = [recipe(f"Biff {n}", "600 g entrecote", "1 kg potatis") for n in "AB"]
+    settings = _settings(dinner_days=["mon", "tue"], members=FAMILY, max_split_days=0)
+    menu = await async_generate_menu([FakeSource(steaks)], settings, MONDAY, set())
+    assert all(d.recipe and d.split for d in menu.days)
+    assert any(w.startswith("split_limit_exceeded") for w in menu.warnings)
+
+
+async def test_split_is_not_offered_across_allergies() -> None:
+    allergic = member("Eva", allergies=["fish"], diet="vegetarian")
+    settings = _settings(
+        dinner_days=["mon"], members=[member("Olle"), allergic], max_split_days=2
+    )
+    menu = await async_generate_menu([FakeSource([LAX])], settings, MONDAY, set())
+    assert menu.days[0].recipe is None
+
+
+async def test_source_is_told_to_keep_proteins_separable_only_when_diets_differ() -> (
+    None
+):
+    mixed, same = FakeSource([CURRY]), FakeSource([CURRY])
+    await async_generate_menu(
+        [mixed], _settings(members=FAMILY, max_split_days=2), MONDAY, set()
+    )
+    await async_generate_menu(
+        [same],
+        _settings(members=[member("A"), member("B")], max_split_days=2),
+        MONDAY,
+        set(),
+    )
+    assert mixed.requests[0].separable_protein is True
+    assert same.requests[0].separable_protein is False
