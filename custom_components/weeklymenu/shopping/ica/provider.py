@@ -19,9 +19,10 @@ PROVIDER_ID = "ica"
 MODE_WEEKLY = "weekly"  # a new list for each week's menu
 MODE_NAMED = "named"  # always the same list, appended to
 
-# How a row without an amount is written. Unverified against the real app: see
-# spikes/ica_rows_spike.py.
-NO_AMOUNT_QUANTITY = 1.0
+# How a row without an amount is written. Checked against the real app (spikes/ica_rows_spike.py):
+# ICA reads a quantity of 0 back as "no quantity", so the row shows only its name. A quantity of 1
+# would show up as a stray "1".
+NO_AMOUNT_QUANTITY = 0.0
 NO_AMOUNT_UNIT = ""
 
 TITLES = {

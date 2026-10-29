@@ -233,7 +233,7 @@ async def test_push_creates_the_week_list_and_writes_rows(
         "nötfärs": (230, "g"),
         "grädde": (1.5, "dl"),
         "gul lök": (2, "st"),  # counted things are written as pieces
-        "hackad persilja": (1.0, ""),  # no amount
+        "hackad persilja": (0.0, ""),  # no amount: ICA shows just the name
     }
     first = created["rows"][0]
     assert (
