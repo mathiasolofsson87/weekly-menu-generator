@@ -1,12 +1,12 @@
 {
   "domain": "weeklymenu",
-  "name": "Weekly Menu",
-  "codeowners": [],
+  "name": "Weekly Menu Generator",
+  "codeowners": ["@mathiasolofsson87"],
   "config_flow": true,
-  "documentation": "https://github.com/OWNER/weeklymenu",
+  "documentation": "https://github.com/mathiasolofsson87/weekly-menu-generator",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/OWNER/weeklymenu/issues",
+  "issue_tracker": "https://github.com/mathiasolofsson87/weekly-menu-generator/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "0.1.0"

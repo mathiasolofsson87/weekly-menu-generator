@@ -1,4 +1,4 @@
-# Weekly Menu: HACS Integration Plan
+# Weekly Menu Generator: HACS Integration Plan
 
 A Home Assistant custom integration (distributed through HACS) that suggests a weekly dinner menu every Friday morning, respects each family member's allergies and preferences, lets the user swap individual recipes, and on confirmation puts the needed ingredients on a shopping list (ICA Handla cart and/or any HA to-do list).
 

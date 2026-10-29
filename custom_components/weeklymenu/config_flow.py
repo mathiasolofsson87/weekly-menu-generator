@@ -141,7 +141,7 @@ class WeeklyMenuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for the general settings."""
         if user_input is not None:
-            return self.async_create_entry(title="Weekly Menu", data=user_input)
+            return self.async_create_entry(title="Weekly Menu Generator", data=user_input)
 
         suggested = {
             CONF_LANGUAGE: self.hass.config.language

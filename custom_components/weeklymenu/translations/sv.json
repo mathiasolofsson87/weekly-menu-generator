@@ -22,7 +22,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Veckomeny",
+        "title": "Veckomenygenerator",
         "menu_options": {
           "general": "Allmänna inställningar",
           "schedule": "Schema",

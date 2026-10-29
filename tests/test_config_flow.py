@@ -17,7 +17,7 @@ async def _menu(hass, flow_id, choice):
 
 async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"language": "sv", "units": "swedish"}, title="Weekly Menu"
+        domain=DOMAIN, data={"language": "sv", "units": "swedish"}, title="Weekly Menu Generator"
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
