@@ -1,0 +1,168 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "General",
+        "data": {
+          "language": "Language",
+          "units": "Units",
+          "shopping_targets": "Shopping lists",
+          "ai_task_entity": "AI Task entity"
+        },
+        "data_description": {
+          "language": "Language for recipes, prompts and notifications. Independent of the Home Assistant language.",
+          "units": "How amounts are written in the shopping list.",
+          "shopping_targets": "To-do lists that receive the ingredients when you confirm the menu.",
+          "ai_task_entity": "Used to suggest recipes when ICA recipes do not fit. Leave empty to skip AI suggestions."
+        },
+        "description": "Family members and the schedule are set up afterwards under Configure."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weekly Menu",
+        "menu_options": {
+          "general": "General settings",
+          "schedule": "Schedule",
+          "family": "Family members",
+          "finish": "Save and close"
+        }
+      },
+      "general": {
+        "title": "General",
+        "data": {
+          "language": "Language",
+          "units": "Units",
+          "shopping_targets": "Shopping lists",
+          "ai_task_entity": "AI Task entity"
+        },
+        "data_description": {
+          "language": "Language for recipes, prompts and notifications. Independent of the Home Assistant language.",
+          "units": "How amounts are written in the shopping list.",
+          "shopping_targets": "To-do lists that receive the ingredients when you confirm the menu.",
+          "ai_task_entity": "Used to suggest recipes when ICA recipes do not fit. Leave empty to skip AI suggestions."
+        }
+      },
+      "schedule": {
+        "title": "Schedule",
+        "data": {
+          "generation_day": "Generate on",
+          "generation_time": "Generate at",
+          "dinner_days": "Dinner days"
+        },
+        "data_description": {
+          "generation_day": "The menu is drafted on this day for the following week.",
+          "generation_time": "Local time.",
+          "dinner_days": "Days of the week that need a dinner."
+        }
+      },
+      "family": {
+        "title": "Family members",
+        "menu_options": {
+          "member_add": "Add a member",
+          "member_edit": "Edit a member",
+          "member_remove": "Remove a member",
+          "init": "Back"
+        }
+      },
+      "member_form": {
+        "title": "Family member",
+        "data": {
+          "name": "Name",
+          "person": "Person",
+          "allergies": "Allergies",
+          "dislikes": "Dislikes",
+          "likes": "Likes",
+          "diet": "Diet",
+          "portion": "Portion size",
+          "attends": "Eats dinner on"
+        },
+        "data_description": {
+          "person": "Optional. Links the member to a Home Assistant person.",
+          "allergies": "Hard rule: recipes with these ingredients are never suggested. Pick from the list or type your own.",
+          "dislikes": "Avoided when possible. Type and press enter.",
+          "likes": "Preferred when possible. Type and press enter.",
+          "attends": "Days this person eats dinner at home."
+        }
+      },
+      "member_edit": {
+        "title": "Edit a member",
+        "data": {
+          "id": "Member"
+        }
+      },
+      "member_remove": {
+        "title": "Remove a member",
+        "data": {
+          "id": "Member"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Enter a name.",
+      "name_exists": "A member with this name already exists.",
+      "no_days": "Pick at least one day."
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "sv": "Svenska",
+        "en": "English"
+      }
+    },
+    "units": {
+      "options": {
+        "swedish": "Swedish (dl, msk, tsk)",
+        "metric": "Metric (ml, g)"
+      }
+    },
+    "weekday": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    },
+    "allergen": {
+      "options": {
+        "gluten": "Gluten",
+        "milk": "Milk",
+        "lactose": "Lactose",
+        "egg": "Egg",
+        "fish": "Fish",
+        "crustaceans": "Crustaceans",
+        "molluscs": "Molluscs",
+        "peanuts": "Peanuts",
+        "tree_nuts": "Tree nuts",
+        "soy": "Soy",
+        "sesame": "Sesame",
+        "celery": "Celery",
+        "mustard": "Mustard",
+        "lupin": "Lupin",
+        "sulphites": "Sulphites"
+      }
+    },
+    "diet": {
+      "options": {
+        "omnivore": "Eats everything",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "pescatarian": "Pescatarian"
+      }
+    },
+    "portion": {
+      "options": {
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large"
+      }
+    }
+  }
+}

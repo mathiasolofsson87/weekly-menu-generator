@@ -1,0 +1,168 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Allmänt",
+        "data": {
+          "language": "Språk",
+          "units": "Enheter",
+          "shopping_targets": "Inköpslistor",
+          "ai_task_entity": "AI-uppgiftsentitet"
+        },
+        "data_description": {
+          "language": "Språk för recept, prompter och notiser. Oberoende av Home Assistants språk.",
+          "units": "Hur mängder skrivs på inköpslistan.",
+          "shopping_targets": "Att göra-listor som får ingredienserna när du bekräftar menyn.",
+          "ai_task_entity": "Används för att föreslå recept när ICA-recepten inte passar. Lämna tomt för att hoppa över AI-förslag."
+        },
+        "description": "Familjemedlemmar och schema ställer du in efteråt under Konfigurera."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Veckomeny",
+        "menu_options": {
+          "general": "Allmänna inställningar",
+          "schedule": "Schema",
+          "family": "Familjemedlemmar",
+          "finish": "Spara och stäng"
+        }
+      },
+      "general": {
+        "title": "Allmänt",
+        "data": {
+          "language": "Språk",
+          "units": "Enheter",
+          "shopping_targets": "Inköpslistor",
+          "ai_task_entity": "AI-uppgiftsentitet"
+        },
+        "data_description": {
+          "language": "Språk för recept, prompter och notiser. Oberoende av Home Assistants språk.",
+          "units": "Hur mängder skrivs på inköpslistan.",
+          "shopping_targets": "Att göra-listor som får ingredienserna när du bekräftar menyn.",
+          "ai_task_entity": "Används för att föreslå recept när ICA-recepten inte passar. Lämna tomt för att hoppa över AI-förslag."
+        }
+      },
+      "schedule": {
+        "title": "Schema",
+        "data": {
+          "generation_day": "Skapa på",
+          "generation_time": "Skapa klockan",
+          "dinner_days": "Middagsdagar"
+        },
+        "data_description": {
+          "generation_day": "Menyn tas fram den här dagen för nästa vecka.",
+          "generation_time": "Lokal tid.",
+          "dinner_days": "Veckodagar som behöver en middag."
+        }
+      },
+      "family": {
+        "title": "Familjemedlemmar",
+        "menu_options": {
+          "member_add": "Lägg till medlem",
+          "member_edit": "Redigera medlem",
+          "member_remove": "Ta bort medlem",
+          "init": "Tillbaka"
+        }
+      },
+      "member_form": {
+        "title": "Familjemedlem",
+        "data": {
+          "name": "Namn",
+          "person": "Person",
+          "allergies": "Allergier",
+          "dislikes": "Ogillar",
+          "likes": "Gillar",
+          "diet": "Kost",
+          "portion": "Portionsstorlek",
+          "attends": "Äter middag på"
+        },
+        "data_description": {
+          "person": "Valfritt. Kopplar medlemmen till en person i Home Assistant.",
+          "allergies": "Hård regel: recept med dessa ingredienser föreslås aldrig. Välj ur listan eller skriv egna.",
+          "dislikes": "Undviks när det går. Skriv och tryck enter.",
+          "likes": "Föredras när det går. Skriv och tryck enter.",
+          "attends": "Dagar då personen äter middag hemma."
+        }
+      },
+      "member_edit": {
+        "title": "Redigera medlem",
+        "data": {
+          "id": "Medlem"
+        }
+      },
+      "member_remove": {
+        "title": "Ta bort medlem",
+        "data": {
+          "id": "Medlem"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Ange ett namn.",
+      "name_exists": "Det finns redan en medlem med det namnet.",
+      "no_days": "Välj minst en dag."
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "sv": "Svenska",
+        "en": "English"
+      }
+    },
+    "units": {
+      "options": {
+        "swedish": "Svenska (dl, msk, tsk)",
+        "metric": "Metriska (ml, g)"
+      }
+    },
+    "weekday": {
+      "options": {
+        "mon": "Måndag",
+        "tue": "Tisdag",
+        "wed": "Onsdag",
+        "thu": "Torsdag",
+        "fri": "Fredag",
+        "sat": "Lördag",
+        "sun": "Söndag"
+      }
+    },
+    "allergen": {
+      "options": {
+        "gluten": "Gluten",
+        "milk": "Mjölk",
+        "lactose": "Laktos",
+        "egg": "Ägg",
+        "fish": "Fisk",
+        "crustaceans": "Kräftdjur",
+        "molluscs": "Blötdjur",
+        "peanuts": "Jordnötter",
+        "tree_nuts": "Trädnötter",
+        "soy": "Soja",
+        "sesame": "Sesam",
+        "celery": "Selleri",
+        "mustard": "Senap",
+        "lupin": "Lupin",
+        "sulphites": "Sulfiter"
+      }
+    },
+    "diet": {
+      "options": {
+        "omnivore": "Äter allt",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "pescatarian": "Pescetarian"
+      }
+    },
+    "portion": {
+      "options": {
+        "small": "Liten",
+        "normal": "Normal",
+        "large": "Stor"
+      }
+    }
+  }
+}
