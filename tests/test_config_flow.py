@@ -17,7 +17,9 @@ async def _menu(hass, flow_id, choice):
 
 async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"language": "sv", "units": "swedish"}, title="Weekly Menu Generator"
+        domain=DOMAIN,
+        data={"language": "sv", "units": "swedish"},
+        title="Weekly Menu Generator",
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -160,3 +162,30 @@ async def test_edit_and_remove_member(hass: HomeAssistant) -> None:
     await _menu(hass, flow_id, "member_remove")
     await hass.config_entries.options.async_configure(flow_id, {"id": member_id})
     assert entry.options["members"] == []
+
+
+async def test_options_styles(hass: HomeAssistant) -> None:
+    entry = await _setup_entry(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await _menu(hass, result["flow_id"], "styles")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"style_tags": ["quick", "budget"], "vegetarian_days": 2.0, "fish_min": 1.0},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert entry.options["style_tags"] == ["quick", "budget"]
+    assert entry.options["vegetarian_days"] == 2 and isinstance(
+        entry.options["vegetarian_days"], int
+    )
+
+
+async def test_options_sources_offers_registered_sources(hass: HomeAssistant) -> None:
+    entry = await _setup_entry(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await _menu(hass, result["flow_id"], "sources")
+    assert result["step_id"] == "sources"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"sources": []}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert entry.options["sources"] == []

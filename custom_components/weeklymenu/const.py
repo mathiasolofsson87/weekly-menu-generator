@@ -13,6 +13,10 @@ CONF_GENERATION_DAY = "generation_day"
 CONF_GENERATION_TIME = "generation_time"
 CONF_DINNER_DAYS = "dinner_days"
 CONF_MEMBERS = "members"
+CONF_SOURCES = "sources"
+CONF_STYLE_TAGS = "style_tags"
+CONF_VEGETARIAN_DAYS = "vegetarian_days"
+CONF_FISH_MIN = "fish_min"
 
 # Family member keys
 MEMBER_ID = "id"
@@ -49,6 +53,7 @@ ALLERGENS = [
     "lupin",
     "sulphites",
 ]
+STYLE_TAGS = ["quick", "easy", "fancy", "family_friendly", "budget"]
 DIETS = ["omnivore", "vegetarian", "vegan", "pescatarian"]
 PORTIONS = ["small", "normal", "large"]
 
@@ -57,5 +62,10 @@ DEFAULT_UNITS = "swedish"
 DEFAULT_GENERATION_DAY = "fri"
 DEFAULT_GENERATION_TIME = "06:00:00"
 DEFAULT_DINNER_DAYS = ["mon", "tue", "wed", "thu", "fri"]
+DEFAULT_VEGETARIAN_DAYS = 1
+DEFAULT_FISH_MIN = 1
+CANDIDATES_PER_DAY = 3
+HISTORY_WEEKS = 6  # weeks of past menus used to avoid repeats; older ones are dropped
 
 EVENT_GENERATION_DUE = "weeklymenu_generation_due"
+EVENT_MENU_READY = "weeklymenu_menu_ready"

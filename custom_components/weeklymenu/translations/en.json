@@ -27,7 +27,9 @@
           "general": "General settings",
           "schedule": "Schedule",
           "family": "Family members",
-          "finish": "Save and close"
+          "finish": "Save and close",
+          "styles": "Meal styles",
+          "sources": "Recipe sources"
         }
       },
       "general": {
@@ -98,6 +100,28 @@
         "data": {
           "id": "Member"
         }
+      },
+      "styles": {
+        "title": "Meal styles",
+        "data": {
+          "style_tags": "Preferred styles",
+          "vegetarian_days": "Vegetarian dinners per week",
+          "fish_min": "Fish dinners per week (at least)"
+        },
+        "data_description": {
+          "style_tags": "Recipes matching more of these are ranked higher.",
+          "vegetarian_days": "Followed when enough suitable recipes exist.",
+          "fish_min": "Followed when enough suitable recipes exist."
+        }
+      },
+      "sources": {
+        "title": "Recipe sources",
+        "data": {
+          "sources": "Enabled sources"
+        },
+        "data_description": {
+          "sources": "Sources are asked in a fixed order: store recipes first, then AI."
+        }
       }
     },
     "error": {
@@ -162,6 +186,93 @@
         "small": "Small",
         "normal": "Normal",
         "large": "Large"
+      }
+    },
+    "source": {
+      "options": {
+        "ai_task": "AI Task"
+      }
+    },
+    "style": {
+      "options": {
+        "quick": "Quick",
+        "easy": "Easy",
+        "fancy": "Fancy",
+        "family_friendly": "Family friendly",
+        "budget": "Budget"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "none": "No menu",
+          "draft": "Draft",
+          "confirmed": "Confirmed"
+        }
+      },
+      "today": {
+        "name": "Today's dinner"
+      },
+      "weekday_mon": {
+        "name": "Monday"
+      },
+      "weekday_tue": {
+        "name": "Tuesday"
+      },
+      "weekday_wed": {
+        "name": "Wednesday"
+      },
+      "weekday_thu": {
+        "name": "Thursday"
+      },
+      "weekday_fri": {
+        "name": "Friday"
+      },
+      "weekday_sat": {
+        "name": "Saturday"
+      },
+      "weekday_sun": {
+        "name": "Sunday"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Weekly Menu Generator is not set up."
+    },
+    "no_such_day": {
+      "message": "There is no dinner planned for {date}."
+    },
+    "not_a_candidate": {
+      "message": "{recipe_id} is not one of the candidates for {date}."
+    }
+  },
+  "services": {
+    "generate_menu": {
+      "name": "Generate menu",
+      "description": "Drafts a dinner menu for a week, replacing any existing draft.",
+      "fields": {
+        "week_start": {
+          "name": "Week start",
+          "description": "Any date in the week. Defaults to next week."
+        }
+      }
+    },
+    "set_recipe": {
+      "name": "Set recipe",
+      "description": "Picks one of the alternatives for a day and locks it.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The dinner to change."
+        },
+        "recipe_id": {
+          "name": "Recipe ID",
+          "description": "Id of one of the day's alternatives (see the weekday sensor)."
+        }
       }
     }
   }

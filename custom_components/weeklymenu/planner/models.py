@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass, field
+from hashlib import sha1
 from typing import Any
 from uuid import uuid4
 
@@ -81,3 +82,137 @@ def dinner_days_from_options(options: Mapping[str, Any]) -> list[str]:
     """Return the configured dinner weekdays in week order."""
     chosen = set(options.get(CONF_DINNER_DAYS, DEFAULT_DINNER_DAYS))
     return [d for d in WEEKDAYS if d in chosen]
+
+
+@dataclass(frozen=True)
+class Ingredient:
+    """One structured ingredient line. `raw` keeps the original text."""
+
+    name: str
+    amount: float | None = None
+    unit: str | None = None
+    category: str | None = None
+    raw: str = ""
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Ingredient:
+        return cls(
+            name=data["name"],
+            amount=data.get("amount"),
+            unit=data.get("unit"),
+            category=data.get("category"),
+            raw=data.get("raw", ""),
+        )
+
+
+@dataclass
+class Recipe:
+    """A recipe from any source. Only metadata and ingredients are stored."""
+
+    id: str
+    source: str
+    title: str
+    ingredients: list[Ingredient] = field(default_factory=list)
+    external_id: str | None = None
+    url: str | None = None
+    image: str | None = None
+    total_time: int | None = None  # minutes
+    servings: int | None = None
+    tags: list[str] = field(default_factory=list)
+
+    @staticmethod
+    def make_id(source: str, key: str) -> str:
+        """Stable id from the provider id and a provider-side key."""
+        return f"{source}:{key}"
+
+    @staticmethod
+    def key_from_title(title: str) -> str:
+        """Key for sources without their own ids (for example AI suggestions)."""
+        return sha1(title.strip().casefold().encode()).hexdigest()[:12]
+
+    def as_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["ingredients"] = [i.as_dict() for i in self.ingredients]
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Recipe:
+        return cls(
+            id=data["id"],
+            source=data["source"],
+            title=data["title"],
+            ingredients=[Ingredient.from_dict(i) for i in data.get("ingredients", [])],
+            external_id=data.get("external_id"),
+            url=data.get("url"),
+            image=data.get("image"),
+            total_time=data.get("total_time"),
+            servings=data.get("servings"),
+            tags=list(data.get("tags", [])),
+        )
+
+
+@dataclass
+class MenuDay:
+    """One dinner. `candidates` holds the alternatives (the chosen recipe first)."""
+
+    date: str  # ISO date
+    weekday: str  # key from WEEKDAYS
+    recipe: Recipe | None = None
+    candidates: list[Recipe] = field(default_factory=list)
+    locked: bool = False
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "date": self.date,
+            "weekday": self.weekday,
+            "recipe": self.recipe.as_dict() if self.recipe else None,
+            "candidates": [r.as_dict() for r in self.candidates],
+            "locked": self.locked,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> MenuDay:
+        recipe = data.get("recipe")
+        return cls(
+            date=data["date"],
+            weekday=data["weekday"],
+            recipe=Recipe.from_dict(recipe) if recipe else None,
+            candidates=[Recipe.from_dict(r) for r in data.get("candidates", [])],
+            locked=data.get("locked", False),
+        )
+
+
+@dataclass
+class Menu:
+    """A week of dinners. Starts as a draft; confirming comes in phase 4."""
+
+    week_start: str  # ISO date of the Monday
+    status: str = "draft"  # draft | confirmed
+    days: list[MenuDay] = field(default_factory=list)
+    generated_at: str = ""
+    warnings: list[str] = field(default_factory=list)
+
+    def day(self, iso_date: str) -> MenuDay | None:
+        return next((d for d in self.days if d.date == iso_date), None)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "week_start": self.week_start,
+            "status": self.status,
+            "days": [d.as_dict() for d in self.days],
+            "generated_at": self.generated_at,
+            "warnings": list(self.warnings),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Menu:
+        return cls(
+            week_start=data["week_start"],
+            status=data.get("status", "draft"),
+            days=[MenuDay.from_dict(d) for d in data.get("days", [])],
+            generated_at=data.get("generated_at", ""),
+            warnings=list(data.get("warnings", [])),
+        )

@@ -15,6 +15,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -27,17 +30,23 @@ from .const import (
     ALLERGENS,
     CONF_AI_TASK,
     CONF_DINNER_DAYS,
+    CONF_FISH_MIN,
     CONF_GENERATION_DAY,
     CONF_GENERATION_TIME,
     CONF_LANGUAGE,
     CONF_MEMBERS,
     CONF_SHOPPING_TARGETS,
+    CONF_SOURCES,
+    CONF_STYLE_TAGS,
     CONF_UNITS,
+    CONF_VEGETARIAN_DAYS,
     DEFAULT_DINNER_DAYS,
+    DEFAULT_FISH_MIN,
     DEFAULT_GENERATION_DAY,
     DEFAULT_GENERATION_TIME,
     DEFAULT_LANGUAGE,
     DEFAULT_UNITS,
+    DEFAULT_VEGETARIAN_DAYS,
     DIETS,
     DOMAIN,
     LANGUAGES,
@@ -51,6 +60,7 @@ from .const import (
     MEMBER_PERSON,
     MEMBER_PORTION,
     PORTIONS,
+    STYLE_TAGS,
     UNITS,
     WEEKDAYS,
 )
@@ -101,6 +111,21 @@ SCHEDULE_SCHEMA = vol.Schema(
     }
 )
 
+
+def _days_selector() -> NumberSelector:
+    return NumberSelector(
+        NumberSelectorConfig(min=0, max=7, step=1, mode=NumberSelectorMode.SLIDER)
+    )
+
+
+STYLES_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_STYLE_TAGS): _select(STYLE_TAGS, "style", multiple=True),
+        vol.Required(CONF_VEGETARIAN_DAYS): _days_selector(),
+        vol.Required(CONF_FISH_MIN): _days_selector(),
+    }
+)
+
 MEMBER_SCHEMA = vol.Schema(
     {
         vol.Required(MEMBER_NAME): TextSelector(),
@@ -141,7 +166,9 @@ class WeeklyMenuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for the general settings."""
         if user_input is not None:
-            return self.async_create_entry(title="Weekly Menu Generator", data=user_input)
+            return self.async_create_entry(
+                title="Weekly Menu Generator", data=user_input
+            )
 
         suggested = {
             CONF_LANGUAGE: self.hass.config.language
@@ -186,7 +213,15 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Top-level menu."""
         return self.async_show_menu(
-            step_id="init", menu_options=["general", "schedule", "family", "finish"]
+            step_id="init",
+            menu_options=[
+                "general",
+                "schedule",
+                "family",
+                "styles",
+                "sources",
+                "finish",
+            ],
         )
 
     async def async_step_finish(
@@ -244,6 +279,53 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
             step_id="schedule",
             data_schema=self.add_suggested_values_to_schema(SCHEDULE_SCHEMA, current),
             errors=errors,
+        )
+
+    async def async_step_styles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Style tags and weekly quotas for vegetarian and fish dinners."""
+        if user_input is not None:
+            self._save(
+                **{
+                    CONF_STYLE_TAGS: user_input.get(CONF_STYLE_TAGS, []),
+                    CONF_VEGETARIAN_DAYS: int(user_input[CONF_VEGETARIAN_DAYS]),
+                    CONF_FISH_MIN: int(user_input[CONF_FISH_MIN]),
+                }
+            )
+            return await self.async_step_init()
+        config = self._config()
+        current = {
+            CONF_STYLE_TAGS: config.get(CONF_STYLE_TAGS, []),
+            CONF_VEGETARIAN_DAYS: config.get(
+                CONF_VEGETARIAN_DAYS, DEFAULT_VEGETARIAN_DAYS
+            ),
+            CONF_FISH_MIN: config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN),
+        }
+        return self.async_show_form(
+            step_id="styles",
+            data_schema=self.add_suggested_values_to_schema(STYLES_SCHEMA, current),
+        )
+
+    async def async_step_sources(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Which recipe sources are used. Priority is fixed by the registry."""
+        available: list[str] = self.hass.data[DOMAIN]["registry"].ids
+        if user_input is not None:
+            self._save(**{CONF_SOURCES: user_input[CONF_SOURCES]})
+            return await self.async_step_init()
+        enabled = [
+            s for s in self._config().get(CONF_SOURCES, available) if s in available
+        ]
+        schema = vol.Schema(
+            {vol.Required(CONF_SOURCES): _select(available, "source", multiple=True)}
+        )
+        return self.async_show_form(
+            step_id="sources",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, {CONF_SOURCES: enabled}
+            ),
         )
 
     async def async_step_family(

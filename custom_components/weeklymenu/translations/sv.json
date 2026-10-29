@@ -27,7 +27,9 @@
           "general": "Allmänna inställningar",
           "schedule": "Schema",
           "family": "Familjemedlemmar",
-          "finish": "Spara och stäng"
+          "finish": "Spara och stäng",
+          "styles": "Måltidsstilar",
+          "sources": "Receptkällor"
         }
       },
       "general": {
@@ -98,6 +100,28 @@
         "data": {
           "id": "Medlem"
         }
+      },
+      "styles": {
+        "title": "Måltidsstilar",
+        "data": {
+          "style_tags": "Önskade stilar",
+          "vegetarian_days": "Vegetariska middagar per vecka",
+          "fish_min": "Fiskmiddagar per vecka (minst)"
+        },
+        "data_description": {
+          "style_tags": "Recept som matchar fler av dessa rankas högre.",
+          "vegetarian_days": "Följs när det finns tillräckligt många passande recept.",
+          "fish_min": "Följs när det finns tillräckligt många passande recept."
+        }
+      },
+      "sources": {
+        "title": "Receptkällor",
+        "data": {
+          "sources": "Aktiva källor"
+        },
+        "data_description": {
+          "sources": "Källorna frågas i fast ordning: butikens recept först, sedan AI."
+        }
       }
     },
     "error": {
@@ -162,6 +186,93 @@
         "small": "Liten",
         "normal": "Normal",
         "large": "Stor"
+      }
+    },
+    "source": {
+      "options": {
+        "ai_task": "AI-uppgift"
+      }
+    },
+    "style": {
+      "options": {
+        "quick": "Snabbt",
+        "easy": "Enkelt",
+        "fancy": "Festligt",
+        "family_friendly": "Barnvänligt",
+        "budget": "Billigt"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "none": "Ingen meny",
+          "draft": "Utkast",
+          "confirmed": "Bekräftad"
+        }
+      },
+      "today": {
+        "name": "Dagens middag"
+      },
+      "weekday_mon": {
+        "name": "Måndag"
+      },
+      "weekday_tue": {
+        "name": "Tisdag"
+      },
+      "weekday_wed": {
+        "name": "Onsdag"
+      },
+      "weekday_thu": {
+        "name": "Torsdag"
+      },
+      "weekday_fri": {
+        "name": "Fredag"
+      },
+      "weekday_sat": {
+        "name": "Lördag"
+      },
+      "weekday_sun": {
+        "name": "Söndag"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Veckomenygeneratorn är inte konfigurerad."
+    },
+    "no_such_day": {
+      "message": "Ingen middag är planerad för {date}."
+    },
+    "not_a_candidate": {
+      "message": "{recipe_id} är inte ett av alternativen för {date}."
+    }
+  },
+  "services": {
+    "generate_menu": {
+      "name": "Skapa meny",
+      "description": "Tar fram ett middagsutkast för en vecka och ersätter ett befintligt utkast.",
+      "fields": {
+        "week_start": {
+          "name": "Veckostart",
+          "description": "Valfritt datum i veckan. Standard är nästa vecka."
+        }
+      }
+    },
+    "set_recipe": {
+      "name": "Välj recept",
+      "description": "Väljer ett av alternativen för en dag och låser den.",
+      "fields": {
+        "date": {
+          "name": "Datum",
+          "description": "Middagen som ska ändras."
+        },
+        "recipe_id": {
+          "name": "Recept-ID",
+          "description": "Id för ett av dagens alternativ (se veckodagssensorn)."
+        }
       }
     }
   }

@@ -1,0 +1,417 @@
+"""Swedish and English ingredient rules for allergens and diets.
+
+This is a best-effort text filter, not a guarantee: it only sees what the recipe
+lists. It is deliberately over-cautious (a false positive drops a recipe, a false
+negative could hurt someone), and it always checks Swedish and English together.
+
+Each rule matches regex fragments against one ingredient text at a time. Before
+matching, `exceptions` (for example "kokosmjölk" for milk) are removed from the
+text, and a text containing any `free_from` phrase (for example "laktosfri") is
+skipped entirely.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Rule:
+    """Matches ingredient texts that contain a given substance."""
+
+    terms: tuple[str, ...]
+    exceptions: tuple[str, ...] = ()
+    free_from: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_pattern", re.compile("|".join(self.terms)))
+
+    def match(self, text: str) -> str | None:
+        """Return the matched term, or None."""
+        text = text.casefold()
+        if any(phrase in text for phrase in self.free_from):
+            return None
+        for exception in self.exceptions:
+            text = text.replace(exception, " ")
+        found = self._pattern.search(text)  # type: ignore[attr-defined]
+        return found.group(0) if found else None
+
+
+_PLANT_BASED = ("växtbaserad", "vegansk", "vegan", "plant-based", "plant based")
+
+_DAIRY_TERMS = (
+    "mjölk",
+    "milk",
+    "grädde",
+    "cream",
+    "smör",
+    "butter",
+    r"ost\b",
+    "cheese",
+    "yoghurt",
+    "yogurt",
+    "gräddfil",
+    "crème fraîche",
+    "creme fraiche",
+    "crème fraiche",
+    "kvarg",
+    "quark",
+    "keso",
+    "cottage",
+    "mozzarella",
+    "parmesan",
+    "feta",
+    "halloumi",
+    "mascarpone",
+    "ricotta",
+    "cheddar",
+    "brie",
+    "gorgonzola",
+    "pecorino",
+    "grana",
+    "kefir",
+    "vassle",
+    "whey",
+    "kasein",
+    "casein",
+    "ghee",
+    "bechamel",
+    "béchamel",
+)
+_DAIRY_EXCEPTIONS = (
+    "kokosmjölk",
+    "kokosgrädde",
+    "havremjölk",
+    "havregrädde",
+    "sojamjölk",
+    "sojagrädde",
+    "mandelmjölk",
+    "jordnötssmör",
+    "mandelsmör",
+    "nötsmör",
+    "kakaosmör",
+    "sheasmör",
+    "kokossmör",
+    "coconut milk",
+    "coconut cream",
+    "oat milk",
+    "soy milk",
+    "almond milk",
+    "rice milk",
+    "peanut butter",
+    "almond butter",
+    "cocoa butter",
+    "shea butter",
+    "coconut butter",
+    "cream of tartar",
+)
+
+ALLERGEN_RULES: dict[str, Rule] = {
+    "gluten": Rule(
+        terms=(
+            "vete",
+            "mjöl",
+            "flour",
+            r"\bråg",
+            r"\bkorn",
+            "pärlkorn",
+            "barley",
+            "havre",
+            "oat",
+            "dinkel",
+            r"\bspelt",
+            "durum",
+            "semolina",
+            "manna",
+            "pasta",
+            "spaghetti",
+            "makaron",
+            "penne",
+            "fusilli",
+            "tagliatelle",
+            "lasagne",
+            "nudl",
+            "noodle",
+            "bröd",
+            "bread",
+            "tortilla",
+            r"\bwrap",
+            "couscous",
+            "bulgur",
+            "seitan",
+            "panko",
+            "krutong",
+            "crouton",
+            "gluten",
+            r"\bdeg|deg\b",
+            "dough",
+        ),
+        exceptions=(
+            "bovete",
+            "kokosmjöl",
+            "mandelmjöl",
+            "majsmjöl",
+            "rismjöl",
+            "potatismjöl",
+            "kikärtsmjöl",
+            "tapiokamjöl",
+            "almond flour",
+            "coconut flour",
+            "rice flour",
+            "chickpea flour",
+            "risnudlar",
+            "glasnudlar",
+            "rice noodle",
+            "glass noodle",
+            "majstortilla",
+            "corn tortilla",
+            "majskorn",
+            "pepparkorn",
+            "senapskorn",
+            "vaniljkorn",
+            "granola",
+        ),
+        free_from=("glutenfri", "gluten-free", "gluten free"),
+    ),
+    "milk": Rule(
+        _DAIRY_TERMS, _DAIRY_EXCEPTIONS, _PLANT_BASED + ("mjölkfri", "dairy-free")
+    ),
+    # Lactose-free dairy is fine for lactose intolerance, but not for milk allergy.
+    "lactose": Rule(
+        _DAIRY_TERMS,
+        _DAIRY_EXCEPTIONS,
+        _PLANT_BASED
+        + ("mjölkfri", "dairy-free", "laktosfri", "lactose-free", "lactose free"),
+    ),
+    "egg": Rule(
+        terms=(
+            "ägg",
+            r"\begg",
+            "majonnäs",
+            "majonnas",
+            "mayonnaise",
+            "mayo",
+            "aioli",
+            "maräng",
+            "meringue",
+            "hollandaise",
+            "bearnaise",
+            "béarnaise",
+        ),
+        exceptions=("eggplant", "äggplanta"),
+    ),
+    "fish": Rule(
+        terms=(
+            "fisk",
+            "fish",
+            r"\blax|lax\b",
+            "salmon",
+            "torsk",
+            r"\bcod\b",
+            "sill",
+            "herring",
+            "tonfisk",
+            "tuna",
+            "makrill",
+            "mackerel",
+            r"\bsej",
+            "pollock",
+            "röding",
+            "öring",
+            "trout",
+            "abborre",
+            "gös",
+            "kolja",
+            "haddock",
+            "rödspätta",
+            "tilapia",
+            "ansjovis",
+            "anchov",
+            "sardin",
+            "surimi",
+            "worcester",
+        ),
+    ),
+    "crustaceans": Rule(
+        terms=(
+            r"\brä[ck]",
+            "shrimp",
+            "prawn",
+            "kräft",
+            "crayfish",
+            "krabb",
+            "crab",
+            "hummer",
+            "lobster",
+            "langust",
+            "scampi",
+            "krill",
+            "skaldjur",
+            "shellfish",
+        ),
+    ),
+    "molluscs": Rule(
+        terms=(
+            "mussla",
+            "musslor",
+            "mussel",
+            "ostron",
+            "oyster",
+            "bläckfisk",
+            "calamari",
+            "snäck",
+            "snail",
+            "scallop",
+            r"\bclam",
+            "skaldjur",
+            "shellfish",
+            "squid",
+            "octopus",
+        ),
+    ),
+    "peanuts": Rule(terms=("jordnöt", "peanut", "arachis")),
+    "tree_nuts": Rule(
+        terms=(
+            "mandel",
+            "almond",
+            "hasselnöt",
+            "hazelnut",
+            "valnöt",
+            "walnut",
+            "cashew",
+            "pistach",
+            "pekan",
+            "pecan",
+            "macadamia",
+            "paranöt",
+            "brazil nut",
+            "nötter",
+            "nuts",
+            "marsipan",
+            "nougat",
+            "praliné",
+            "nutella",
+        ),
+        exceptions=("peanuts", "coconut"),
+    ),
+    "soy": Rule(
+        terms=("soja", "soy", "tofu", "edamame", "tempeh", "miso", "tamari", "shoyu")
+    ),
+    "sesame": Rule(terms=("sesam", "tahini", "tahin")),
+    "celery": Rule(terms=("selleri", "celery", "celeriac")),
+    "mustard": Rule(terms=("senap", "mustard")),
+    "lupin": Rule(terms=("lupin",)),
+    "sulphites": Rule(
+        terms=(
+            "sulfit",
+            "sulphite",
+            "vitvin",
+            "rödvin",
+            "vitt vin",
+            "rött vin",
+            "white wine",
+            "red wine",
+            "torkade aprikos",
+            "dried apricot",
+        ),
+    ),
+}
+
+# Diet building blocks
+MEAT = Rule(
+    terms=(
+        "kött",
+        "färs",
+        "biff",
+        "fläsk",
+        "skinka",
+        "bacon",
+        "korv",
+        r"\bank|anka\b",
+        "kyckling",
+        "kalkon",
+        "lamm",
+        r"\box",
+        "nötfärs",
+        "kalv",
+        "vilt",
+        r"\bälg",
+        "hjort",
+        "rådjur",
+        "kanin",
+        r"\blever|lever\b",
+        "salami",
+        "chorizo",
+        "prosciutto",
+        "pancetta",
+        "kassler",
+        "revben",
+        "kotlett",
+        "schnitzel",
+        "hamburgare",
+        "burger",
+        "pölsa",
+        "beef",
+        "pork",
+        "chicken",
+        "turkey",
+        "duck",
+        "lamb",
+        "veal",
+        "sausage",
+        r"\bham\b",
+        "mince",
+        "steak",
+        "meatball",
+    ),
+    exceptions=(
+        "sojafärs",
+        "vegofärs",
+        "quornfärs",
+        "bönfärs",
+        "linsfärs",
+        "svampfärs",
+        "fiskfärs",
+        "leverpastej på",
+    ),
+    free_from=(
+        "vegetarisk",
+        "vegetarian",
+        "vegansk",
+        "vegan",
+        "vego",
+        "veggie",
+        "växtbaserad",
+        "plant-based",
+        "plant based",
+        "meat-free",
+        "köttfri",
+        "quorn",
+    ),
+)
+GELATIN = Rule(terms=("gelatin",))
+HONEY = Rule(terms=("honung", "honey"))
+
+# Diet -> rules whose substances the diet excludes
+DIET_EXCLUDES: dict[str, tuple[Rule, ...]] = {
+    "omnivore": (),
+    "pescatarian": (MEAT, GELATIN),
+    "vegetarian": (
+        MEAT,
+        GELATIN,
+        ALLERGEN_RULES["fish"],
+        ALLERGEN_RULES["crustaceans"],
+        ALLERGEN_RULES["molluscs"],
+    ),
+    "vegan": (
+        MEAT,
+        GELATIN,
+        HONEY,
+        ALLERGEN_RULES["fish"],
+        ALLERGEN_RULES["crustaceans"],
+        ALLERGEN_RULES["molluscs"],
+        ALLERGEN_RULES["milk"],
+        ALLERGEN_RULES["egg"],
+    ),
+}

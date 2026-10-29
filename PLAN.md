@@ -111,7 +111,8 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 |---|---|
 | 0 | ICA spike: login, recipe search, product search, cart add. Go/no-go |
 | 1 | Scaffold, config/options flow, family members, schedule (**done 2026-10-29**; options flow so far has general, schedule and family; the other option pages arrive with the phase that uses them) |
-| 2 | Provider interfaces, registry and fake-provider contract tests; source chain, generator, allergen validation, storage, services, entities |
+| 2a | Provider interfaces, registry and fake-provider contract tests; AI Task source, generator, allergen validation, storage, `generate_menu`/`set_recipe` services, sensors (**done 2026-10-29**) |
+| 2b | ICA recipe source (sitemaps, JSON-LD, local cache), calendar and button entities |
 | 3 | Notifications with actions, per-day regenerate, lock, swap |
 | 4 | Shopping aggregation, to-do provider, confirm flow |
 | 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
@@ -127,6 +128,19 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - Language user-defined (sv/en).
 - AI backend: Gemini via Google Generative AI integration in HA.
 - Voting is deferred to the roadmap.
+
+## Phase 2a decisions (2026-10-29)
+
+- **Allergies and diets are both hard rules** for whoever eats that day. A vegetarian member means every dinner they attend is vegetarian. Dislikes and likes are soft and only change ranking.
+- **Rules check Swedish and English together**, regardless of the language setting, since a safe false positive beats a missed allergen. The title is checked as well as the ingredients. Rules live in `planner/allergens.py` with exceptions (`kokosmjölk`, `nötfärs`, `eggplant`) and free-from phrases (`glutenfri`, `laktosfri`, `växtbaserad`). It is a text filter, not a guarantee, and the README must say so.
+- **Only attendees constrain a day.** With no members configured every dinner day is planned without constraints; days nobody attends are skipped.
+- **Source chain:** sources are asked in registry order and the next one is only asked when the week cannot be filled with eligible recipes (at least three per day). A failing source adds a warning and the chain continues. Priority is fixed by the registry, so there is no reordering UI, only enable/disable.
+- **Planner:** greedy day by day. Score = style-tag fit, repeat penalty (recipes from the last six weeks are also excluded from the request), dislike penalty, like bonus, and a reuse bonus for ingredients shared with days already picked. Vegetarian and fish quotas become hard filters only when every remaining day is needed and something qualifies. Cost and package-size terms wait for prices.
+- **Each day stores up to three candidates** with stable ids (chosen recipe first), ready for regenerate/swap in phase 3 and voting later.
+- **AI Task** is called through the `ai_task.generate_data` service with a structure schema, so the answer comes back as data. The structure is tested against Home Assistant's own validator.
+- **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
+- **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
+- **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
 
 ## 12. Phase 0 findings (2026-10-25)
 
