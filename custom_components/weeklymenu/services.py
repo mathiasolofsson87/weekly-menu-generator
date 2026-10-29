@@ -26,6 +26,7 @@ SERVICE_REGENERATE_DAY = "regenerate_day"
 SERVICE_SWAP_DAYS = "swap_days"
 SERVICE_LOCK_DAY = "lock_day"
 SERVICE_CONFIRM_MENU = "confirm_menu"
+SERVICE_ADD_TO_SHOPPING = "add_to_shopping"
 
 
 def _coordinator(hass: HomeAssistant) -> WeeklyMenuCoordinator:
@@ -80,6 +81,12 @@ def async_register_services(hass: HomeAssistant) -> None:
             await _coordinator(hass).async_confirm(call.data.get("week_start"))
         )
 
+    async def add_to_shopping(call: ServiceCall) -> ServiceResponse:
+        result = await _coordinator(hass).async_add_to_shopping(
+            call.data.get("week_start"), call.data["everything"]
+        )
+        return {"counts": result.counts, "errors": result.errors}
+
     day = {vol.Required("date"): cv.date}
     for name, handler, schema, response in (
         (
@@ -116,6 +123,15 @@ def async_register_services(hass: HomeAssistant) -> None:
             SERVICE_CONFIRM_MENU,
             confirm_menu,
             {vol.Optional("week_start"): cv.date},
+            True,
+        ),
+        (
+            SERVICE_ADD_TO_SHOPPING,
+            add_to_shopping,
+            {
+                vol.Optional("week_start"): cv.date,
+                vol.Optional("everything", default=False): cv.boolean,
+            },
             True,
         ),
     ):

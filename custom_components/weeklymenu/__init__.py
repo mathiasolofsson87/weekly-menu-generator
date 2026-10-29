@@ -16,6 +16,7 @@ from .coordinator import WeeklyMenuCoordinator
 from .notifications import Notifier
 from .scheduler import MenuScheduler
 from .services import async_register_services
+from .shopping.registry import ShoppingRegistry, build_default_shopping_registry
 from .sources.registry import SourceRegistry, build_default_registry
 from .store import MenuStore
 
@@ -37,7 +38,9 @@ type WeeklyMenuConfigEntry = ConfigEntry[WeeklyMenuData]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register services and the provider registry."""
-    hass.data.setdefault(DOMAIN, {})["registry"] = build_default_registry()
+    data = hass.data.setdefault(DOMAIN, {})
+    data["registry"] = build_default_registry()
+    data["shopping_registry"] = build_default_shopping_registry()
     async_register_services(hass)
     return True
 
@@ -45,9 +48,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: WeeklyMenuConfigEntry) -> bool:
     """Set up Weekly Menu Generator from a config entry."""
     registry: SourceRegistry = hass.data[DOMAIN]["registry"]
+    shopping_registry: ShoppingRegistry = hass.data[DOMAIN]["shopping_registry"]
     store = MenuStore(hass, entry.entry_id)
     await store.async_load()
-    coordinator = WeeklyMenuCoordinator(hass, entry, store, registry)
+    coordinator = WeeklyMenuCoordinator(hass, entry, store, registry, shopping_registry)
     await coordinator.async_config_entry_first_refresh()
 
     scheduler = MenuScheduler(hass, entry)

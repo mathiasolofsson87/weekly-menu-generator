@@ -270,6 +270,7 @@ class Menu:
     generated_at: str = ""
     warnings: list[str] = field(default_factory=list)
     confirmed_at: str | None = None
+    shopping: dict[str, Any] | None = None  # ShoppingResult as stored data
 
     def day(self, iso_date: str) -> MenuDay | None:
         return next((d for d in self.days if d.date == iso_date), None)
@@ -282,6 +283,7 @@ class Menu:
             "generated_at": self.generated_at,
             "warnings": list(self.warnings),
             "confirmed_at": self.confirmed_at,
+            "shopping": self.shopping,
         }
 
     @classmethod
@@ -293,4 +295,5 @@ class Menu:
             generated_at=data.get("generated_at", ""),
             warnings=list(data.get("warnings", [])),
             confirmed_at=data.get("confirmed_at"),
+            shopping=data.get("shopping"),
         )

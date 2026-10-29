@@ -18,6 +18,7 @@ from . import WeeklyMenuConfigEntry
 from .const import DOMAIN, WEEKDAYS
 from .coordinator import WeeklyMenuCoordinator
 from .planner.models import MenuDay
+from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
 
 
 def _day_attributes(day: MenuDay | None) -> dict[str, Any]:
@@ -75,6 +76,45 @@ class StatusSensor(_MenuSensor):
             "generated_at": menu.generated_at,
             "warnings": menu.warnings,
             "menu": {d.date: d.recipe.title if d.recipe else None for d in menu.days},
+        }
+
+
+class ShoppingSensor(_MenuSensor):
+    """How the last confirmed menu's shopping went: items added, with the details as attributes."""
+
+    def __init__(self, coordinator: WeeklyMenuCoordinator) -> None:
+        super().__init__(coordinator, "shopping")
+
+    def _result(self) -> ShoppingResult | None:
+        menu = self.coordinator.shopping_menu
+        return (
+            ShoppingResult.from_dict(menu.shopping) if menu and menu.shopping else None
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        result = self._result()
+        return result.counts[ADDED] if result else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        result, menu = self._result(), self.coordinator.shopping_menu
+        if result is None or menu is None:
+            return {}
+        text = lambda status: [
+            i.text(result.language) for i in result.with_status(status)
+        ]
+        return {
+            "week_start": menu.week_start,
+            "counts": result.counts,
+            "added": text(ADDED),
+            "review": text(REVIEW),
+            "failed": text(FAILED),
+            "pending": text(PENDING),
+            "skipped": [i.name for i in result.with_status(SKIPPED)],
+            "targets": result.targets,
+            "errors": result.errors,
+            "updated_at": result.updated_at,
         }
 
 
@@ -142,6 +182,7 @@ async def async_setup_entry(
         [
             StatusSensor(coordinator),
             TodaySensor(coordinator),
+            ShoppingSensor(coordinator),
             *(
                 DinnerSensor(
                     coordinator, f"weekday_{wd}", _weekday_lookup(coordinator, wd)

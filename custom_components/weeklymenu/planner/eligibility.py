@@ -98,7 +98,7 @@ def _group(
     return SplitGroup(
         members=[m.name for m in members],
         substitutions=swaps,
-        share=round(sum(_weight(m) for m in members) / total, 3),
+        share=round(sum(_weight(m) for m in members) / total, 6),
         separate_pans=any(
             v.kind == "allergy" for v in hard_violations(recipe, members)
         ),

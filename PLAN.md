@@ -114,7 +114,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 2a | Provider interfaces, registry and fake-provider contract tests; AI Task source, generator, allergen validation, storage, `generate_menu`/`set_recipe` services, sensors (**done 2026-10-29**) |
 | 2b | ICA recipe source (dish-type pages, JSON-LD, persistent cache), calendar and generate button (**done 2026-10-29**) |
 | 3 | Notifications with actions, per-day regenerate, lock, swap, confirm (**done 2026-10-29**) |
-| 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow |
+| 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow (**done 2026-10-29**) |
 | 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
 | 6 | Custom cards |
 | 7 | Tests, translations, docs, HACS release |
@@ -141,6 +141,21 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Phase 4: shopping (2026-10-29)
+
+Confirming a menu now builds the shopping lists. Code is in `shopping/`: `aggregate.py` (pure), `delivery.py`, `base.py` + `registry.py` (the provider interface, like the recipe side) and `todo.py` (the first provider).
+
+- **Scaling:** each dinner is scaled by the portions eaten that day over the recipe's servings (a normal portion counts 1, small 0.6, large 1.4). With no members, or no stated servings, the recipe is bought as written.
+- **Split dinners:** a swapped ingredient is bought for the share of portions that keeps it, and its replacement for each group's share. Replacements are marked `special`, so a pantry staple like flour can never swallow "gluten-free flour".
+- **Merging:** the same name is added up across recipes after converting to a common unit (ml and g), then rounded up to something you can buy: grams to 5, kilograms and litres to 0.1, dl and msk to 0.5, whole pieces for counted things, half teaspoons for small spice amounts. Units that cannot be converted (1 förp vs 2 dl) stay separate lines, so nothing is lost. Swedish units (dl, msk, tsk) or metric (ml) follow the Units setting.
+- **Names:** ICA's wording is cut at "gärna", "eller", "alt.", a percentage and so on ("nötfärs gärna ICAs nötfärs 12% eller hushållsfärs" becomes "nötfärs"), and the original text is kept as the item's note and shown as the to-do description when the list supports descriptions.
+- **Pantry staples** are never added but are listed as skipped, matched on whole words. Options hold the list (default: salt, pepper, water, oil, sugar, flour and a few more); an empty list means "buy everything".
+- **Delivery:** every item ends in exactly one state: `added` (any provider took it), `review` (a provider could not place it, so it went to the review list), `failed` (nobody could deliver it; retry with `add_to_shopping`), `skipped` (pantry), or `pending` (no list is set up yet). Confirmation is saved before shopping starts, so shopping trouble never undoes it.
+- **Services:** `add_to_shopping` retries what failed or waited, or with `everything` sends the whole list again (which can duplicate lines).
+- **Entities and events:** `sensor.…_shopping` (items added, with added, review, failed, skipped, targets and errors as attributes, for the phase 6 card), `weeklymenu_confirmed` now carries the counts, and the confirmed notification says how many items were added, need review, failed or were skipped.
+- **Options:** a Shopping page (lists, review list, pantry); the lists moved there from General, which previously would have been overwritten on save.
+- **Known limits:** plurals are not merged ("gul lök" and "gula lökar" stay two lines), the lists get no store-aisle sorting, package-size rounding beyond the steps above and "I have this at home" subtraction (section 14) are still to do, and the to-do provider cannot tell when a line is already on the list.
 
 ## Phase 3: editing the menu and notifications (2026-10-29)
 

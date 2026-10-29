@@ -40,6 +40,8 @@ from .const import (
     CONF_NOTIFY_EVENTS,
     CONF_NOTIFY_TARGETS,
     CONF_OPEN_PATH,
+    CONF_PANTRY,
+    CONF_REVIEW_LIST,
     CONF_SHOPPING_TARGETS,
     CONF_SOURCES,
     CONF_STYLE_TAGS,
@@ -73,7 +75,8 @@ from .const import (
     UNITS,
     WEEKDAYS,
 )
-from .planner.models import FamilyMember, dinner_days_from_options
+from .planner.models import FamilyMember, clean_terms, dinner_days_from_options
+from .shopping.aggregate import DEFAULT_PANTRY
 
 
 def _select(options: list[str], key: str, *, multiple: bool = False) -> SelectSelector:
@@ -95,21 +98,38 @@ def _free_terms() -> SelectSelector:
     )
 
 
-def _general_schema() -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): _select(
-                LANGUAGES, "language"
-            ),
-            vol.Required(CONF_UNITS, default=DEFAULT_UNITS): _select(UNITS, "units"),
-            vol.Optional(CONF_SHOPPING_TARGETS): EntitySelector(
-                EntitySelectorConfig(domain="todo", multiple=True)
-            ),
-            vol.Optional(CONF_AI_TASK): EntitySelector(
-                EntitySelectorConfig(domain="ai_task")
-            ),
-        }
+def _todo_lists() -> EntitySelector:
+    return EntitySelector(EntitySelectorConfig(domain="todo", multiple=True))
+
+
+def _general_schema(with_targets: bool = False) -> vol.Schema:
+    """The settings asked at setup. Shopping lists are asked there too, and edited later
+    on their own page."""
+    fields: dict[Any, Any] = {
+        vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): _select(
+            LANGUAGES, "language"
+        ),
+        vol.Required(CONF_UNITS, default=DEFAULT_UNITS): _select(UNITS, "units"),
+    }
+    if with_targets:
+        fields[vol.Optional(CONF_SHOPPING_TARGETS)] = _todo_lists()
+    fields[vol.Optional(CONF_AI_TASK)] = EntitySelector(
+        EntitySelectorConfig(domain="ai_task")
     )
+    return vol.Schema(fields)
+
+
+SHOPPING_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SHOPPING_TARGETS): _todo_lists(),
+        vol.Optional(CONF_REVIEW_LIST): EntitySelector(
+            EntitySelectorConfig(domain="todo")
+        ),
+        vol.Optional(CONF_PANTRY): SelectSelector(
+            SelectSelectorConfig(options=[], multiple=True, custom_value=True)
+        ),
+    }
+)
 
 
 SCHEDULE_SCHEMA = vol.Schema(
@@ -189,7 +209,7 @@ class WeeklyMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _general_schema(), suggested
+                _general_schema(with_targets=True), suggested
             ),
         )
 
@@ -231,6 +251,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                 "family",
                 "styles",
                 "sources",
+                "shopping",
                 "notifications",
                 "finish",
             ],
@@ -245,14 +266,13 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
     async def async_step_general(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Language, units, shopping targets and AI Task entity."""
+        """Language, units and AI Task entity."""
         if user_input is not None:
             # Write every key, so a cleared field overrides the value from setup.
             self._save(
                 **{
                     CONF_LANGUAGE: user_input[CONF_LANGUAGE],
                     CONF_UNITS: user_input[CONF_UNITS],
-                    CONF_SHOPPING_TARGETS: user_input.get(CONF_SHOPPING_TARGETS, []),
                     CONF_AI_TASK: user_input.get(CONF_AI_TASK),
                 }
             )
@@ -321,6 +341,32 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="styles",
             data_schema=self.add_suggested_values_to_schema(STYLES_SCHEMA, current),
+        )
+
+    async def async_step_shopping(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Where the shopping goes, where items needing a look go, and what is never bought."""
+        if user_input is not None:
+            self._save(
+                **{
+                    CONF_SHOPPING_TARGETS: user_input.get(CONF_SHOPPING_TARGETS, []),
+                    CONF_REVIEW_LIST: user_input.get(CONF_REVIEW_LIST),
+                    CONF_PANTRY: clean_terms(user_input.get(CONF_PANTRY)),
+                }
+            )
+            return await self.async_step_init()
+        config = self._config()
+        current = {
+            CONF_SHOPPING_TARGETS: config.get(CONF_SHOPPING_TARGETS, []),
+            CONF_REVIEW_LIST: config.get(CONF_REVIEW_LIST),
+            CONF_PANTRY: config[CONF_PANTRY]
+            if config.get(CONF_PANTRY) is not None
+            else list(DEFAULT_PANTRY),
+        }
+        return self.async_show_form(
+            step_id="shopping",
+            data_schema=self.add_suggested_values_to_schema(SHOPPING_SCHEMA, current),
         )
 
     async def async_step_notifications(

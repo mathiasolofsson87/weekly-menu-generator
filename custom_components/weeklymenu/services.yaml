@@ -65,3 +65,15 @@ confirm_menu:
       example: "2026-11-02"
       selector:
         date:
+add_to_shopping:
+  fields:
+    week_start:
+      required: false
+      example: "2026-11-02"
+      selector:
+        date:
+    everything:
+      required: false
+      default: false
+      selector:
+        boolean:

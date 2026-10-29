@@ -32,6 +32,7 @@ from .const import (
 from .coordinator import WeeklyMenuCoordinator
 from .planner.models import Menu
 from .scheduler import next_week_start
+from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,11 @@ TEXT = {
         "ready_split": "{n} middag(ar) lagas i flera versioner.",
         "confirmed_title": "Menyn är bekräftad",
         "confirmed": "Veckan som börjar {week} är låst.",
+        "shop_added": "{n} varor lades på inköpslistan.",
+        "shop_review": "{n} behöver granskas.",
+        "shop_failed": "{n} kunde inte läggas till. Försök igen med add_to_shopping.",
+        "shop_skipped": "{n} skafferivaror hoppades över.",
+        "shop_pending": "Ingen inköpslista är inställd.",
         "reminder_title": "Menyn väntar på dig",
         "reminder": "Utkastet för veckan som börjar {week} är inte bekräftat.",
         "problems_title": "Veckomenyn behöver uppmärksamhet",
@@ -71,6 +77,11 @@ TEXT = {
         "ready_split": "{n} dinner(s) are cooked in more than one version.",
         "confirmed_title": "Menu confirmed",
         "confirmed": "The week starting {week} is locked.",
+        "shop_added": "{n} items were added to the shopping list.",
+        "shop_review": "{n} need a look.",
+        "shop_failed": "{n} could not be added. Try again with add_to_shopping.",
+        "shop_skipped": "{n} pantry items were skipped.",
+        "shop_pending": "No shopping list is set up.",
         "reminder_title": "Your menu is waiting",
         "reminder": "The draft for the week starting {week} is not confirmed.",
         "problems_title": "The weekly menu needs attention",
@@ -152,7 +163,7 @@ class Notifier:
         if (menu := self._menu(event)) and self._enabled("confirmed"):
             await self._send(
                 self._text["confirmed_title"],
-                self._text["confirmed"].format(week=menu.week_start),
+                self._confirmed_message(menu),
                 tag=f"{TAG}_{menu.week_start}",
             )
 
@@ -180,6 +191,23 @@ class Notifier:
             await self._send(self._text["problems_title"], self._explain(err))
 
     # --- messages ----------------------------------------------------------------
+
+    def _confirmed_message(self, menu: Menu) -> str:
+        text = self._text
+        lines = [text["confirmed"].format(week=menu.week_start)]
+        if menu.shopping:
+            counts = ShoppingResult.from_dict(menu.shopping).counts
+            for status, key in (
+                (ADDED, "shop_added"),
+                (REVIEW, "shop_review"),
+                (FAILED, "shop_failed"),
+                (SKIPPED, "shop_skipped"),
+            ):
+                if counts[status]:
+                    lines.append(text[key].format(n=counts[status]))
+            if counts[PENDING]:
+                lines.append(text["shop_pending"])
+        return "\n".join(lines)
 
     def _explain(self, err: HomeAssistantError) -> str:
         """An error in the integration language (Home Assistant's own text follows its language)."""

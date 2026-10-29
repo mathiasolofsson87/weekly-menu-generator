@@ -30,7 +30,8 @@
           "finish": "Save and close",
           "styles": "Meal styles",
           "sources": "Recipe sources",
-          "notifications": "Notifications"
+          "notifications": "Notifications",
+          "shopping": "Shopping"
         }
       },
       "general": {
@@ -139,6 +140,19 @@
           "notify_targets": "Notify services such as mobile_app_your_phone. Buttons for Open, Confirm and Regenerate work with the Home Assistant app.",
           "notify_events": "Problems are sent separately, for example when a recipe source fails.",
           "open_path": "A dashboard path, for example /lovelace/menu."
+        }
+      },
+      "shopping": {
+        "title": "Shopping",
+        "data": {
+          "shopping_targets": "Shopping lists",
+          "review_list": "List for items to review",
+          "pantry_staples": "Pantry staples"
+        },
+        "data_description": {
+          "shopping_targets": "To-do lists that receive the ingredients when you confirm the menu.",
+          "review_list": "Items a shopping provider could not place end up here, so nothing is lost. Leave empty to skip.",
+          "pantry_staples": "Never added to the lists (matched on whole words, so 'salt' also covers 'salt och peppar'). Substitutes bought for a diet or allergy are never skipped."
         }
       }
     },
@@ -263,6 +277,9 @@
       },
       "weekday_sun": {
         "name": "Sunday"
+      },
+      "shopping": {
+        "name": "Shopping"
       }
     },
     "calendar": {
@@ -309,6 +326,9 @@
     },
     "no_draft": {
       "message": "There is no draft menu to confirm."
+    },
+    "no_confirmed_menu": {
+      "message": "There is no confirmed menu to shop for."
     }
   },
   "services": {
@@ -389,6 +409,20 @@
         "week_start": {
           "name": "Week start",
           "description": "Any date in the week to confirm."
+        }
+      }
+    },
+    "add_to_shopping": {
+      "name": "Add to shopping",
+      "description": "Tries again with the items of a confirmed menu that could not be delivered, or builds and sends the whole list again.",
+      "fields": {
+        "week_start": {
+          "name": "Week start",
+          "description": "Any date in the week. Defaults to the latest confirmed menu."
+        },
+        "everything": {
+          "name": "Everything",
+          "description": "Send the whole list again, which can create duplicates on the lists."
         }
       }
     }

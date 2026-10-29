@@ -30,7 +30,8 @@
           "finish": "Spara och stäng",
           "styles": "Måltidsstilar",
           "sources": "Receptkällor",
-          "notifications": "Notiser"
+          "notifications": "Notiser",
+          "shopping": "Inköp"
         }
       },
       "general": {
@@ -139,6 +140,19 @@
           "notify_targets": "Notifieringstjänster som mobile_app_din_telefon. Knapparna Öppna, Bekräfta och Skapa om fungerar med Home Assistant-appen.",
           "notify_events": "Problem skickas separat, till exempel när en receptkälla inte fungerar.",
           "open_path": "En dashboardsökväg, till exempel /lovelace/menu."
+        }
+      },
+      "shopping": {
+        "title": "Inköp",
+        "data": {
+          "shopping_targets": "Inköpslistor",
+          "review_list": "Lista för varor att granska",
+          "pantry_staples": "Skafferivaror"
+        },
+        "data_description": {
+          "shopping_targets": "Att göra-listor som får ingredienserna när du bekräftar menyn.",
+          "review_list": "Varor som en inköpstjänst inte kunde placera hamnar här, så inget går förlorat. Lämna tomt för att hoppa över.",
+          "pantry_staples": "Läggs aldrig på listorna (matchas på hela ord, så 'salt' täcker även 'salt och peppar'). Ersättningsvaror för kost eller allergi hoppas aldrig över."
         }
       }
     },
@@ -263,6 +277,9 @@
       },
       "weekday_sun": {
         "name": "Söndag"
+      },
+      "shopping": {
+        "name": "Inköp"
       }
     },
     "calendar": {
@@ -309,6 +326,9 @@
     },
     "no_draft": {
       "message": "Det finns inget menyutkast att bekräfta."
+    },
+    "no_confirmed_menu": {
+      "message": "Det finns ingen bekräftad meny att handla för."
     }
   },
   "services": {
@@ -389,6 +409,20 @@
         "week_start": {
           "name": "Veckostart",
           "description": "Valfritt datum i veckan som ska bekräftas."
+        }
+      }
+    },
+    "add_to_shopping": {
+      "name": "Lägg på inköp",
+      "description": "Försöker igen med de varor från en bekräftad meny som inte kunde levereras, eller bygger och skickar hela listan igen.",
+      "fields": {
+        "week_start": {
+          "name": "Veckostart",
+          "description": "Valfritt datum i veckan. Standard är den senaste bekräftade menyn."
+        },
+        "everything": {
+          "name": "Allt",
+          "description": "Skicka hela listan igen, vilket kan ge dubbletter på listorna."
         }
       }
     }

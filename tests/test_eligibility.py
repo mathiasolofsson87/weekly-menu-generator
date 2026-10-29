@@ -1,5 +1,7 @@
 """Cooking one dinner in more than one version so everyone can eat it."""
 
+import pytest
+
 from custom_components.weeklymenu.planner.eligibility import assess
 from custom_components.weeklymenu.planner.models import Split
 from tests.helpers import member, recipe
@@ -67,7 +69,7 @@ def test_mince_and_sausage_get_matching_substitutes() -> None:
 def test_split_share_follows_portion_sizes() -> None:
     kid = member("Kid", diet="vegetarian", portion="small")
     group = only_group(assess(STEAK, [member("Big", portion="large"), kid]))
-    assert group.share == round(0.6 / 2.0, 3)
+    assert group.share == pytest.approx(0.3)
 
 
 def test_nobody_eating_the_original_is_not_a_split() -> None:
@@ -219,13 +221,13 @@ def test_diet_and_allergy_can_need_two_different_versions() -> None:
         swaps(by_member["Kim"]) == [("grädde", "2 dl havregrädde")]
         and by_member["Kim"].separate_pans
     )
-    assert sorted(g.share for g in result.split.groups) == [round(1 / 3, 3)] * 2
+    assert sorted(g.share for g in result.split.groups) == pytest.approx([1 / 3, 1 / 3])
 
 
 def test_members_with_the_same_needs_share_a_version() -> None:
     result = assess(SALMON, [OLLE, ANNA_VEG, member("Eva", allergies=["fish"])])
     group = only_group(result)
-    assert group.members == ["Anna", "Eva"] and group.share == round(2 / 3, 3)
+    assert group.members == ["Anna", "Eva"] and group.share == pytest.approx(2 / 3)
     assert group.separate_pans is True  # one of them is allergic
 
 

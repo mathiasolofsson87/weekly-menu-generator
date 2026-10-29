@@ -18,8 +18,11 @@ from .const import (
     CONF_FISH_MIN,
     CONF_LANGUAGE,
     CONF_MAX_SPLIT_DAYS,
+    CONF_PANTRY,
+    CONF_REVIEW_LIST,
     CONF_SOURCES,
     CONF_STYLE_TAGS,
+    CONF_UNITS,
     CONF_VEGETARIAN_DAYS,
     DEFAULT_FISH_MIN,
     DEFAULT_LANGUAGE,
@@ -44,6 +47,10 @@ from .planner.models import (
     dinner_days_from_options,
     members_from_options,
 )
+from .shopping.aggregate import DEFAULT_PANTRY, aggregate
+from .shopping.delivery import async_deliver, to_retry
+from .shopping.models import ShoppingResult
+from .shopping.registry import ShoppingRegistry
 from .sources.base import RecipeSource
 from .sources.registry import SourceRegistry
 from .store import MenuStore
@@ -60,12 +67,14 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
         entry: ConfigEntry,
         store: MenuStore,
         registry: SourceRegistry,
+        shopping_registry: ShoppingRegistry,
     ) -> None:
         super().__init__(
             hass, _LOGGER, config_entry=entry, name=DOMAIN, update_interval=None
         )
         self.store = store
         self.registry = registry
+        self.shopping_registry = shopping_registry
         self._lock = asyncio.Lock()
 
     async def _async_update_data(self) -> dict[str, Menu]:
@@ -295,9 +304,89 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             self._editable(menu)
             menu.status = "confirmed"
             menu.confirmed_at = dt_util.utcnow().isoformat()
-            await self._commit(menu)
+            await self._commit(
+                menu
+            )  # confirmed first: shopping trouble must not undo it
+            await self._shop(menu)
         self.hass.bus.async_fire(
             EVENT_CONFIRMED,
-            {"week_start": menu.week_start, "warnings": list(menu.warnings)},
+            {
+                "week_start": menu.week_start,
+                "warnings": list(menu.warnings),
+                "shopping": self.shopping_counts(menu),
+            },
         )
         return menu
+
+    # --- shopping --------------------------------------------------------------
+
+    @staticmethod
+    def shopping_counts(menu: Menu) -> dict[str, int] | None:
+        return ShoppingResult.from_dict(menu.shopping).counts if menu.shopping else None
+
+    @property
+    def shopping_menu(self) -> Menu | None:
+        """The menu whose shopping was done last."""
+        done = [m for m in self.data.values() if m.shopping]
+        return max(done, key=lambda m: m.week_start) if done else None
+
+    async def _shop(self, menu: Menu, retry_only: bool = False) -> None:
+        """Build the lists for a confirmed menu and deliver them. Never raises: trouble is
+        recorded in the result, and the items can be retried with add_to_shopping."""
+        config = self.config
+        language = config.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
+        previous = ShoppingResult.from_dict(menu.shopping) if menu.shopping else None
+        try:
+            if retry_only and previous:
+                result, items = previous, to_retry(previous)
+            else:
+                built = aggregate(
+                    menu,
+                    self._settings(),
+                    list(
+                        DEFAULT_PANTRY
+                        if config.get(CONF_PANTRY) is None
+                        else config[CONF_PANTRY]
+                    ),
+                    metric_only=config.get(CONF_UNITS) == "metric",
+                )
+                result = ShoppingResult(
+                    items=built.items + built.skipped, language=language
+                )
+                items = built.items
+            result.errors = []
+            await async_deliver(
+                self.hass,
+                self.shopping_registry.create(self.hass, config),
+                config.get(CONF_REVIEW_LIST),
+                items,
+                result,
+            )
+            result.touch()
+            menu.shopping = result.as_dict()
+        except Exception:
+            _LOGGER.exception("Building the shopping lists failed")
+            failed = previous or ShoppingResult(language=language)
+            failed.errors = ["unexpected"]
+            menu.shopping = failed.as_dict()
+        await self._commit(menu)
+
+    async def async_add_to_shopping(
+        self, week_start: date | None = None, everything: bool = False
+    ) -> ShoppingResult:
+        """Retry what failed for a confirmed menu, or (everything=True) build and push it all again."""
+        async with self._lock:
+            menus = [m for m in self.store.menus.values() if m.status == "confirmed"]
+            if week_start is not None:
+                menus = [
+                    m
+                    for m in menus
+                    if m.week_start == week_start_of(week_start).isoformat()
+                ]
+            if not menus:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="no_confirmed_menu"
+                )
+            menu = max(menus, key=lambda m: m.week_start)
+            await self._shop(menu, retry_only=not everything and bool(menu.shopping))
+            return ShoppingResult.from_dict(menu.shopping or {})
