@@ -79,14 +79,16 @@
           "likes": "Likes",
           "diet": "Diet",
           "portion": "Portion size",
-          "attends": "Eats dinner on"
+          "attends": "Eats dinner on",
+          "cook_separately": "Allergens can be cooked separately"
         },
         "data_description": {
           "person": "Optional. Links the member to a Home Assistant person.",
           "allergies": "Hard rule: recipes with these ingredients are never suggested. Pick from the list or type your own.",
           "dislikes": "Avoided when possible. Type and press enter.",
           "likes": "Preferred when possible. Type and press enter.",
-          "attends": "Days this person eats dinner at home."
+          "attends": "Days this person eats dinner at home.",
+          "cook_separately": "On: a recipe containing this person's allergen can still be used when that ingredient can be swapped and cooked in clean, separate pans. Off: such recipes are never suggested. Turn off for severe allergies."
         }
       },
       "member_edit": {
@@ -107,13 +109,13 @@
           "style_tags": "Preferred styles",
           "vegetarian_days": "Vegetarian dinners per week",
           "fish_min": "Fish dinners per week (at least)",
-          "max_split_days": "Dinners with a separate protein (at most)"
+          "max_split_days": "Dinners cooked in more than one version (at most)"
         },
         "data_description": {
           "style_tags": "Recipes matching more of these are ranked higher.",
           "vegetarian_days": "Followed when enough suitable recipes exist.",
           "fish_min": "Followed when enough suitable recipes exist.",
-          "max_split_days": "When someone does not eat the meat or fish, a dinner can still be used if only that protein is in the way: they get a substitute such as tofu. This limits how often per week."
+          "max_split_days": "When someone cannot eat an ingredient (meat for a vegetarian, cream for a dairy allergy, pasta for gluten), a dinner can still be used if that ingredient can be swapped: they get an adjusted version. This limits how often per week."
         }
       },
       "sources": {

@@ -98,7 +98,13 @@ async def test_options_general_clears_optional_fields(hass: HomeAssistant) -> No
 
 async def _add_member(hass, flow_id, **overrides):
     await _menu(hass, flow_id, "member_add")
-    data = {"name": "Anna", "diet": "omnivore", "portion": "normal", "attends": ["mon"]}
+    data = {
+        "name": "Anna",
+        "diet": "omnivore",
+        "portion": "normal",
+        "attends": ["mon"],
+        "cook_separately": True,
+    }
     return await hass.config_entries.options.async_configure(
         flow_id, {**data, **overrides}
     )
@@ -153,7 +159,13 @@ async def test_edit_and_remove_member(hass: HomeAssistant) -> None:
     await hass.config_entries.options.async_configure(flow_id, {"id": member_id})
     result = await hass.config_entries.options.async_configure(
         flow_id,
-        {"name": "Anna B", "diet": "omnivore", "portion": "large", "attends": ["fri"]},
+        {
+            "name": "Anna B",
+            "diet": "omnivore",
+            "portion": "large",
+            "attends": ["fri"],
+            "cook_separately": True,
+        },
     )
     assert result["type"] is FlowResultType.MENU
     [anna] = entry.options["members"]

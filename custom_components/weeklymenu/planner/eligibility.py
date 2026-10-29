@@ -1,4 +1,11 @@
-"""Can these people eat this recipe, and if only the protein is in the way, how to split it."""
+"""Can these people eat this recipe, and if not, can it be cooked in more than one version.
+
+A member who breaks a rule on specific ingredient lines gets an adjusted version in
+which exactly those lines are swapped. Members with the same needs share a version.
+Anyone with no conflict eats the recipe as written. Nothing is split when the title
+alone objects, when stock, anchovies or gelatin are involved, when egg, soy or nuts
+would have to be swapped, or when no replacement is safe for the group.
+"""
 
 from __future__ import annotations
 
@@ -6,18 +13,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..const import PORTION_WEIGHTS
-from .allergens import DIET_EXCLUDES
 from .constraints import hard_violations
-from .models import FamilyMember, Ingredient, Recipe, Split, Substitution
-from .substitutes import (
-    FLAVOURING,
-    PROTEIN_RULES,
-    ProteinKind,
-    Replacement,
-    kind_of,
-)
+from .models import FamilyMember, Ingredient, Recipe, Split, SplitGroup, Substitution
+from .substitutes import FLAVOURING, Replacement, SwapKind, kind_of
 
-_GRAMS_UNITS = {"g": 1.0, "kg": 1000.0}
+MAX_GROUPS = 2  # alternative versions beside the original
 
 
 @dataclass(frozen=True)
@@ -34,12 +34,14 @@ def _weight(member: FamilyMember) -> float:
     return PORTION_WEIGHTS.get(member.portion, 1.0)
 
 
-def _safe_for(option: Replacement, members: Sequence[FamilyMember]) -> bool:
+def _bare(ingredients: list[Ingredient]) -> Recipe:
+    """A recipe stub without a title, so only ingredient lines are judged."""
+    return Recipe(id="", source="", title="", ingredients=ingredients)
+
+
+def _safe_for(option: Replacement, members: Sequence[FamilyMember], name: str) -> bool:
     """True when `option` breaks no allergy or diet of `members`, by name or declared contents."""
-    stub = Recipe(
-        id="", source="", title="", ingredients=[Ingredient(name=option.name)]
-    )
-    if hard_violations(stub, members):
+    if hard_violations(_bare([Ingredient(name=name)]), members):
         return False
     contains = set(option.contains)
     for member in members:
@@ -54,11 +56,12 @@ def _safe_for(option: Replacement, members: Sequence[FamilyMember]) -> bool:
 
 
 def _replacement(
-    original: Ingredient, kind: ProteinKind, restricted: Sequence[FamilyMember]
+    original: Ingredient, kind: SwapKind, members: Sequence[FamilyMember]
 ) -> Ingredient | None:
-    """The first substitute for `original` that every restricted member can eat."""
+    """The first substitute for `original` that every member of the group can eat."""
     for option in kind.replacements:
-        if not _safe_for(option, restricted):
+        name = option.name.format(name=original.name)
+        if not _safe_for(option, members, name):
             continue
         amount, unit = original.amount, original.unit
         if amount is not None:
@@ -67,60 +70,73 @@ def _replacement(
             amount = round(amount * option.factor, 3)
         text = " ".join(
             part
-            for part in (
-                f"{amount:g}" if amount is not None else "",
-                unit or "",
-                option.name,
-            )
+            for part in (f"{amount:g}" if amount is not None else "", unit or "", name)
             if part
         )
-        return Ingredient(name=option.name, amount=amount, unit=unit, raw=text)
+        return Ingredient(name=name, amount=amount, unit=unit, raw=text)
     return None
 
 
-def _plan_split(recipe: Recipe, attendees: Sequence[FamilyMember]) -> Split | None:
-    # Which attendees break a diet rule on an ingredient line (the title does not count).
-    restricted = [
-        m
-        for m in attendees
-        if any(
-            r.match(_text(i))
-            for i in recipe.ingredients
-            for r in DIET_EXCLUDES.get(m.diet, ())
-        )
-    ]
-    if not restricted or len(restricted) == len(attendees):
-        return None  # nothing to split, or nobody would eat the original protein
-
+def _group(
+    recipe: Recipe, lines: tuple[int, ...], members: list[FamilyMember], total: float
+) -> SplitGroup | None:
     swaps: list[Substitution] = []
-    for ingredient in recipe.ingredients:
-        text = _text(ingredient)
-        broken = any(
-            r.match(text) for m in restricted for r in DIET_EXCLUDES.get(m.diet, ())
-        )
-        if not broken:
-            continue
-        if FLAVOURING.match(text) or not any(
-            rule.match(text) for rule in PROTEIN_RULES
-        ):
-            return None  # stock, anchovies, dairy, egg...: more than a protein is in the way
-        kind = kind_of(text)
-        replacement = _replacement(ingredient, kind, restricted) if kind else None
-        if replacement is None:
+    adjusted = list(recipe.ingredients)
+    for index in lines:
+        original = recipe.ingredients[index]
+        if FLAVOURING.match(_text(original)):
             return None
-        swaps.append(Substitution(ingredient, replacement))
+        kind = kind_of(_text(original))
+        new = _replacement(original, kind, members) if kind else None
+        if new is None:
+            return None
+        swaps.append(Substitution(original, new))
+        adjusted[index] = new
+    # Whatever the swaps missed, the adjusted version itself must be clean for the group.
+    if hard_violations(_bare(adjusted), members):
+        return None
+    return SplitGroup(
+        members=[m.name for m in members],
+        substitutions=swaps,
+        share=round(sum(_weight(m) for m in members) / total, 3),
+        separate_pans=any(
+            v.kind == "allergy" for v in hard_violations(recipe, members)
+        ),
+    )
+
+
+def _plan_split(recipe: Recipe, attendees: Sequence[FamilyMember]) -> Split | None:
+    needs: dict[tuple[int, ...], list[FamilyMember]] = {}
+    for member in attendees:
+        if not hard_violations(recipe, [member]):
+            continue
+        lines = tuple(
+            i
+            for i, ingredient in enumerate(recipe.ingredients)
+            if hard_violations(_bare([ingredient]), [member])
+        )
+        if not lines:
+            return None  # only the title objects, so the listing may be incomplete
+        needs.setdefault(lines, []).append(member)
+
+    served = sum(len(members) for members in needs.values())
+    if not needs or served == len(attendees) or len(needs) > MAX_GROUPS:
+        return None  # nothing to split, nobody eats the original, or too many versions
 
     total = sum(_weight(m) for m in attendees)
-    share = round(sum(_weight(m) for m in restricted) / total, 3)
-    return Split(members=[m.name for m in restricted], substitutions=swaps, share=share)
+    groups = [_group(recipe, lines, members, total) for lines, members in needs.items()]
+    if any(g is None for g in groups):
+        return None
+    return Split(groups=[g for g in groups if g])
 
 
 def assess(recipe: Recipe, attendees: Sequence[FamilyMember]) -> Eligibility:
-    """Allergies are never negotiable. A diet conflict is fine if it is only a swappable protein."""
+    """Whether the recipe can be served to `attendees`, and as one dinner or several versions."""
     violations = hard_violations(recipe, attendees)
     if not violations:
         return Eligibility(True)
-    if any(v.kind == "allergy" for v in violations):
+    strict = {m.name for m in attendees if not m.cook_separately}
+    if any(v.kind == "allergy" and v.member in strict for v in violations):
         return Eligibility(False)
     split = _plan_split(recipe, attendees)
     return Eligibility(split is not None, split)

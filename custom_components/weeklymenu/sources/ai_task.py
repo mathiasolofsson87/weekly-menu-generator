@@ -56,9 +56,9 @@ _PROMPTS = {
         "use_up": "Använd gärna dessa ingredienser: {terms}.",
         "hint": "Extra önskemål: {text}",
         "separable": (
-            "Om en rätt innehåller kött eller fisk: skriv proteinet som en egen ingrediensrad "
-            "och blanda inte in kött eller fisk i såser, buljonger eller kryddblandningar, så att "
-            "proteinet kan bytas mot ett vegetariskt alternativ åt den som inte äter det."
+            "Om en rätt innehåller kött, fisk, mejeriprodukter eller gluten: skriv dem som egna "
+            "ingrediensrader och blanda inte in dem i såser, buljonger eller kryddblandningar, så "
+            "att de kan bytas mot ett alternativ åt den som inte kan äta dem."
         ),
         "format": (
             "Skriv varje ingrediens på en rad med mängd och enhet (g, kg, dl, msk, tsk, st), "
@@ -75,9 +75,9 @@ _PROMPTS = {
         "use_up": "Please use these ingredients: {terms}.",
         "hint": "Extra wishes: {text}",
         "separable": (
-            "If a dish contains meat or fish: write the protein on its own ingredient line and "
-            "do not hide meat or fish in sauces, stocks or spice mixes, so the protein can be "
-            "swapped for a vegetarian alternative for anyone who does not eat it."
+            "If a dish contains meat, fish, dairy or gluten: write them on their own ingredient "
+            "lines and do not hide them in sauces, stocks or spice mixes, so they can be swapped "
+            "for an alternative for anyone who cannot eat them."
         ),
         "format": (
             "Write each ingredient on one line with amount and unit (g, kg, dl, msk, tsk, st), "
@@ -103,7 +103,7 @@ def build_instructions(request: CandidateRequest) -> str:
         parts.append(text["use_up"].format(terms=", ".join(request.use_up)))
     if request.hint:
         parts.append(text["hint"].format(text=request.hint))
-    if request.separable_protein:
+    if request.separable:
         parts.append(text["separable"])
     parts.append(text["format"].format(tags=", ".join(STYLE_TAGS)))
     return " ".join(parts)

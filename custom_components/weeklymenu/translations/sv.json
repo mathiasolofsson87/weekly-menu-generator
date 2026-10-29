@@ -79,14 +79,16 @@
           "likes": "Gillar",
           "diet": "Kost",
           "portion": "Portionsstorlek",
-          "attends": "Äter middag på"
+          "attends": "Äter middag på",
+          "cook_separately": "Allergener kan lagas separat"
         },
         "data_description": {
           "person": "Valfritt. Kopplar medlemmen till en person i Home Assistant.",
           "allergies": "Hård regel: recept med dessa ingredienser föreslås aldrig. Välj ur listan eller skriv egna.",
           "dislikes": "Undviks när det går. Skriv och tryck enter.",
           "likes": "Föredras när det går. Skriv och tryck enter.",
-          "attends": "Dagar då personen äter middag hemma."
+          "attends": "Dagar då personen äter middag hemma.",
+          "cook_separately": "På: ett recept med personens allergen kan ändå användas när ingrediensen kan bytas och lagas i rena, separata pannor. Av: sådana recept föreslås aldrig. Stäng av vid svåra allergier."
         }
       },
       "member_edit": {
@@ -107,13 +109,13 @@
           "style_tags": "Önskade stilar",
           "vegetarian_days": "Vegetariska middagar per vecka",
           "fish_min": "Fiskmiddagar per vecka (minst)",
-          "max_split_days": "Middagar med separat protein (högst)"
+          "max_split_days": "Middagar som lagas i flera versioner (högst)"
         },
         "data_description": {
           "style_tags": "Recept som matchar fler av dessa rankas högre.",
           "vegetarian_days": "Följs när det finns tillräckligt många passande recept.",
           "fish_min": "Följs när det finns tillräckligt många passande recept.",
-          "max_split_days": "När någon inte äter köttet eller fisken kan middagen ändå användas om det bara är proteinet som hindrar: personen får ett alternativ som tofu. Det här begränsar hur ofta per vecka."
+          "max_split_days": "När någon inte kan äta en ingrediens (kött för vegetarianer, grädde vid mjölkallergi, pasta vid gluten) kan middagen ändå användas om ingrediensen kan bytas: personen får en anpassad version. Det här begränsar hur ofta per vecka."
         }
       },
       "sources": {

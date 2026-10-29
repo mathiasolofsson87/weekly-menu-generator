@@ -79,8 +79,11 @@ async def async_generate_menu(
         tags=settings.style_tags,
         avoid=sorted({t for m in everyone for t in (*m.allergies, *m.dislikes)}),
         diets=sorted({m.diet for m in everyone}),
-        separable_protein=settings.max_split_days > 0
-        and len({m.diet for m in everyone}) > 1,
+        separable=settings.max_split_days > 0
+        and (
+            len({m.diet for m in everyone}) > 1
+            or any(m.allergies and m.cook_separately for m in everyone)
+        ),
         exclude_ids=set(recent_ids),
     )
 

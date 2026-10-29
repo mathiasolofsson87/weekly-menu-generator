@@ -14,6 +14,7 @@ from ..const import (
     DEFAULT_DINNER_DAYS,
     MEMBER_ALLERGIES,
     MEMBER_ATTENDS,
+    MEMBER_COOK_SEPARATELY,
     MEMBER_DIET,
     MEMBER_DISLIKES,
     MEMBER_ID,
@@ -47,6 +48,8 @@ class FamilyMember:
     likes: list[str] = field(default_factory=list)
     diet: str = "omnivore"
     portion: str = "normal"
+    # Allergen may be cooked separately (clean pans) so the dinner can still be used.
+    cook_separately: bool = True
     attends: list[str] = field(default_factory=lambda: list(DEFAULT_DINNER_DAYS))
 
     def as_dict(self) -> dict[str, Any]:
@@ -65,6 +68,7 @@ class FamilyMember:
             likes=clean_terms(data.get(MEMBER_LIKES)),
             diet=data.get(MEMBER_DIET) or "omnivore",
             portion=data.get(MEMBER_PORTION) or "normal",
+            cook_separately=data.get(MEMBER_COOK_SEPARATELY, True),
             attends=[
                 d
                 for d in data.get(MEMBER_ATTENDS, DEFAULT_DINNER_DAYS)
@@ -176,30 +180,50 @@ class Substitution:
 
 
 @dataclass
-class Split:
-    """Members who cannot eat the recipe's protein get a substitute instead.
+class SplitGroup:
+    """Members who get an adjusted version of the dinner.
 
-    `share` is the fraction of the dinner's portions eaten by `members`, so shopping
-    buys the original protein for the rest and the substitute for this share."""
+    `share` is the fraction of the dinner's portions they eat, so shopping buys the
+    replacement for that share and the original for the rest. `separate_pans` is set
+    when an allergy is involved: the adjusted version must be cooked with clean pans
+    and utensils."""
 
     members: list[str]
     substitutions: list[Substitution]
     share: float
+    separate_pans: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "members": list(self.members),
             "substitutions": [s.as_dict() for s in self.substitutions],
             "share": self.share,
+            "separate_pans": self.separate_pans,
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> Split:
+    def from_dict(cls, data: Mapping[str, Any]) -> SplitGroup:
         return cls(
             members=list(data["members"]),
             substitutions=[Substitution.from_dict(s) for s in data["substitutions"]],
             share=data["share"],
+            separate_pans=data.get("separate_pans", False),
         )
+
+
+@dataclass
+class Split:
+    """A dinner cooked in more than one version, because some members cannot eat the
+    original. Everyone not in a group eats the recipe as written."""
+
+    groups: list[SplitGroup]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"groups": [g.as_dict() for g in self.groups]}
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Split:
+        return cls(groups=[SplitGroup.from_dict(g) for g in data["groups"]])
 
 
 @dataclass

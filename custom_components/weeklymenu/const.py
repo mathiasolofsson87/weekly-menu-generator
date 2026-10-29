@@ -29,6 +29,7 @@ MEMBER_LIKES = "likes"
 MEMBER_DIET = "diet"
 MEMBER_PORTION = "portion"
 MEMBER_ATTENDS = "attends"
+MEMBER_COOK_SEPARATELY = "cook_separately"
 
 LANGUAGES = ["sv", "en"]
 UNITS = ["swedish", "metric"]  # swedish: dl, msk, tsk. metric: ml, g.

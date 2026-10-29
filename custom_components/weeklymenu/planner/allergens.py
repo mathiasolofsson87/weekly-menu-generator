@@ -38,9 +38,9 @@ class Rule:
         return found.group(0) if found else None
 
 
-_PLANT_BASED = ("växtbaserad", "vegansk", "vegan", "plant-based", "plant based")
+PLANT_BASED = ("växtbaserad", "vegansk", "vegan", "plant-based", "plant based")
 
-_DAIRY_TERMS = (
+DAIRY_TERMS = (
     "mjölk",
     "milk",
     "grädde",
@@ -79,7 +79,7 @@ _DAIRY_TERMS = (
     "bechamel",
     "béchamel",
 )
-_DAIRY_EXCEPTIONS = (
+DAIRY_EXCEPTIONS = (
     "kokosmjölk",
     "kokosgrädde",
     "havremjölk",
@@ -175,13 +175,13 @@ ALLERGEN_RULES: dict[str, Rule] = {
         free_from=("glutenfri", "gluten-free", "gluten free"),
     ),
     "milk": Rule(
-        _DAIRY_TERMS, _DAIRY_EXCEPTIONS, _PLANT_BASED + ("mjölkfri", "dairy-free")
+        DAIRY_TERMS, DAIRY_EXCEPTIONS, PLANT_BASED + ("mjölkfri", "dairy-free")
     ),
     # Lactose-free dairy is fine for lactose intolerance, but not for milk allergy.
     "lactose": Rule(
-        _DAIRY_TERMS,
-        _DAIRY_EXCEPTIONS,
-        _PLANT_BASED
+        DAIRY_TERMS,
+        DAIRY_EXCEPTIONS,
+        PLANT_BASED
         + ("mjölkfri", "dairy-free", "laktosfri", "lactose-free", "lactose free"),
     ),
     "egg": Rule(

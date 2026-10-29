@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -54,6 +55,7 @@ from .const import (
     LANGUAGES,
     MEMBER_ALLERGIES,
     MEMBER_ATTENDS,
+    MEMBER_COOK_SEPARATELY,
     MEMBER_DIET,
     MEMBER_DISLIKES,
     MEMBER_ID,
@@ -149,6 +151,7 @@ MEMBER_SCHEMA = vol.Schema(
         vol.Required(MEMBER_DIET): _select(DIETS, "diet"),
         vol.Required(MEMBER_PORTION): _select(PORTIONS, "portion"),
         vol.Required(MEMBER_ATTENDS): _select(WEEKDAYS, "weekday", multiple=True),
+        vol.Required(MEMBER_COOK_SEPARATELY): BooleanSelector(),
     }
 )
 
@@ -436,6 +439,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
             current = {
                 MEMBER_DIET: "omnivore",
                 MEMBER_PORTION: "normal",
+                MEMBER_COOK_SEPARATELY: True,
                 MEMBER_ATTENDS: dinner_days_from_options(self._config())
                 or list(DEFAULT_DINNER_DAYS),
             }

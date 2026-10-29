@@ -142,17 +142,22 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
 
-## Split dinners: one recipe, two proteins (2026-10-29)
+## Split dinners: one recipe, more than one version (2026-10-29)
 
-A meat recipe whose only obstacle for a vegetarian is the protein still counts. Members who cannot eat it get a substitute and the others get the original.
+If the only thing in the way for some members is an ingredient that can be swapped, the dinner is still served. Those members get an adjusted version, cooked separately, and everyone else eats the recipe as written. This covers diets (meat for a vegetarian) and allergies (cream for a milk allergy, pasta for gluten, salmon for a fish allergy), because the allergen can be swapped and cooked in clean, separate pans.
 
-- **Eligibility** (`planner/eligibility.py`): allergies are never split (a shared pan is not safe enough). A diet conflict can be split only if every offending ingredient line is a plain protein (meat, fish, shellfish) and not stock, fish sauce, anchovies, gelatin, dairy or egg. A conflict that exists only in the title never qualifies. At least one attendee must eat the original; otherwise the recipe is simply not eligible.
-- **Substitutes** (`planner/substitutes.py`): the protein kind decides the options in order (mince: vegofärs, red lentils, chickpeas; sausage: vegokorv; cured meat: smoked tofu, portobello; poultry, fish and steak: tofu, portobello, halloumi, chickpeas). Amounts are converted by weight, and counted pieces become grams (a chicken fillet is 150 g, a steak 200 g). The first option that is safe for everyone receiving it wins. Each product declares the allergens it may contain on purpose (vegofärs: soy and gluten) because its name does not show them.
-- **Stored on the day** as `MenuDay.split`: who gets the substitute, the swaps (original and replacement at full recipe scale) and the portion share, weighted by portion size. Phase 4 buys the original for the remaining share and the substitute for `share`. The weekday sensors expose it as the `split` attribute.
-- **Planner:** a split is ranked below a recipe everyone can eat as is, and `max_split_days` (default 2, in Meal styles) caps how many dinners per week need two proteins. The cap gives way only to avoid an empty day, with a warning.
-- **AI Task** is told to keep the protein on its own line and out of sauces and stocks, but only when family diets differ. Whether a recipe really is splittable is decided by the deterministic check, never by the model.
-- **Known limits:** one substitute group per dinner (a vegan and a vegetarian with different needs are served the same substitute, or the recipe is not eligible), and the swap quantities are estimates.
-- **Later:** per-person cooking instructions in the card ("for Anna: fry tofu instead"), and offering a split for dislikes.
+- **Eligibility** (`planner/eligibility.py`): each member who breaks a rule is matched to the exact ingredient lines that break it. Members with the same lines share a version, with at most two alternative versions per dinner. At least one attendee must eat the original. A conflict that exists only in the title never qualifies (the listing may be incomplete). Stock, fish sauce, anchovies and gelatin block the split, and so does any line with no known swap (egg, soy, nuts, sesame, mustard, celery...). After swapping, the adjusted version is checked again for the group; anything left over rejects the recipe.
+- **Swaps** (`planner/substitutes.py`), tried in order and taken only if safe for the whole group:
+  - mince: vegofärs, red lentils, chickpeas; sausage: vegokorv; cured meat: smoked tofu, portobello; poultry, fish, shellfish and other meat: tofu, portobello, halloumi, chickpeas;
+  - dairy: lactose-free first (right for lactose intolerance, wrong for milk allergy or vegans), then oat cream, oat drink, plant-based margarine, plant-based `{name}`;
+  - gluten: gluten-free `{name}`, rice noodles, quinoa or rice for couscous and bulgur, gluten-free flour.
+  Amounts are converted by weight and counted pieces become grams. Each product declares the allergens it may contain on purpose (vegofärs: soy and gluten) because its name does not show them.
+- **Per-member switch** "Allergens can be cooked separately" (default on). Off means recipes containing that person's allergen are never suggested; it is meant for severe allergies. It does not affect diets.
+- **Stored on the day** as `MenuDay.split`: a list of groups, each with members, swaps (original and replacement at full recipe scale), portion share (weighted by portion size) and `separate_pans`, which is set whenever an allergy is involved so the card can say "clean pan and utensils". Phase 4 buys the replacement for each group's share and the original for the remainder. The weekday sensors expose it as the `split` attribute.
+- **Planner:** a split ranks below a recipe everyone can eat as is, and `max_split_days` (default 2, in Meal styles) caps how many dinners per week need more than one version. The cap gives way only to avoid an empty day, with a warning.
+- **AI Task** is told to keep meat, fish, dairy and gluten on their own ingredient lines when diets differ or allergies exist. Whether a recipe really is splittable is decided by the deterministic check, never by the model.
+- **Known limits:** swap amounts are estimates, an adjusted version for several people with different needs is limited to two groups, and the filter only sees what the recipe lists.
+- **Later:** per-person cooking instructions on the menu card ("for Anna: fry tofu instead, in a clean pan"), swaps for egg, soy and nuts, and splits for dislikes.
 
 ## 12. Phase 0 findings (2026-10-25)
 

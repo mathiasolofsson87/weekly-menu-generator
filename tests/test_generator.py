@@ -195,8 +195,9 @@ async def test_a_meat_recipe_is_used_with_a_split_when_it_ranks_best() -> None:
     )
     [day] = menu.days
     assert day.recipe.title == "Biff med potatis"
-    assert day.split.members == ["Anna"]
-    assert day.split.substitutions[0].replacement.raw == "600 g tofu"
+    [group] = day.split.groups
+    assert group.members == ["Anna"]
+    assert group.substitutions[0].replacement.raw == "600 g tofu"
 
 
 async def test_recipes_everyone_can_eat_win_over_splits() -> None:
@@ -230,10 +231,20 @@ async def test_split_limit_is_not_allowed_to_leave_a_day_empty() -> None:
     assert any(w.startswith("split_limit_exceeded") for w in menu.warnings)
 
 
-async def test_split_is_not_offered_across_allergies() -> None:
-    allergic = member("Eva", allergies=["fish"], diet="vegetarian")
+async def test_allergy_is_served_as_a_separately_cooked_version() -> None:
+    allergic = member("Eva", allergies=["fish"])
     settings = _settings(
         dinner_days=["mon"], members=[member("Olle"), allergic], max_split_days=2
+    )
+    menu = await async_generate_menu([FakeSource([LAX])], settings, MONDAY, set())
+    assert menu.days[0].recipe.title == "Ugnsbakad lax"
+    assert menu.days[0].split.groups[0].separate_pans is True
+
+
+async def test_allergy_that_must_not_be_cooked_separately_excludes_the_recipe() -> None:
+    strict = member("Eva", allergies=["fish"], cook_separately=False)
+    settings = _settings(
+        dinner_days=["mon"], members=[member("Olle"), strict], max_split_days=2
     )
     menu = await async_generate_menu([FakeSource([LAX])], settings, MONDAY, set())
     assert menu.days[0].recipe is None
@@ -252,5 +263,5 @@ async def test_source_is_told_to_keep_proteins_separable_only_when_diets_differ(
         MONDAY,
         set(),
     )
-    assert mixed.requests[0].separable_protein is True
-    assert same.requests[0].separable_protein is False
+    assert mixed.requests[0].separable is True
+    assert same.requests[0].separable is False

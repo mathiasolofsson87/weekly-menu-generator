@@ -217,6 +217,6 @@ async def test_split_shows_up_on_the_weekday_sensor(
 
     monday = _state(hass, entry, "weekday_mon")
     assert monday.state == "Biff med potatis"
-    split = monday.attributes["split"]
-    assert split["members"] == ["Anna"] and split["share"] == 0.5
-    assert split["substitutions"][0]["replacement"]["raw"] == "600 g tofu"
+    [group] = monday.attributes["split"]["groups"]
+    assert group["members"] == ["Anna"] and group["share"] == 0.5
+    assert group["substitutions"][0]["replacement"]["raw"] == "600 g tofu"

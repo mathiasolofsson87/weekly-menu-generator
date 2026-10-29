@@ -177,12 +177,10 @@ def test_default_registry(hass: HomeAssistant) -> None:
     assert isinstance(source, AiTaskSource)
 
 
-def test_prompt_asks_for_separable_protein_only_when_needed() -> None:
+def test_prompt_asks_for_separable_only_when_needed() -> None:
     plain = build_instructions(CandidateRequest(count=2, language="sv"))
-    split = build_instructions(
-        CandidateRequest(count=2, language="sv", separable_protein=True)
-    )
-    assert "egen ingrediensrad" not in plain and "egen ingrediensrad" in split
-    assert "its own ingredient line" in build_instructions(
-        CandidateRequest(count=2, language="en", separable_protein=True)
+    split = build_instructions(CandidateRequest(count=2, language="sv", separable=True))
+    assert "egna ingrediensrader" not in plain and "egna ingrediensrader" in split
+    assert "their own ingredient lines" in build_instructions(
+        CandidateRequest(count=2, language="en", separable=True)
     )
