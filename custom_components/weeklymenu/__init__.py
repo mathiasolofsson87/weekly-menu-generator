@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from .cards import async_register_cards
 from .const import DOMAIN, EVENT_GENERATION_DUE
 from .coordinator import WeeklyMenuCoordinator
 from .notifications import Notifier
@@ -42,6 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     data["registry"] = build_default_registry()
     data["shopping_registry"] = build_default_shopping_registry()
     async_register_services(hass)
+    await async_register_cards(hass)
     return True
 
 

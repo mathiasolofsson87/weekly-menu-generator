@@ -116,7 +116,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 3 | Notifications with actions, per-day regenerate, lock, swap, confirm (**done 2026-10-29**) |
 | 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow (**done 2026-10-29**) |
 | 5 | ICA shopping provider (as a plugin behind the registry), re-auth (**done 2026-10-29**, with open checks below); product matching waits for the cart |
-| 6 | Custom cards |
+| 6 | Custom cards (**Menu and Today cards done 2026-10-29**; Shopping result and Family cards still to do) |
 | 7 | Tests, translations, docs, HACS release |
 
 ## 11. Decisions made
@@ -141,6 +141,19 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Phase 6: dashboard cards (2026-10-29)
+
+Frontend in `frontend/` (Lit + TypeScript, built by Vite into one 45 KB file). The built bundle is **committed** at `custom_components/weeklymenu/www/weeklymenu-cards.js`, so HACS delivers it with the integration. After any change in `frontend/src`, run `npm run build` and commit the result.
+
+- **Registration:** `cards.py` serves the bundle at `/weeklymenu_cards/weeklymenu-cards.js` and adds it to every dashboard with `add_extra_js_url`, with a content hash in the URL so a new build is never served from the browser cache. No Lovelace resource has to be added by hand. Without a frontend (headless install) or without a built bundle it does nothing and logs a hint.
+- **No entity configuration:** the cards find the integration's sensors themselves through the frontend's entity registry (platform `weeklymenu`, translation keys `status`, `today`, `weekday_*`), so they work as soon as they are added. The Menu card shows the latest menu, the Today card tonight's dinner.
+- **Menu card** (`custom:weeklymenu-menu-card`): week number and status chip, backend warnings in plain language, one row per planned day with picture, linked title, time, tags, source and a "more than one version" badge. A lock button per day; an expandable area with ingredients, who gets which swap (with portion share and the clean-pan reminder), a wish field and **New dinner**, a picker for the day's alternatives, and **Swap with…**. Footer: **Regenerate all** and **Confirm** (asks first). While a service runs the controls are off and a note shows; errors from the backend are shown. A confirmed menu and `show_actions: false` give a read-only card. Options: `title`, `show_images`, `show_actions`.
+- **Today card** (`custom:weeklymenu-today-card`): tonight's dinner, compact, with the same split information. Options: `title`, `show_image`, `show_ingredients`.
+- **Visual editors** for both (Home Assistant's own form), Swedish and English text from the user's language, theme variables only (light and dark themes work), and a container query so a narrow card (phone, small grid cell) gives the text all the room.
+- **Checked by:** 61 unit and component tests (vitest + jsdom, with a fake `hass` and the real components), and by rendering the real bundle in Chrome at phone and desktop width in light and dark. That render found overflow bugs (a dropdown stretching the grid) that tests could not.
+- **Not checked:** how it looks and behaves inside a real Home Assistant (its own `ha-card`, `ha-icon` and `ha-form` were stand-ins in the render), and the visual editor in the real card picker.
+- **Still to do:** the *Shopping result* card (added, review, failed and skipped items, from `sensor.…_shopping`) and the *Family and preferences* card (edit allergies and preferences from the dashboard; this needs a service to edit members), plus stock-card YAML examples.
 
 ## Phase 5: ICA shopping list (2026-10-29)
 
