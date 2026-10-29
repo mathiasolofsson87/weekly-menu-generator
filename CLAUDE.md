@@ -16,3 +16,4 @@ HACS Home Assistant integration that suggests a weekly dinner menu. Read `PLAN.m
 - Test extras: the AI Task schema test needs `hassil==3.5.0` and `home-assistant-intents==2026.1.28` (the versions pinned by HA's `conversation` manifest).
 - The GitHub repo is `mathiasolofsson87/weekly-menu-generator` (private until release). The integration is called "Weekly Menu Generator" but the domain and folder stay `weeklymenu`. There is no README yet (phase 7).
 - **Never put real personal data in the repository, tests included**: no real personnummer, password, token, name or address, even if the user pasted it into the chat while debugging. Use invented values (the tests use 900101-1234). The repository is meant to become public.
+- Licence: MIT (`LICENSE`), with third-party notices in `NOTICE.md`. If you add code ported from another project, or a bundled dependency, add its notice there.

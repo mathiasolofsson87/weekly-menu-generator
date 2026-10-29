@@ -4,7 +4,7 @@
 
 En integration för Home Assistant som planerar familjens middagar för kommande vecka, tar hänsyn till allas allergier och kost, låter dig ändra enskilda middagar, och när du bekräftar lägger ingredienserna på dina inköpslistor (Home Assistants att göra-listor och/eller ICA-appen).
 
-*English: [README.md](README.md)*
+*English: [README.md](README.md)*  ·  Licens: [MIT](LICENSE)  ·  Tredjepartsnotiser: [NOTICE.md](NOTICE.md)
 
 > **Status:** version 0.1.0, inte släppt än. Den har bara testats med automatiska tester, ännu inte i en riktig Home Assistant. Räkna med skavanker.
 
@@ -96,3 +96,7 @@ Home Assistant pratar med: **ica.se** (receptsidor), **ICA:s appgränssnitt** (b
 ## Utveckling
 
 Se [README.md](README.md#development).
+
+## Licens
+
+[MIT](LICENSE). ICA-inloggningen är portad från [LazyTarget/ha-ica-todo](https://github.com/LazyTarget/ha-ica-todo) via [kanylbullen/ica-mcp](https://github.com/kanylbullen/ica-mcp) (båda MIT; tack), och dashboardpaketet innehåller Lit (BSD-3-Clause). Deras notiser finns i [NOTICE.md](NOTICE.md).

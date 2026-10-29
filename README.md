@@ -4,7 +4,7 @@
 
 A Home Assistant integration that plans the family's dinners for the coming week, respects every family member's allergies and diet, lets you change any single dinner, and on confirmation puts the ingredients on your shopping lists (Home Assistant to-do lists and/or the ICA app).
 
-*Svenska: [README.sv.md](README.sv.md)*
+*Svenska: [README.sv.md](README.sv.md)*  ·  License: [MIT](LICENSE)  ·  Third-party notices: [NOTICE.md](NOTICE.md)
 
 > **Status:** version 0.1.0, not released yet. It has been tested with automated tests only, not yet in a live Home Assistant. Expect rough edges.
 
@@ -102,4 +102,8 @@ pytest && ruff check . && ruff format --check .
 cd frontend && npm ci && npm test && npm run build   # commit the rebuilt bundle
 ```
 
-`PLAN.md` holds the design and decisions, `ROADMAP.md` what may come later, and `CLAUDE.md` the working notes. The ICA login flow was ported from [LazyTarget/ha-ica-todo](https://github.com/LazyTarget/ha-ica-todo) via [kanylbullen/ica-mcp](https://github.com/kanylbullen/ica-mcp) (both MIT); thank you.
+`PLAN.md` holds the design and decisions, `ROADMAP.md` what may come later, and `CLAUDE.md` the working notes.
+
+## License
+
+[MIT](LICENSE). The ICA login flow was ported from [LazyTarget/ha-ica-todo](https://github.com/LazyTarget/ha-ica-todo) via [kanylbullen/ica-mcp](https://github.com/kanylbullen/ica-mcp) (both MIT; thank you), and the dashboard bundle contains Lit (BSD-3-Clause). Their notices are in [NOTICE.md](NOTICE.md).

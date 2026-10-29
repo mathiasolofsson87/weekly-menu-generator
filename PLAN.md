@@ -167,7 +167,7 @@ Frontend in `frontend/` (Lit + TypeScript, built by Vite into one 45 KB file). T
 
 ## Before a release (not done, on purpose)
 
-1. **Licence:** none is chosen yet. Pick one, add `LICENSE`, and check the credit for the ICA login flow that was ported from two MIT projects (LazyTarget/ha-ica-todo and kanylbullen/ica-mcp): MIT asks that the copyright and permission notice travel with substantial portions, so add theirs to a `NOTICE` or similar.
+1. (Done 2026-10-29) **Licence:** MIT (`LICENSE`, copyright holder "Mathias Olofsson", inferred from the account, so check it). `NOTICE.md` carries the notices of the two MIT projects the ICA login was ported from, and of Lit (BSD-3-Clause), which is inside the card bundle.
 2. **Run it in a real Home Assistant** with the user's own setup (ICA, an AI Task entity, the app notifications, the cards in a real dashboard and the visual editors) and fix what that shows. Nothing has run outside tests so far.
 3. **CI green on GitHub** (hassfest and HACS validation included).
 4. Make the repository public with a description and topics (HACS needs them), write the release notes, tag `v0.1.0`, publish a release, and only then consider a pull request to the HACS default list.
