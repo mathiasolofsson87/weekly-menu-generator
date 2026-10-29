@@ -1,4 +1,6 @@
 {
+  "domain": "weeklymenu",
+  "name": "Weekly Menu Generator",
   "after_dependencies": [
     "frontend",
     "http"
@@ -8,11 +10,9 @@
   ],
   "config_flow": true,
   "documentation": "https://github.com/mathiasolofsson87/weekly-menu-generator",
-  "domain": "weeklymenu",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mathiasolofsson87/weekly-menu-generator/issues",
-  "name": "Weekly Menu Generator",
   "requirements": [],
   "single_config_entry": true,
   "version": "0.1.0"

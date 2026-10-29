@@ -155,3 +155,10 @@ def test_every_form_error_is_translated(language: str) -> None:
     used |= {"no_days", "name_required", "name_exists"}
     translated = load(language)["options"]["error"]
     assert used <= set(translated), used - set(translated)
+
+
+def test_manifest_keys_are_in_the_order_hassfest_requires() -> None:
+    """hassfest: "domain, name, then alphabetical order"."""
+    keys = list(json.loads((ROOT / "manifest.json").read_text(encoding="utf-8")))
+    assert keys[:2] == ["domain", "name"]
+    assert keys[2:] == sorted(keys[2:])

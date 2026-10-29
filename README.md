@@ -96,7 +96,7 @@ Home Assistant talks to: **ica.se** (recipe pages), **ICA's app interface** (onl
 ## Development
 
 ```
-pip install -r requirements-test.txt && pip install $(python scripts/ha_extra_requirements.py)
+pip install -r requirements-test.txt
 pytest && ruff check . && ruff format --check .
 
 cd frontend && npm ci && npm test && npm run build   # commit the rebuilt bundle

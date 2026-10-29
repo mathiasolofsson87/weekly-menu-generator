@@ -13,7 +13,6 @@ HACS Home Assistant integration that suggests a weekly dinner menu. Read `PLAN.m
 - All menu changes go through `WeeklyMenuCoordinator` (one lock); services, buttons and notification actions only call it. Shared test fixtures are in `tests/conftest.py`, helpers in `tests/helpers.py`.
 - Provider rule: only `sources/registry.py` and `shopping/registry.py` may import a concrete provider, and nothing outside an ICA package may mention ICA. Account forms and re-auth are generic (`ProviderSetup`). The tests include a fake second provider and a shared contract (`tests/test_sources.py`); keep both passing.
 - The allergen filter in `planner/allergens.py` is safety-critical: any change needs a test case in `tests/test_constraints.py`.
-- Test extras: the AI Task schema test needs `hassil==3.5.0` and `home-assistant-intents==2026.1.28` (the versions pinned by HA's `conversation` manifest).
 - The GitHub repo is `mathiasolofsson87/weekly-menu-generator` (private until release). The integration is called "Weekly Menu Generator" but the domain and folder stay `weeklymenu`. There is no README yet (phase 7).
 - **Never put real personal data in the repository, tests included**: no real personnummer, password, token, name or address, even if the user pasted it into the chat while debugging. Use invented values (the tests use 900101-1234). The repository is meant to become public.
 - Licence: MIT (`LICENSE`), with third-party notices in `NOTICE.md`. If you add code ported from another project, or a bundled dependency, add its notice there.

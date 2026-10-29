@@ -2,12 +2,9 @@
 
 import pytest
 import voluptuous as vol
-from homeassistant.components.ai_task import (
-    STRUCTURE_FIELD_SCHEMA,
-    _validate_structure_fields,
-)
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
 from custom_components.weeklymenu.planner.models import Recipe
 from custom_components.weeklymenu.sources.ai_task import (
@@ -98,7 +95,33 @@ async def test_ai_task_source_meets_contract(hass: HomeAssistant) -> None:
 
 
 async def test_ai_task_structure_is_accepted_by_home_assistant() -> None:
-    _validate_structure_fields(vol.Schema({str: STRUCTURE_FIELD_SCHEMA})(STRUCTURE))
+    """Validates the structure the way `ai_task.generate_data` does (see its __init__.py):
+    each field is a description, a `required` flag and a selector, and the selector must be one
+    Home Assistant can build. Written out here from the public selector helpers, because
+    importing the whole ai_task component needs the camera and media stack."""
+    field = vol.Schema(
+        {
+            vol.Optional("description"): str,
+            vol.Optional("required"): bool,
+            vol.Required("selector"): selector.validate_selector,
+        }
+    )
+    for name, definition in vol.Schema({str: field})(STRUCTURE).items():
+        built = selector.selector(definition["selector"])
+        assert built is not None, name
+        # and an answer shaped like the structure is accepted by the selector
+        if name == "recipes":
+            built(
+                [
+                    {
+                        "title": "Soppa",
+                        "time_minutes": 30,
+                        "servings": 4,
+                        "tags": ["quick"],
+                        "ingredients": ["1 st lök"],
+                    }
+                ]
+            )
 
 
 async def test_ai_task_sends_entity_structure_and_prompt(hass: HomeAssistant) -> None:
