@@ -116,8 +116,8 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 3 | Notifications with actions, per-day regenerate, lock, swap, confirm (**done 2026-10-29**) |
 | 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow (**done 2026-10-29**) |
 | 5 | ICA shopping provider (as a plugin behind the registry), re-auth (**done 2026-10-29**, with open checks below); product matching waits for the cart |
-| 6 | Custom cards (**Menu and Today cards done 2026-10-29**; Shopping result and Family cards still to do) |
-| 7 | Tests, translations, docs, HACS release |
+| 6 | Custom cards (**done 2026-10-29**) |
+| 7 | Tests, translations, docs, CI (**done 2026-10-29**); **HACS release not done** (see "Before a release") |
 
 ## 11. Decisions made
 
@@ -153,7 +153,38 @@ Frontend in `frontend/` (Lit + TypeScript, built by Vite into one 45 KB file). T
 - **Visual editors** for both (Home Assistant's own form), Swedish and English text from the user's language, theme variables only (light and dark themes work), and a container query so a narrow card (phone, small grid cell) gives the text all the room.
 - **Checked by:** 61 unit and component tests (vitest + jsdom, with a fake `hass` and the real components), and by rendering the real bundle in Chrome at phone and desktop width in light and dark. That render found overflow bugs (a dropdown stretching the grid) that tests could not.
 - **Not checked:** how it looks and behaves inside a real Home Assistant (its own `ha-card`, `ha-icon` and `ha-form` were stand-ins in the render), and the visual editor in the real card picker.
-- **Still to do:** the *Shopping result* card (added, review, failed and skipped items, from `sensor.…_shopping`) and the *Family and preferences* card (edit allergies and preferences from the dashboard; this needs a service to edit members), plus stock-card YAML examples.
+- **Shopping result card** (`custom:weeklymenu-shopping-card`): how the last confirmed menu went. Counts per outcome, the lists (what needs a look and what failed are open, the rest folded away), plain-language problems (a sign-in that no longer works, ICA blocking non-Swedish connections, no list set up) and **Try again** (`add_to_shopping`). Options: `title`, `show_added`, `show_skipped`.
+- **Family card** (`custom:weeklymenu-family-card`): the people with diet, portion, allergies, dislikes and days. A form (every EU allergen as a checkbox, plus your own words, diet, portion, days, and the "cook allergens separately" switch) saves through `set_member` and removes through `remove_member` after asking. Backend: `family.py`, the `set_member` and `remove_member` services and a `family` sensor. A member is found by id, otherwise by name (any case); fields a call leaves out keep their value. Changes apply to menus made from now on. Options: `title`, `editable`.
+- **Stock-card examples** and automations are in `docs/dashboard-examples.md`.
+- **Brand images** (`custom_components/weeklymenu/brand/`, served by Home Assistant itself since 2026.3, see the brands documentation): icon and logo with dark variants and @2x, drawn here (`design/*.svg`) and rendered by `design/render.sh`.
+- **Checked by:** 97 frontend tests, and by rendering the cards in Chrome at phone and desktop width in light and dark (this found, and fixed, chips breaking their text and a doubled sign-in warning).
+
+## Phase 7 without the release (2026-10-29)
+
+- **CI** (`.github/workflows/`): `ci.yml` runs ruff (pinned, `pyproject.toml`), pytest, and for the frontend typecheck, tests, build and a check that the committed bundle is up to date; `validate.yml` runs hassfest and the HACS action weekly and on every push. **Neither has run on GitHub yet**: the first run may find things (hassfest in particular could not be run here).
+- **Translation checks:** `tests/test_translations.py` keeps English and Swedish in step, checks every service, error, entity, dropdown, options step and form error the code refers to, and the frontend has the same parity test for its own strings.
+- **Docs:** `README.md` (English) and `README.sv.md`, with the allergy, ICA and privacy notes, services, troubleshooting and development; `docs/dashboard-examples.md`.
+
+## Before a release (not done, on purpose)
+
+1. **Licence:** none is chosen yet. Pick one, add `LICENSE`, and check the credit for the ICA login flow that was ported from two MIT projects (LazyTarget/ha-ica-todo and kanylbullen/ica-mcp): MIT asks that the copyright and permission notice travel with substantial portions, so add theirs to a `NOTICE` or similar.
+2. **Run it in a real Home Assistant** with the user's own setup (ICA, an AI Task entity, the app notifications, the cards in a real dashboard and the visual editors) and fix what that shows. Nothing has run outside tests so far.
+3. **CI green on GitHub** (hassfest and HACS validation included).
+4. Make the repository public with a description and topics (HACS needs them), write the release notes, tag `v0.1.0`, publish a release, and only then consider a pull request to the HACS default list.
+5. (Done) The README's promise that the AI is sent words and never family members' names is now guarded by a test (`test_no_family_member_name_ever_reaches_a_recipe_source`).
+
+## Left over from the v1 plan
+
+Not built, with where each stands:
+
+- **Per-weekday meal styles** (section 3: defaults and per weekday). Only the defaults exist.
+- **A `select` entity for a style preset** and the **review `todo` entity** (section 5). The review list is any `todo` entity the user picks.
+- **Stock-aware planning**: the manual "I have these at home" list (section 14), package-size rounding beyond the buy-able steps in phase 4, the expected-leftover display, the waste penalty for ingredients used once, and everything about budget (weekly budget, per-meal ceiling, offers, estimated cost). Scoring leaves the cost terms out until prices exist, as planned.
+- **Plural merging** and **aisle sorting** in shopping.
+- **A curated or scraped last-resort recipe source** (section 4), and **reordering** the sources (only on/off).
+- **Product matching** for an online cart, and ICA's cart itself (unverified).
+- **Hint support for ICA recipes** (only AI Task uses the wish when regenerating a day).
+- **HACS `brands` validation** is ignored in the validation workflow until release.
 
 ## Phase 5: ICA shopping list (2026-10-29)
 

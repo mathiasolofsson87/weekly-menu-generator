@@ -187,3 +187,38 @@ def test_prompt_asks_for_separable_only_when_needed() -> None:
     assert "their own ingredient lines" in build_instructions(
         CandidateRequest(count=2, language="en", separable=True)
     )
+
+
+async def test_no_family_member_name_ever_reaches_a_recipe_source() -> None:
+    """The README promises the AI is sent words (allergies, diets, styles) and never names."""
+    from dataclasses import asdict
+    from datetime import date
+
+    from custom_components.weeklymenu.planner.generator import (
+        PlannerSettings,
+        async_generate_menu,
+    )
+    from custom_components.weeklymenu.sources.ai_task import build_instructions
+    from tests.helpers import member
+
+    family = [
+        member("Zzyzx", allergies=["milk"], dislikes=["svamp"], diet="vegetarian"),
+        member("Qwertyuiop", likes=["pasta"]),
+    ]
+    source = FakeSource([PASTA, CURRY])
+    settings = PlannerSettings(
+        dinner_days=["mon", "tue"],
+        members=family,
+        style_tags=["quick"],
+        max_split_days=2,
+    )
+    await async_generate_menu(
+        [source], settings, date(2026, 11, 2), set(), hint="more fish"
+    )
+
+    for request in source.requests:
+        fields = {k: v for k, v in asdict(request).items() if k != "accept"}
+        for language in ("sv", "en"):
+            sent = repr(fields) + build_instructions(request)
+            assert "Zzyzx" not in sent and "Qwertyuiop" not in sent
+        assert "milk" in request.avoid and "svamp" in request.avoid
