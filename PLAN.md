@@ -115,7 +115,7 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 | 2b | ICA recipe source (dish-type pages, JSON-LD, persistent cache), calendar and generate button (**done 2026-10-29**) |
 | 3 | Notifications with actions, per-day regenerate, lock, swap, confirm (**done 2026-10-29**) |
 | 4 | Shopping aggregation (scaled by attendees and split shares), to-do provider, confirm flow (**done 2026-10-29**) |
-| 5 | ICA shopping provider (as a plugin behind the registry), product matching, re-auth |
+| 5 | ICA shopping provider (as a plugin behind the registry), re-auth (**done 2026-10-29**, with open checks below); product matching waits for the cart |
 | 6 | Custom cards |
 | 7 | Tests, translations, docs, HACS release |
 
@@ -141,6 +141,19 @@ Public GitHub repo, `hacs.json`, complete `manifest.json`, CI (hassfest, HACS va
 - **Options flow** now has general, schedule, family members, meal styles (tags, vegetarian days, fish minimum) and recipe sources. Per-weekday style overrides are still to do.
 - **Services:** `generate_menu` (replaces a draft, refuses a confirmed week) and `set_recipe` (pick one of a day's candidates, locks it). Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`.
 - **Entities:** sensors for status, today's dinner and one per weekday, with ingredients and alternatives as attributes. Calendar and buttons come in 2b.
+
+## Phase 5: ICA shopping list (2026-10-29)
+
+Code is in `shopping/ica/` (`auth.py` login, `api.py` list API, `provider.py`, `setup.py` account form). Only `shopping/registry.py` imports it.
+
+- **Target:** the ICA app's shopping list, with free-text rows (name, quantity, unit). **No product matching**: that only matters for the online cart, which is still unproven, so the `product_matching` capability and the review-list path stay unused by ICA for now (the path is covered by a fake provider in the tests).
+- **Login:** the flow proven by the Phase 0 spike (OAuth2 + PKCE through `ims.icagruppen.se`, personnummer and password, a dedicated cookie jar), ported to async. **Nothing is kept between uses:** tokens last ~15 minutes and shopping happens once a week, so each push logs in fresh. That removes refresh handling, which could not be verified without credentials.
+- **Credentials** (personnummer and password) are stored in the config entry, as Home Assistant integrations usually do. Leaving the password empty when editing keeps the saved one. BankID-only accounts do not work. ICA answers connections from outside Sweden with HTTP 451, which is reported as such.
+- **Lists:** either a new list for each week (`Veckomeny vecka 45`) or one fixed, named list, found by title (case-insensitive) or created. Rows already on the list are skipped, so retrying `add_to_shopping` never duplicates anything. Counted things are written in pieces (`st`); a row without an amount is written as quantity 1 with no unit.
+- **Setup is provider-owned.** A `ProviderSetup` (form, validation, config keys, which fields re-auth asks for) is registered next to the provider. The options flow shows a *Store accounts* page and the config flow a re-auth step, both generic: neither knows ICA exists. Leaving the personnummer empty switches ICA off.
+- **When the login stops working** the items stay `failed` (retryable), the menu stays confirmed, the confirmed notification says so in plain language, and Home Assistant starts its re-authentication flow for the provider. Entering the password again checks it, updates the entry and reloads. Then `add_to_shopping` delivers what waited. HA's re-auth flow is the "repair" the plan asked for; a separate repair issue would only repeat it.
+- **Still to verify (needs the user's login):** run `python3 spikes/ica_rows_spike.py` and record the result here. It checks that ICA accepts every row shape the integration writes (dl, msk, förp, kg, no unit, no amount, a long name), what the list answer's id key is (the code assumes `offlineId`, falling back to `id`), and that a list can be found by title. If a shape is rejected, the constants at the top of `shopping/ica/provider.py` are the place to change.
+- **Known limits:** the app interface is unofficial and may change; the DCR client secret in `auth.py` is the app's public one and may be rotated; an ICA list is not read back to see whether a family member ticked things off.
 
 ## Phase 4: shopping (2026-10-29)
 

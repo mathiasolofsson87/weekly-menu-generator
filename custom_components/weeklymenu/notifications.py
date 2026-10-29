@@ -32,6 +32,7 @@ from .const import (
 from .coordinator import WeeklyMenuCoordinator
 from .planner.models import Menu
 from .scheduler import next_week_start
+from .shopping.delivery import REAUTH
 from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +55,10 @@ TEXT = {
         "shop_failed": "{n} kunde inte läggas till. Försök igen med add_to_shopping.",
         "shop_skipped": "{n} skafferivaror hoppades över.",
         "shop_pending": "Ingen inköpslista är inställd.",
+        "shop_reauth": "Inloggningen till {store} fungerar inte längre. Logga in igen under Inställningar.",
+        "shop_geo_blocked": "{store} svarar bara på anslutningar från Sverige.",
+        "shop_no_review_list": "Varor som inte kunde placeras hade ingen granskningslista att hamna på.",
+        "shop_error": "Fel: {error}",
         "reminder_title": "Menyn väntar på dig",
         "reminder": "Utkastet för veckan som börjar {week} är inte bekräftat.",
         "problems_title": "Veckomenyn behöver uppmärksamhet",
@@ -82,6 +87,10 @@ TEXT = {
         "shop_failed": "{n} could not be added. Try again with add_to_shopping.",
         "shop_skipped": "{n} pantry items were skipped.",
         "shop_pending": "No shopping list is set up.",
+        "shop_reauth": "The sign-in to {store} no longer works. Sign in again under Settings.",
+        "shop_geo_blocked": "{store} only answers connections from Sweden.",
+        "shop_no_review_list": "Items that could not be placed had no review list to go to.",
+        "shop_error": "Error: {error}",
         "reminder_title": "Your menu is waiting",
         "reminder": "The draft for the week starting {week} is not confirmed.",
         "problems_title": "The weekly menu needs attention",
@@ -207,7 +216,28 @@ class Notifier:
                     lines.append(text[key].format(n=counts[status]))
             if counts[PENDING]:
                 lines.append(text["shop_pending"])
+            lines += self._shopping_errors(
+                ShoppingResult.from_dict(menu.shopping).errors
+            )
         return "\n".join(lines)
+
+    def _shopping_errors(self, errors: list[str]) -> list[str]:
+        """Provider errors as readable lines. Codes look like "<provider>: geo_blocked"."""
+        text, lines = self._text, []
+        for error in errors:
+            store, _, code = error.rpartition(": ")
+            store = (store or "").upper() or "?"
+            if error == REAUTH:
+                continue  # said once, per store, by its own auth_failed
+            if code == "auth_failed":
+                lines.append(text["shop_reauth"].format(store=store))
+            elif code == "geo_blocked":
+                lines.append(text["shop_geo_blocked"].format(store=store))
+            elif error == "no_review_list":
+                lines.append(text["shop_no_review_list"])
+            elif error not in ("no_targets",):
+                lines.append(text["shop_error"].format(error=error))
+        return lines
 
     def _explain(self, err: HomeAssistantError) -> str:
         """An error in the integration language (Home Assistant's own text follows its language)."""

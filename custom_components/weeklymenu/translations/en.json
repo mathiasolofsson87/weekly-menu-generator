@@ -16,7 +16,34 @@
           "ai_task_entity": "Used to suggest recipes when ICA recipes do not fit. Leave empty to skip AI suggestions."
         },
         "description": "Family members and the schedule are set up afterwards under Configure."
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "The login to the store account no longer works. Enter the password again.",
+        "data": {
+          "ica_personnummer": "ICA personnummer",
+          "ica_password": "ICA password",
+          "ica_list_mode": "ICA list",
+          "ica_list_name": "List name"
+        },
+        "data_description": {
+          "ica_personnummer": "The same login as the ICA app (10 or 12 digits). BankID-only accounts do not work. Leave empty to switch ICA off.",
+          "ica_password": "Stored in Home Assistant's configuration. Leave empty to keep the saved one.",
+          "ica_list_mode": "A new list for every week's menu, or one list that is added to.",
+          "ica_list_name": "Only for a fixed list. Created if it does not exist."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "ICA did not accept the personnummer and password.",
+      "geo_blocked": "ICA only answers connections from Sweden.",
+      "cannot_connect": "Could not reach ICA. Try again later.",
+      "invalid_personnummer": "Enter 10 or 12 digits.",
+      "password_required": "Enter the password."
+    },
+    "abort": {
+      "reauth_successful": "Signed in again.",
+      "no_account": "There is no store account to sign in to."
     }
   },
   "options": {
@@ -31,7 +58,8 @@
           "styles": "Meal styles",
           "sources": "Recipe sources",
           "notifications": "Notifications",
-          "shopping": "Shopping"
+          "shopping": "Shopping",
+          "accounts": "Store accounts"
         }
       },
       "general": {
@@ -154,12 +182,39 @@
           "review_list": "Items a shopping provider could not place end up here, so nothing is lost. Leave empty to skip.",
           "pantry_staples": "Never added to the lists (matched on whole words, so 'salt' also covers 'salt och peppar'). Substitutes bought for a diet or allergy are never skipped."
         }
+      },
+      "accounts": {
+        "title": "Store accounts",
+        "data": {
+          "provider": "Store"
+        }
+      },
+      "account": {
+        "title": "Store account",
+        "description": "Your ICA shopping list is used through the same login as the ICA app. ICA only answers connections from Sweden, so Home Assistant needs a Swedish IP address. This uses ICA's app interface, which is not official and may change.",
+        "data": {
+          "ica_personnummer": "ICA personnummer",
+          "ica_password": "ICA password",
+          "ica_list_mode": "ICA list",
+          "ica_list_name": "List name"
+        },
+        "data_description": {
+          "ica_personnummer": "The same login as the ICA app (10 or 12 digits). BankID-only accounts do not work. Leave empty to switch ICA off.",
+          "ica_password": "Stored in Home Assistant's configuration. Leave empty to keep the saved one.",
+          "ica_list_mode": "A new list for every week's menu, or one list that is added to.",
+          "ica_list_name": "Only for a fixed list. Created if it does not exist."
+        }
       }
     },
     "error": {
       "name_required": "Enter a name.",
       "name_exists": "A member with this name already exists.",
-      "no_days": "Pick at least one day."
+      "no_days": "Pick at least one day.",
+      "invalid_auth": "ICA did not accept the personnummer and password.",
+      "geo_blocked": "ICA only answers connections from Sweden.",
+      "cannot_connect": "Could not reach ICA. Try again later.",
+      "invalid_personnummer": "Enter 10 or 12 digits.",
+      "password_required": "Enter the password."
     }
   },
   "selector": {
@@ -241,6 +296,17 @@
         "confirmed": "Menu confirmed",
         "problems": "Problems",
         "reminder": "Saturday reminder"
+      }
+    },
+    "provider": {
+      "options": {
+        "ica": "ICA"
+      }
+    },
+    "ica_list_mode": {
+      "options": {
+        "weekly": "A new list each week",
+        "named": "One fixed list"
       }
     }
   },

@@ -16,7 +16,34 @@
           "ai_task_entity": "Används för att föreslå recept när ICA-recepten inte passar. Lämna tomt för att hoppa över AI-förslag."
         },
         "description": "Familjemedlemmar och schema ställer du in efteråt under Konfigurera."
+      },
+      "reauth_confirm": {
+        "title": "Logga in igen",
+        "description": "Inloggningen till butikskontot fungerar inte längre. Ange lösenordet igen.",
+        "data": {
+          "ica_personnummer": "ICA personnummer",
+          "ica_password": "ICA-lösenord",
+          "ica_list_mode": "ICA-lista",
+          "ica_list_name": "Listans namn"
+        },
+        "data_description": {
+          "ica_personnummer": "Samma inloggning som i ICA-appen (10 eller 12 siffror). Konton som bara använder BankID fungerar inte. Lämna tomt för att stänga av ICA.",
+          "ica_password": "Sparas i Home Assistants konfiguration. Lämna tomt för att behålla det sparade.",
+          "ica_list_mode": "En ny lista för varje veckas meny, eller en lista som fylls på.",
+          "ica_list_name": "Bara för en fast lista. Skapas om den inte finns."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "ICA godtog inte personnummer och lösenord.",
+      "geo_blocked": "ICA svarar bara på anslutningar från Sverige.",
+      "cannot_connect": "Kunde inte nå ICA. Försök igen senare.",
+      "invalid_personnummer": "Ange 10 eller 12 siffror.",
+      "password_required": "Ange lösenordet."
+    },
+    "abort": {
+      "reauth_successful": "Inloggningen fungerar igen.",
+      "no_account": "Det finns inget butikskonto att logga in på."
     }
   },
   "options": {
@@ -31,7 +58,8 @@
           "styles": "Måltidsstilar",
           "sources": "Receptkällor",
           "notifications": "Notiser",
-          "shopping": "Inköp"
+          "shopping": "Inköp",
+          "accounts": "Butikskonton"
         }
       },
       "general": {
@@ -154,12 +182,39 @@
           "review_list": "Varor som en inköpstjänst inte kunde placera hamnar här, så inget går förlorat. Lämna tomt för att hoppa över.",
           "pantry_staples": "Läggs aldrig på listorna (matchas på hela ord, så 'salt' täcker även 'salt och peppar'). Ersättningsvaror för kost eller allergi hoppas aldrig över."
         }
+      },
+      "accounts": {
+        "title": "Butikskonton",
+        "data": {
+          "provider": "Butik"
+        }
+      },
+      "account": {
+        "title": "Butikskonto",
+        "description": "Din ICA-inköpslista används via samma inloggning som ICA-appen. ICA svarar bara på anslutningar från Sverige, så Home Assistant behöver en svensk IP-adress. Det här använder ICA:s appgränssnitt, som inte är officiellt och kan ändras.",
+        "data": {
+          "ica_personnummer": "ICA personnummer",
+          "ica_password": "ICA-lösenord",
+          "ica_list_mode": "ICA-lista",
+          "ica_list_name": "Listans namn"
+        },
+        "data_description": {
+          "ica_personnummer": "Samma inloggning som i ICA-appen (10 eller 12 siffror). Konton som bara använder BankID fungerar inte. Lämna tomt för att stänga av ICA.",
+          "ica_password": "Sparas i Home Assistants konfiguration. Lämna tomt för att behålla det sparade.",
+          "ica_list_mode": "En ny lista för varje veckas meny, eller en lista som fylls på.",
+          "ica_list_name": "Bara för en fast lista. Skapas om den inte finns."
+        }
       }
     },
     "error": {
       "name_required": "Ange ett namn.",
       "name_exists": "Det finns redan en medlem med det namnet.",
-      "no_days": "Välj minst en dag."
+      "no_days": "Välj minst en dag.",
+      "invalid_auth": "ICA godtog inte personnummer och lösenord.",
+      "geo_blocked": "ICA svarar bara på anslutningar från Sverige.",
+      "cannot_connect": "Kunde inte nå ICA. Försök igen senare.",
+      "invalid_personnummer": "Ange 10 eller 12 siffror.",
+      "password_required": "Ange lösenordet."
     }
   },
   "selector": {
@@ -241,6 +296,17 @@
         "confirmed": "Menyn bekräftad",
         "problems": "Problem",
         "reminder": "Påminnelse på lördag"
+      }
+    },
+    "provider": {
+      "options": {
+        "ica": "ICA"
+      }
+    },
+    "ica_list_mode": {
+      "options": {
+        "weekly": "En ny lista varje vecka",
+        "named": "En fast lista"
       }
     }
   },

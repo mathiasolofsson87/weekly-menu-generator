@@ -32,7 +32,9 @@ class TodoProvider(ShoppingProvider):
         features = state.attributes.get("supported_features", 0) if state else 0
         return bool(features & TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM)
 
-    async def async_push(self, items: list[ShoppingItem], language: str) -> PushResult:
+    async def async_push(
+        self, items: list[ShoppingItem], language: str, week_start: str = ""
+    ) -> PushResult:
         result = PushResult()
         delivered: set[int] = set()  # positions of items that reached at least one list
         for entity_id in self._entity_ids:

@@ -271,7 +271,7 @@ class FussyProvider(ShoppingProvider):
     def targets(self) -> list[str]:
         return ["fussy-store"]
 
-    async def async_push(self, items, language) -> PushResult:
+    async def async_push(self, items, language, week_start="") -> PushResult:
         result = PushResult()
         for item in items:
             if item.name in self._unmatched:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -77,6 +78,7 @@ from .const import (
 )
 from .planner.models import FamilyMember, clean_terms, dinner_days_from_options
 from .shopping.aggregate import DEFAULT_PANTRY
+from .shopping.base import ProviderSetup
 
 
 def _select(options: list[str], key: str, *, multiple: bool = False) -> SelectSelector:
@@ -192,6 +194,46 @@ class WeeklyMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return WeeklyMenuOptionsFlow()
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """A provider's login stopped working."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask again for what the provider needs, checked by the provider itself."""
+        entry = self._get_reauth_entry()
+        setups = self.hass.data[DOMAIN]["shopping_registry"].setups
+        setup = setups.get(self.context.get("provider_id", ""))
+        if setup is None:
+            return self.async_abort(reason="no_account")
+        config = dict(entry.data)
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            current = {key: config.get(key) for key in setup.keys}
+            changes, errors = await setup.validate(
+                self.hass, config, {**current, **user_input}
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(entry, data_updates=changes)
+        fields = {
+            marker: selector
+            for marker, selector in setup.schema(config).schema.items()
+            if marker.schema in setup.reauth_keys
+        }
+        shown = {
+            k: v
+            for k, v in config.items()
+            if k in setup.reauth_keys and k not in setup.secret_keys
+        }
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(vol.Schema(fields), shown),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -220,6 +262,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
     def __init__(self) -> None:
         self._options: dict[str, Any] | None = None
         self._editing_id: str | None = None
+        self._account = ""
 
     def _current(self) -> dict[str, Any]:
         if self._options is None:
@@ -243,18 +286,65 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Top-level menu."""
+        menu = ["general", "schedule", "family", "styles", "sources", "shopping"]
+        if self._setups():
+            menu.append("accounts")
         return self.async_show_menu(
-            step_id="init",
-            menu_options=[
-                "general",
-                "schedule",
-                "family",
-                "styles",
-                "sources",
-                "shopping",
-                "notifications",
-                "finish",
-            ],
+            step_id="init", menu_options=[*menu, "notifications", "finish"]
+        )
+
+    def _setups(self) -> dict[str, ProviderSetup]:
+        return self.hass.data[DOMAIN]["shopping_registry"].setups
+
+    async def async_step_accounts(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the store account to set up (skipped when there is only one)."""
+        setups = self._setups()
+        if user_input is not None:
+            self._account = user_input["provider"]
+            return await self.async_step_account()
+        if len(setups) == 1:
+            self._account = next(iter(setups))
+            return await self.async_step_account()
+        schema = vol.Schema(
+            {vol.Required("provider"): _select(list(setups), "provider")}
+        )
+        return self.async_show_form(step_id="accounts", data_schema=schema)
+
+    async def async_step_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """One provider's account form, built and checked by the provider itself."""
+        setup = self._setups()[self._account]
+        config = self._config()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            changes, errors = await setup.validate(self.hass, config, user_input)
+            if not errors:
+                data = {**self.config_entry.data}
+                for key, value in changes.items():
+                    if value is None:
+                        data.pop(key, None)
+                    else:
+                        data[key] = value
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=data
+                )
+                return await self.async_step_init()
+            shown = user_input
+        else:  # secrets are never shown again; leaving them empty keeps the stored one
+            shown = {
+                k: v
+                for k, v in config.items()
+                if k in setup.keys and k not in setup.secret_keys
+            }
+        return self.async_show_form(
+            step_id="account",
+            data_schema=self.add_suggested_values_to_schema(
+                setup.schema(config), shown
+            ),
+            errors=errors,
         )
 
     async def async_step_finish(

@@ -355,13 +355,20 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
                 )
                 items = built.items
             result.errors = []
-            await async_deliver(
+            reauth = await async_deliver(
                 self.hass,
                 self.shopping_registry.create(self.hass, config),
                 config.get(CONF_REVIEW_LIST),
                 items,
                 result,
+                menu.week_start,
             )
+            for (
+                provider_id
+            ) in reauth:  # sign-in stopped working: HA asks the user to log in again
+                self.config_entry.async_start_reauth(
+                    self.hass, context={"provider_id": provider_id}
+                )
             result.touch()
             menu.shopping = result.as_dict()
         except Exception:
