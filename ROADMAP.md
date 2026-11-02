@@ -2,6 +2,23 @@
 
 Ideas after the v1 release described in `PLAN.md`.
 
+## Next: Favorites and ratings
+Let the family tell the planner what they liked, and let the planner listen.
+
+- **Favorite a recipe:** a star on the Menu and Today cards (and a service, `favorite_recipe`) marks a recipe as a favorite. Favorites are stored with the full recipe, so they can come back even when the source (ICA, AI Task) would not offer them again.
+- **Rate a recipe:** 1 to 5 stars, set from the cards (for example on today's dinner after it has been cooked) or through a service (`rate_recipe`). A short "How was it?" prompt after a dinner day, as a notification action, is optional.
+- **Whose rating:** start with one household rating per recipe. Later, a rating per family member (linked to the Home Assistant person already on the family card), combined by who eats on the day, so a recipe one person dislikes counts less on days they are home. This sits well with the voting idea in v2.
+- **Planner weighting (extends `planner/scoring.py`):**
+  - A favorite gets a bonus, and a high rating adds to it. A low rating is a penalty, and a very low rating (1 star) keeps the recipe out unless nothing else fits.
+  - Favorites are not served every week: a cool-down (say 3 to 4 weeks) stops the same ones from dominating, and the existing repeat penalty still applies.
+  - Unrated recipes are neutral, so new recipes still get a fair chance. A small "explore" share keeps the menu from only repeating known dishes.
+  - The hard rules do not change: allergies and diets are checked first, so a favorite is never suggested to someone who cannot eat it, and a favorite that only fits through a split dinner still counts against the split limit.
+  - Ratings feed the next week's menu and also "new dinner" for a single day.
+- **Favorites as a candidate source:** a source that offers rated and favorite recipes from the local store, ahead of the other sources, so the planner can mix known good dinners with new ones. Like every source it is untrusted until the planner has run its checks.
+- **Entities and cards:** a favorites list (sensor attributes or a card section) and the rating shown on the recipe in the Menu card. The Menu card's alternatives list shows stars so a choice is informed.
+- **Data:** a store of recipe id, favorite flag, rating(s), last cooked date and times cooked. History comes from confirmed menus, which the store already keeps. Ratings survive a restart and are included in any later backup or export.
+- **Open questions:** one rating or one per person; whether a rating can be changed later (yes); how long before a favorite comes back; whether to drop low-rated recipes from the cache of known recipes.
+
 ## v2: Family voting
 - Each menu day offers several candidate recipes (v1 already stores candidate lists with stable recipe IDs).
 - Family members (linked to HA user IDs) vote from the dashboard card or through notification actions.
@@ -29,7 +46,7 @@ ICA is the v1 provider because it is the largest chain. The v1 architecture keep
 - **Done when:** a second provider passes the same contract tests as ICA with no change to the planner, entities, services or cards.
 
 ## Later ideas
-- Recipe ratings and history feeding back into the planner.
+- Rating-based learning beyond favorites: for example, noticing which ingredients or styles score well across ratings and nudging the style tags.
 - Budget tracking over time: weekly spend history based on actual purchases, and trends. (v1 already includes budget-aware planning with estimated costs.)
 - Nutrition summary per day and week.
 - Additional languages.
