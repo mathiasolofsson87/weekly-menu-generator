@@ -3,21 +3,24 @@
 Ideas after the v1 release described in `PLAN.md`.
 
 ## Next: Favorites and ratings
-Let the family tell the planner what they liked, and let the planner listen.
+Let each family member tell the planner what they liked, and let the planner listen.
 
-- **Favorite a recipe:** a star on the Menu and Today cards (and a service, `favorite_recipe`) marks a recipe as a favorite. Favorites are stored with the full recipe, so they can come back even when the source (ICA, AI Task) would not offer them again.
-- **Rate a recipe:** 1 to 5 stars, set from the cards (for example on today's dinner after it has been cooked) or through a service (`rate_recipe`). A short "How was it?" prompt after a dinner day, as a notification action, is optional.
-- **Whose rating:** start with one household rating per recipe. Later, a rating per family member (linked to the Home Assistant person already on the family card), combined by who eats on the day, so a recipe one person dislikes counts less on days they are home. This sits well with the voting idea in v2.
-- **Planner weighting (extends `planner/scoring.py`):**
-  - A favorite gets a bonus, and a high rating adds to it. A low rating is a penalty, and a very low rating (1 star) keeps the recipe out unless nothing else fits.
-  - Favorites are not served every week: a cool-down (say 3 to 4 weeks) stops the same ones from dominating, and the existing repeat penalty still applies.
+- **Per member:** every family member has their own ratings and their own favorites. There is no single household rating. A member is linked to a Home Assistant person (already on the family card), which lets someone rate from their own dashboard or notification.
+- **Favorite a recipe:** a star on the Menu and Today cards (and a `favorite_recipe` service with a member) marks a recipe as that member's favorite. Favorites are stored with the full recipe, so they can come back even when the source (ICA, AI Task) would not offer them again. A recipe can be a favorite of several members, and the cards show whose.
+- **Rate a recipe:** 1 to 5 stars per member, from the cards (for example on today's dinner after it has been cooked) or through a `rate_recipe` service. An optional "How was it?" notification after a dinner asks each person who ate it. A rating can be changed later.
+- **Who is asked:** the card and the notification only show a member their own stars. Setting a rating for someone else is allowed from the card (a parent rating for a small child), since not everyone has a login.
+- **Planner weighting (extends `planner/scoring.py`):** the score for a day is built from the people who eat that day, using the family's attendance and portion setup that already exists.
+  - A favorite adds a bonus for each attendee who has it as a favorite. A rating adds or subtracts for each attendee: high ratings add, low ratings subtract. The result is averaged over the attendees, so a dinner is not decided by one person.
+  - A 1-star rating from someone who eats that day is a strong penalty, and the recipe is left out if anything else fits. Ratings from people who are not eating that day do not count that day.
+  - Favorites are not served every week: a cool-down (say 3 to 4 weeks) stops the same ones from dominating, and the existing repeat penalty still applies. When different people have different favorites, the planner spreads them over the week so everyone gets one now and then.
   - Unrated recipes are neutral, so new recipes still get a fair chance. A small "explore" share keeps the menu from only repeating known dishes.
   - The hard rules do not change: allergies and diets are checked first, so a favorite is never suggested to someone who cannot eat it, and a favorite that only fits through a split dinner still counts against the split limit.
-  - Ratings feed the next week's menu and also "new dinner" for a single day.
-- **Favorites as a candidate source:** a source that offers rated and favorite recipes from the local store, ahead of the other sources, so the planner can mix known good dinners with new ones. Like every source it is untrusted until the planner has run its checks.
-- **Entities and cards:** a favorites list (sensor attributes or a card section) and the rating shown on the recipe in the Menu card. The Menu card's alternatives list shows stars so a choice is informed.
-- **Data:** a store of recipe id, favorite flag, rating(s), last cooked date and times cooked. History comes from confirmed menus, which the store already keeps. Ratings survive a restart and are included in any later backup or export.
-- **Open questions:** one rating or one per person; whether a rating can be changed later (yes); how long before a favorite comes back; whether to drop low-rated recipes from the cache of known recipes.
+  - Ratings feed next week's menu and also "new dinner" for a single day.
+- **Favorites as a candidate source:** a source that offers favorite and well-rated recipes from the local store, ahead of the other sources, so the planner can mix known good dinners with new ones. Like every source it is untrusted until the planner has run its checks.
+- **Entities and cards:** each member's favorites and the family's ratings per recipe appear on the family sensor and in a card section. The Menu card shows who likes a recipe, and its alternatives list shows the attendees' ratings so a choice is informed.
+- **Data:** a store of recipe id, member id, favorite flag and rating, plus last cooked date and times cooked per recipe. History comes from confirmed menus, which the store already keeps. When a member is removed, their ratings and favorites go with them. Ratings survive a restart.
+- **Related:** this feeds the v2 voting idea, where a member's rating can be the starting point for their vote.
+- **Open questions:** how ratings from different members combine for the day (average, or weight the lowest more); how long before a favorite comes back; whether children's ratings count as much as adults'; whether to drop low-rated recipes from the cache of known recipes.
 
 ## v2: Family voting
 - Each menu day offers several candidate recipes (v1 already stores candidate lists with stable recipe IDs).
