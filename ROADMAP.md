@@ -21,7 +21,7 @@ Let each family member tell the planner what they liked, and let the planner lis
 - **Entities and cards:** each member's favorites and the family's ratings per recipe appear on the family sensor and in a card section. The Menu card shows who likes a recipe, and its alternatives list shows the attendees' ratings so a choice is informed.
 - **Data:** a store of recipe id, member id, favorite flag and rating, plus last cooked date and times cooked per recipe. History comes from confirmed menus, which the store already keeps. When a member is removed, their ratings and favorites go with them. Ratings survive a restart.
 - **Related:** this feeds the v2 voting idea, where a member's rating can be the starting point for their vote.
-- **Combining ratings for a day (proposed, to confirm):** a weighted average over the people eating, where an adult counts 1 and a child 0.5, and a dislike counts 1.5 times as much as a like of the same size. A 1-star rating from anyone eating that day is close to a veto (the recipe is left out if anything else fits).
+- **Combining ratings for a day (decided):** a weighted average over the people eating, where an adult counts 1 and a child 0.5, and a dislike counts 1.5 times as much as a like of the same size. A 1-star rating from anyone eating that day is close to a veto (the recipe is left out if anything else fits).
 - **Open questions:** whether to drop low-rated recipes from the cache of known recipes.
 
 ## v2: Family voting
