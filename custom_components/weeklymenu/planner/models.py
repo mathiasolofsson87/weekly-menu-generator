@@ -14,6 +14,7 @@ from ..const import (
     DEFAULT_DINNER_DAYS,
     MEMBER_ALLERGIES,
     MEMBER_ATTENDS,
+    MEMBER_CHILD,
     MEMBER_COOK_SEPARATELY,
     MEMBER_DIET,
     MEMBER_DISLIKES,
@@ -50,6 +51,7 @@ class FamilyMember:
     portion: str = "normal"
     # Allergen may be cooked separately (clean pans) so the dinner can still be used.
     cook_separately: bool = True
+    child: bool = False  # a child's rating counts half of an adult's
     attends: list[str] = field(default_factory=lambda: list(DEFAULT_DINNER_DAYS))
 
     def as_dict(self) -> dict[str, Any]:
@@ -69,6 +71,7 @@ class FamilyMember:
             diet=data.get(MEMBER_DIET) or "omnivore",
             portion=data.get(MEMBER_PORTION) or "normal",
             cook_separately=data.get(MEMBER_COOK_SEPARATELY, True),
+            child=bool(data.get(MEMBER_CHILD, False)),
             attends=[
                 d
                 for d in data.get(MEMBER_ATTENDS, DEFAULT_DINNER_DAYS)

@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CANDIDATES_PER_DAY,
+    CONF_FAVORITE_GAP_WEEKS,
     CONF_FISH_MIN,
     CONF_LANGUAGE,
     CONF_MAX_SPLIT_DAYS,
@@ -24,6 +25,7 @@ from .const import (
     CONF_STYLE_TAGS,
     CONF_UNITS,
     CONF_VEGETARIAN_DAYS,
+    DEFAULT_FAVORITE_GAP_WEEKS,
     DEFAULT_FISH_MIN,
     DEFAULT_LANGUAGE,
     DEFAULT_MAX_SPLIT_DAYS,
@@ -31,6 +33,7 @@ from .const import (
     DOMAIN,
     EVENT_CONFIRMED,
     EVENT_MENU_READY,
+    MAX_FAVORITE_GAP_WEEKS,
 )
 from .planner.eligibility import assess
 from .planner.generator import (
@@ -41,6 +44,7 @@ from .planner.generator import (
     week_start_of,
 )
 from .planner.models import (
+    FamilyMember,
     Menu,
     MenuDay,
     Recipe,
@@ -52,8 +56,10 @@ from .shopping.delivery import async_deliver, to_retry
 from .shopping.models import ShoppingResult
 from .shopping.registry import ShoppingRegistry
 from .sources.base import RecipeSource
+from .sources.favorites import FavoritesSource
 from .sources.registry import SourceRegistry
 from .store import MenuStore
+from .taste import TasteStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +72,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
         hass: HomeAssistant,
         entry: ConfigEntry,
         store: MenuStore,
+        taste: TasteStore,
         registry: SourceRegistry,
         shopping_registry: ShoppingRegistry,
     ) -> None:
@@ -73,6 +80,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             hass, _LOGGER, config_entry=entry, name=DOMAIN, update_interval=None
         )
         self.store = store
+        self.taste = taste
         self.registry = registry
         self.shopping_registry = shopping_registry
         self._lock = asyncio.Lock()
@@ -113,14 +121,35 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             fish_min=int(config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN)),
             candidates_per_day=CANDIDATES_PER_DAY,
             max_split_days=int(config.get(CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS)),
+            taste=self.taste.snapshot(),
         )
 
     # --- helpers -------------------------------------------------------------
 
     def _sources(self) -> list[RecipeSource]:
-        return self.registry.create(
-            self.hass, self.config, self.config.get(CONF_SOURCES)
+        return [
+            FavoritesSource(self.taste),
+            *self.registry.create(
+                self.hass, self.config, self.config.get(CONF_SOURCES)
+            ),
+        ]
+
+    def _recent_ids(self, week_start: str) -> set[str]:
+        """Recipes to keep out of a week for variety. Favorites are only kept out of the
+        weeks next to where they were cooked (the cool-down), not for the whole history."""
+        gap = min(
+            MAX_FAVORITE_GAP_WEEKS,
+            max(
+                1,
+                int(
+                    self.config.get(CONF_FAVORITE_GAP_WEEKS, DEFAULT_FAVORITE_GAP_WEEKS)
+                ),
+            ),
         )
+        favorites = self.taste.favorite_ids()
+        recent = self.store.recent_recipe_ids(before=week_start)
+        near = self.store.recipe_ids_near(week_start, gap)
+        return (recent - favorites) | (near & favorites)
 
     def _find(self, day: date) -> tuple[Menu, MenuDay]:
         """The menu and dinner for a date, or a validation error."""
@@ -185,7 +214,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
                 self._sources(),
                 self._settings(),
                 date.fromisoformat(week),
-                self.store.recent_recipe_ids(before=week),
+                self._recent_ids(week),
                 keep=[d for d in existing.days if d.locked and d.recipe]
                 if existing
                 else (),
@@ -208,7 +237,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
                 self._settings(),
                 menu,
                 current.weekday,
-                self.store.recent_recipe_ids(before=menu.week_start),
+                self._recent_ids(menu.week_start),
                 hint,
             )
             if new is None:
@@ -219,6 +248,66 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             menu.warnings += [w for w in warnings if w not in menu.warnings]
             await self._commit(menu)
             return new
+
+    # --- ratings and favorites --------------------------------------------------
+
+    def member(self, ref: str) -> FamilyMember:
+        """A family member by id, or else by name (any case)."""
+        members = members_from_options(self.config)
+        found = next((m for m in members if m.id == ref), None) or next(
+            (m for m in members if m.name.casefold() == ref.strip().casefold()), None
+        )
+        if found is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="member_not_found",
+                translation_placeholders={"member": ref},
+            )
+        return found
+
+    def find_recipe(self, recipe_id: str) -> Recipe:
+        """A recipe on any stored menu (chosen or an alternative), or a stored favorite."""
+        for menu in self.store.menus.values():
+            for day in menu.days:
+                for recipe in ([day.recipe] if day.recipe else []) + day.candidates:
+                    if recipe.id == recipe_id:
+                        return recipe
+        if recipe := self.taste.recipe(recipe_id):
+            return recipe
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="recipe_not_found",
+            translation_placeholders={"recipe_id": recipe_id},
+        )
+
+    async def async_rate_recipe(
+        self, member_ref: str, recipe_id: str, stars: int | None
+    ) -> None:
+        """Rate a recipe for a member, 1 to 5 stars, or clear it with None."""
+        async with self._lock:
+            member = self.member(member_ref)
+            recipe = self.find_recipe(recipe_id)
+            self.taste.set_rating(member.id, recipe, stars)
+            await self._save_taste()
+
+    async def async_set_favorite(
+        self, member_ref: str, recipe_id: str, favorite: bool
+    ) -> None:
+        """Add a recipe to a member's favorites, or take it off."""
+        async with self._lock:
+            member = self.member(member_ref)
+            recipe = self.find_recipe(recipe_id)
+            self.taste.set_favorite(member.id, recipe, favorite)
+            await self._save_taste()
+
+    async def async_prune_taste(self) -> None:
+        """Drop the ratings and favorites of members that were removed."""
+        if self.taste.prune(m.id for m in members_from_options(self.config)):
+            await self.taste.async_save()
+
+    async def _save_taste(self) -> None:
+        await self.taste.async_save()
+        self.async_set_updated_data(dict(self.store.menus))
 
     async def async_lock_day(self, day: date, locked: bool = True) -> MenuDay:
         """Lock a dinner so that regenerating the menu keeps it."""

@@ -163,6 +163,76 @@ describe("linking a Home Assistant person", () => {
   });
 });
 
+describe("favorites and the child setting", () => {
+  const WITH_FAVORITES = [
+    {
+      ...FAMILY[0],
+      favorites: [
+        { id: "r1", title: "Gryta", url: "https://x/gryta", rating: 4 },
+        { id: "r2", title: "Soppa" },
+      ],
+    },
+    FAMILY[1],
+  ];
+
+  it("folds out a member's favorites under their name", async () => {
+    const { card } = await mount({ family: { members: WITH_FAVORITES } });
+    const [anna, olle] = $$(card, ".member");
+    expect(anna.querySelector("details.favorites summary")!.textContent).toBe("Favorites (2)");
+    expect([...anna.querySelectorAll(".fav .name")].map((n) => n.textContent!.trim())).toEqual(["Gryta", "Soppa"]);
+    expect(anna.querySelector(".fav a")!.getAttribute("href")).toBe("https://x/gryta");
+    expect(anna.querySelector(".fav .stars-text")!.textContent).toBe("★ 4");
+    expect(olle.querySelector("details.favorites")).toBeNull(); // none, nothing to fold out
+  });
+
+  it("removes a favorite for that member only", async () => {
+    const { card, hass } = await mount({ family: { members: WITH_FAVORITES } });
+    ($$(card, ".fav button")[1] as HTMLButtonElement).click();
+    await settle(card);
+    expect(hass.callService).toHaveBeenCalledWith("weeklymenu", "favorite_recipe", {
+      member: "1",
+      recipe_id: "r2",
+      favorite: false,
+    });
+  });
+
+  it("has no remove buttons when editing is off", async () => {
+    const { card } = await mount({ family: { members: WITH_FAVORITES } }, { editable: false });
+    expect($$(card, ".fav").length).toBe(2);
+    expect($$(card, ".fav button")).toHaveLength(0);
+  });
+
+  it("shows the list in the edit form too, even when it is empty", async () => {
+    const { card } = await mount({ family: { members: WITH_FAVORITES } });
+    button(card, "Edit").click(); // Anna
+    await settle(card);
+    const form = $(card, "form")!;
+    expect(form.querySelectorAll(".fav")).toHaveLength(2);
+    expect(form.querySelector("details.favorites")!.hasAttribute("open")).toBe(true);
+    document.body.innerHTML = "";
+    const empty = await mount();
+    button(empty.card, "Edit").click();
+    await settle(empty.card);
+    expect($(empty.card, "form")!.textContent).toContain("No favorites yet");
+  });
+
+  it("is in Swedish for a Swedish user", async () => {
+    const { card } = await mount({ family: { members: WITH_FAVORITES }, language: "sv" });
+    expect($(card, "details.favorites summary")!.textContent).toBe("Favoriter (2)");
+  });
+
+  it("saves the child setting and shows a badge", async () => {
+    const { card, hass } = await mount({ family: { members: [{ ...FAMILY[1], child: true }] } });
+    expect($(card, ".member .badge")!.textContent).toBe("Child");
+    button(card, "Edit").click();
+    await settle(card);
+    await tick(card, "Child (their ratings count half)", false);
+    button(card, "Save").click();
+    await settle(card);
+    expect(hass.callService).toHaveBeenCalledWith("weeklymenu", "set_member", expect.objectContaining({ id: "2", child: false }));
+  });
+});
+
 describe("adding a person", () => {
   it("opens an empty form with sensible defaults", async () => {
     const { card } = await mount();
@@ -199,6 +269,7 @@ describe("adding a person", () => {
       portion: "large",
       attends: ["mon", "tue", "wed", "thu"],
       cook_separately: false,
+      child: false,
     });
     expect($(card, "form")).toBeNull(); // closed after saving
   });

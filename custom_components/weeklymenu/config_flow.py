@@ -32,6 +32,7 @@ from .const import (
     ALLERGENS,
     CONF_AI_TASK,
     CONF_DINNER_DAYS,
+    CONF_FAVORITE_GAP_WEEKS,
     CONF_FISH_MIN,
     CONF_GENERATION_DAY,
     CONF_GENERATION_TIME,
@@ -49,6 +50,7 @@ from .const import (
     CONF_UNITS,
     CONF_VEGETARIAN_DAYS,
     DEFAULT_DINNER_DAYS,
+    DEFAULT_FAVORITE_GAP_WEEKS,
     DEFAULT_FISH_MIN,
     DEFAULT_GENERATION_DAY,
     DEFAULT_GENERATION_TIME,
@@ -60,8 +62,10 @@ from .const import (
     DIETS,
     DOMAIN,
     LANGUAGES,
+    MAX_FAVORITE_GAP_WEEKS,
     MEMBER_ALLERGIES,
     MEMBER_ATTENDS,
+    MEMBER_CHILD,
     MEMBER_COOK_SEPARATELY,
     MEMBER_DIET,
     MEMBER_DISLIKES,
@@ -155,6 +159,16 @@ STYLES_SCHEMA = vol.Schema(
         vol.Required(CONF_VEGETARIAN_DAYS): _days_selector(),
         vol.Required(CONF_FISH_MIN): _days_selector(),
         vol.Required(CONF_MAX_SPLIT_DAYS): _days_selector(),
+        vol.Optional(
+            CONF_FAVORITE_GAP_WEEKS, default=DEFAULT_FAVORITE_GAP_WEEKS
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=1,
+                max=MAX_FAVORITE_GAP_WEEKS,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
     }
 )
 
@@ -179,6 +193,7 @@ MEMBER_SCHEMA = vol.Schema(
         vol.Required(MEMBER_PORTION): _select(PORTIONS, "portion"),
         vol.Required(MEMBER_ATTENDS): _select(WEEKDAYS, "weekday", multiple=True),
         vol.Required(MEMBER_COOK_SEPARATELY): BooleanSelector(),
+        vol.Optional(MEMBER_CHILD, default=False): BooleanSelector(),
     }
 )
 
@@ -414,6 +429,11 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                     CONF_VEGETARIAN_DAYS: int(user_input[CONF_VEGETARIAN_DAYS]),
                     CONF_FISH_MIN: int(user_input[CONF_FISH_MIN]),
                     CONF_MAX_SPLIT_DAYS: int(user_input[CONF_MAX_SPLIT_DAYS]),
+                    CONF_FAVORITE_GAP_WEEKS: int(
+                        user_input.get(
+                            CONF_FAVORITE_GAP_WEEKS, DEFAULT_FAVORITE_GAP_WEEKS
+                        )
+                    ),
                 }
             )
             return await self.async_step_init()
@@ -426,6 +446,9 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
             CONF_FISH_MIN: config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN),
             CONF_MAX_SPLIT_DAYS: config.get(
                 CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS
+            ),
+            CONF_FAVORITE_GAP_WEEKS: config.get(
+                CONF_FAVORITE_GAP_WEEKS, DEFAULT_FAVORITE_GAP_WEEKS
             ),
         }
         return self.async_show_form(
@@ -628,6 +651,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                 MEMBER_DIET: "omnivore",
                 MEMBER_PORTION: "normal",
                 MEMBER_COOK_SEPARATELY: True,
+                MEMBER_CHILD: False,
                 MEMBER_ATTENDS: dinner_days_from_options(self._config())
                 or list(DEFAULT_DINNER_DAYS),
             }

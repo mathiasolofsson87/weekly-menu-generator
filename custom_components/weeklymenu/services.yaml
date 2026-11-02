@@ -133,6 +133,10 @@ set_member:
       required: false
       selector:
         boolean:
+    child:
+      required: false
+      selector:
+        boolean:
 remove_member:
   fields:
     name:
@@ -144,3 +148,38 @@ remove_member:
       required: false
       selector:
         text:
+rate_recipe:
+  fields:
+    member:
+      required: true
+      example: "Anna"
+      selector:
+        text:
+    recipe_id:
+      required: true
+      selector:
+        text:
+    rating:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 5
+          step: 1
+          mode: slider
+favorite_recipe:
+  fields:
+    member:
+      required: true
+      example: "Anna"
+      selector:
+        text:
+    recipe_id:
+      required: true
+      selector:
+        text:
+    favorite:
+      required: false
+      default: true
+      selector:
+        boolean:

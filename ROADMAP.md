@@ -2,28 +2,14 @@
 
 Ideas after the v1 release described in `PLAN.md`.
 
-## Next: Favorites and ratings
-Let each family member tell the planner what they liked, and let the planner listen.
+## Favorites and ratings: built, with these left over
+Per-member ratings and favorites are in (see `PLAN.md`, "Favorites and ratings"). Still open:
 
-- **Per member:** every family member has their own ratings and their own favorites. There is no single household rating. A member is linked to a Home Assistant person (already on the family card), which lets someone rate from their own dashboard or notification.
-- **Favorite a recipe:** a star on the Menu and Today cards (and a `favorite_recipe` service with a member) marks a recipe as that member's favorite. Favorites are stored with the full recipe, so they can come back even when the source (ICA, AI Task) would not offer them again. A recipe can be a favorite of several members, and the cards show whose.
-- **Rate a recipe:** 1 to 5 stars per member, from the cards (for example on today's dinner after it has been cooked) or through a `rate_recipe` service. An optional "How was it?" notification after a dinner asks each person who ate it. A rating can be changed later.
-- **Who is asked:** the card and the notification only show a member their own stars. Setting a rating for someone else is allowed from the card (a parent rating for a small child), since not everyone has a login.
-- **Planner weighting (extends `planner/scoring.py`):** the score for a day is built from the people who eat that day, using the family's attendance and portion setup that already exists.
-  - A favorite adds a bonus for each attendee who has it as a favorite. A rating adds or subtracts for each attendee: high ratings add, low ratings subtract. The result is averaged over the attendees, so a dinner is not decided by one person.
-  - A 1-star rating from someone who eats that day is a strong penalty, and the recipe is left out if anything else fits. Ratings from people who are not eating that day do not count that day.
-  - A child's rating has half the weight of an adult's. A member gets an adult/child setting for this (a new field on the family card and in the options, set by hand and never guessed from the portion size).
-  - A favorite is never served in two weeks in a row: after it has been on a menu, it is kept out of the following calendar week, so the earliest return is two weeks later (at least 14 days for the same weekday). The gap is a setting (default 1 week skipped, up to 4), and the existing repeat penalty still applies. When different people have different favorites, the planner spreads them over the week so everyone gets one now and then.
-  - Unrated recipes are neutral, so new recipes still get a fair chance. A small "explore" share keeps the menu from only repeating known dishes.
-  - The hard rules do not change: allergies and diets are checked first, so a favorite is never suggested to someone who cannot eat it, and a favorite that only fits through a split dinner still counts against the split limit.
-  - Ratings feed next week's menu and also "new dinner" for a single day.
-- **Favorites as a candidate source:** a source that offers favorite and well-rated recipes from the local store, ahead of the other sources, so the planner can mix known good dinners with new ones. Like every source it is untrusted until the planner has run its checks.
-- **A member's own favorites list:** in the Family card, each member has a fold-out list of their favorited recipes (title, picture, their rating), under their name and also inside their edit form. Each row has a button to remove the favorite and a link to open the recipe. Removing a favorite only takes it off that member's list: the recipe, other members' favorites and the ratings all stay. The list works through the same `favorite_recipe` service (with a remove option), so the card needs no separate storage. If the recipe's source has gone, the stored copy still shows.
-- **Entities and cards:** each member's favorites and the family's ratings per recipe appear on the family sensor and in a card section. The Menu card shows who likes a recipe, and its alternatives list shows the attendees' ratings so a choice is informed.
-- **Data:** a store of recipe id, member id, favorite flag and rating, plus last cooked date and times cooked per recipe. History comes from confirmed menus, which the store already keeps. When a member is removed, their ratings and favorites go with them. Ratings survive a restart.
-- **Related:** this feeds the v2 voting idea, where a member's rating can be the starting point for their vote.
-- **Combining ratings for a day (decided):** a weighted average over the people eating, where an adult counts 1 and a child 0.5, and a dislike counts 1.5 times as much as a like of the same size. A 1-star rating from anyone eating that day is close to a veto (the recipe is left out if anything else fits).
-- **Open questions:** whether to drop low-rated recipes from the cache of known recipes.
+- **Spreading favorites over the week** when members have different favorites, so everyone gets one now and then. Today a recipe's bonus follows the share of the table that has it as a favorite, which tends to do this by itself but does not guarantee it.
+- **An explicit "explore" share**, so the menu never ends up only repeating known dishes. Today unrated recipes are neutral and ties are broken at random.
+- **A "How was it?" notification** after a dinner day, asking each person who ate it for stars.
+- **Dropping low-rated recipes** from the cache of known recipes.
+- **Favorites in the menu card's alternatives list**, with each attendee's rating next to the alternative.
 
 ## v2: Family voting
 - Each menu day offers several candidate recipes (v1 already stores candidate lists with stable recipe IDs).

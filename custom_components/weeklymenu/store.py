@@ -44,3 +44,16 @@ class MenuStore:
             for day in menu.days
             if day.recipe
         }
+
+    def recipe_ids_near(self, week: str, weeks: int) -> set[str]:
+        """Ids of recipes on menus within `weeks` calendar weeks of `week`, either side,
+        not counting `week` itself."""
+        centre = date.fromisoformat(week)
+        return {
+            day.recipe.id
+            for start, menu in self.menus.items()
+            if start != week
+            and abs((date.fromisoformat(start) - centre).days) <= 7 * weeks
+            for day in menu.days
+            if day.recipe
+        }

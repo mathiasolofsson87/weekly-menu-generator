@@ -45,8 +45,35 @@ describe("readFamily", () => {
       portion: "small",
       attends: ["mon", "tue", "wed", "thu", "fri"],
       cookSeparately: false,
+      child: false,
+      favorites: [],
     });
     expect(family.members[1].cookSeparately).toBe(true);
+  });
+
+  it("reads the child flag and the favorites, ignoring bad entries", () => {
+    const hass = makeHass({
+      family: {
+        members: [
+          {
+            ...FAMILY[0],
+            child: true,
+            favorites: [
+              { id: "r1", title: "Gryta", image: "/i.jpg", url: "https://x/y", rating: 4 },
+              { id: "r2", title: "Soppa", rating: null },
+              { id: 3, title: "Bad" },
+              null,
+            ],
+          },
+        ],
+      },
+    });
+    const [anna] = readFamily(hass).members;
+    expect(anna.child).toBe(true);
+    expect(anna.favorites).toEqual([
+      { id: "r1", title: "Gryta", image: "/i.jpg", url: "https://x/y", rating: 4 },
+      { id: "r2", title: "Soppa", image: undefined, url: undefined, rating: undefined },
+    ]);
   });
 
   it("is unavailable while the entry reloads", () => {

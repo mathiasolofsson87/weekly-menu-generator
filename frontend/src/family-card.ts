@@ -26,6 +26,7 @@ interface Draft {
   portion: string;
   attends: string[];
   cookSeparately: boolean;
+  child: boolean;
 }
 
 const KNOWN = new Set<string>(ALLERGENS);
@@ -73,6 +74,7 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
       portion: "normal",
       attends: [...defaultDays],
       cookSeparately: true,
+      child: false,
     };
   }
   return {
@@ -89,6 +91,7 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
     portion: member.portion,
     attends: [...member.attends],
     cookSeparately: member.cookSeparately,
+    child: member.child,
   };
 }
 
@@ -186,11 +189,16 @@ export class WeeklyMenuFamilyCard extends LitElement {
       portion: draft.portion,
       attends: WEEKDAYS.filter((d) => draft.attends.includes(d)),
       cook_separately: draft.cookSeparately,
+      child: draft.child,
     };
     if (draft.id) data.id = draft.id;
     if (draft.person) data.person = draft.person;
     else if (draft.hadPerson) data.person = null;
     if (await this._run("set_member", data)) this._draft = null;
+  }
+
+  private async _removeFavorite(member: Member, recipeId: string): Promise<void> {
+    await this._run("favorite_recipe", { member: member.id, recipe_id: recipeId, favorite: false });
   }
 
   private async _remove(): Promise<void> {
@@ -238,12 +246,14 @@ export class WeeklyMenuFamilyCard extends LitElement {
         <div style="flex:1;min-width:0">
           <div class="title">${member.name}</div>
           <div class="meta">
+            ${member.child ? html`<span class="badge">${t(hass, "famChildBadge")}</span>` : nothing}
             ${member.diet !== "omnivore" ? html`<span class="badge">${t(hass, `diet_${member.diet}` as Key)}</span>` : nothing}
             ${member.portion !== "normal" ? html`<span class="badge">${t(hass, `portion_${member.portion}` as Key)}</span>` : nothing}
             ${member.allergies.map((a) => html`<span class="tag allergy">${KNOWN.has(a) ? t(hass, `allergen_${a}` as Key) : a}</span>`)}
             ${member.dislikes.length ? html`<span>${member.dislikes.join(", ")}</span>` : nothing}
             <span>${every ? t(hass, "famEveryDay") : attends.map((d) => weekdayShort(hass, d)).join(", ")}</span>
           </div>
+          ${member.favorites.length ? this._renderFavorites(member, editable, false) : nothing}
         </div>
         ${editable && !editing
           ? html`<button ?disabled=${this._busy} @click=${() => (this._draft = toDraft(member, dinnerDays))}>
@@ -251,11 +261,43 @@ export class WeeklyMenuFamilyCard extends LitElement {
             </button>`
           : nothing}
       </div>
-      ${editing && this._draft ? this._renderForm(this._draft, days) : nothing}
+      ${editing && this._draft ? this._renderForm(this._draft, days, member) : nothing}
     </div>`;
   }
 
-  private _renderForm(draft: Draft, days: string[]): TemplateResult {
+  /** A member's favorite recipes, folded out from a summary line, each with a button to remove it. */
+  private _renderFavorites(member: Member, editable: boolean, open: boolean): TemplateResult {
+    const hass = this.hass;
+    return html`<details class="favorites" ?open=${open}>
+      <summary>${t(hass, "famFavorites", { n: member.favorites.length })}</summary>
+      ${member.favorites.length
+        ? member.favorites.map(
+            (fav) => html`<div class="fav">
+              ${fav.image ? html`<img src=${fav.image} alt="" loading="lazy" />` : nothing}
+              <span class="name">
+                ${fav.url
+                  ? html`<a href=${fav.url} target="_blank" rel="noopener noreferrer" title=${t(hass, "openRecipe")}>${fav.title}</a>`
+                  : fav.title}
+              </span>
+              ${fav.rating ? html`<span class="stars-text">★ ${fav.rating}</span>` : nothing}
+              ${editable
+                ? html`<button
+                    class="icon"
+                    ?disabled=${this._busy}
+                    title=${t(hass, "famRemoveFavorite", { title: fav.title })}
+                    aria-label=${t(hass, "famRemoveFavorite", { title: fav.title })}
+                    @click=${() => this._removeFavorite(member, fav.id)}
+                  >
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>`
+                : nothing}
+            </div>`,
+          )
+        : html`<div class="empty">${t(hass, "famNoFavorites")}</div>`}
+    </details>`;
+  }
+
+  private _renderForm(draft: Draft, days: string[], member?: Member): TemplateResult {
     const hass = this.hass;
     const valid = draft.name.trim() !== "" && draft.attends.length > 0;
     const text = (label: Key, value: string, key: keyof Draft) => html`<label class="field">
@@ -323,11 +365,20 @@ export class WeeklyMenuFamilyCard extends LitElement {
       <label class="check">
         <input
           type="checkbox"
+          .checked=${draft.child}
+          @change=${(ev: Event) => this._set({ child: (ev.target as HTMLInputElement).checked })}
+        />
+        ${t(hass, "famChild")}
+      </label>
+      <label class="check">
+        <input
+          type="checkbox"
           .checked=${draft.cookSeparately}
           @change=${(ev: Event) => this._set({ cookSeparately: (ev.target as HTMLInputElement).checked })}
         />
         ${t(hass, "famCookSeparately")}
       </label>
+      ${member ? this._renderFavorites(member, true, true) : nothing}
       <small>${t(hass, "famAppliesLater")}</small>
       <div class="row">
         <button class="primary" type="button" ?disabled=${this._busy || !valid} @click=${() => this._save()}>${t(hass, "famSave")}</button>

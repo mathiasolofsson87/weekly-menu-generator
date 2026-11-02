@@ -20,6 +20,7 @@ from .services import async_register_services
 from .shopping.registry import ShoppingRegistry, build_default_shopping_registry
 from .sources.registry import SourceRegistry, build_default_registry
 from .store import MenuStore
+from .taste import TasteStore
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
@@ -53,7 +54,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeeklyMenuConfigEntry) -
     shopping_registry: ShoppingRegistry = hass.data[DOMAIN]["shopping_registry"]
     store = MenuStore(hass, entry.entry_id)
     await store.async_load()
-    coordinator = WeeklyMenuCoordinator(hass, entry, store, registry, shopping_registry)
+    taste = TasteStore(hass, entry.entry_id)
+    await taste.async_load()
+    coordinator = WeeklyMenuCoordinator(
+        hass, entry, store, taste, registry, shopping_registry
+    )
+    await coordinator.async_prune_taste()
     await coordinator.async_config_entry_first_refresh()
 
     scheduler = MenuScheduler(hass, entry)

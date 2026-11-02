@@ -70,6 +70,7 @@ export class WeeklyMenuTodayCard extends LitElement {
           </div>
         </div>
         <div class="more" style="padding-left:0">
+          <weeklymenu-taste .hass=${hass} .dinner=${dinner}></weeklymenu-taste>
           ${renderSplit(hass, dinner.split)}
           ${this._config.show_ingredients ? renderIngredients(hass, dinner.ingredients) : nothing}
         </div>

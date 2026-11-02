@@ -19,9 +19,12 @@ from .const import DOMAIN, WEEKDAYS
 from .coordinator import WeeklyMenuCoordinator
 from .planner.models import MenuDay, dinner_days_from_options, members_from_options
 from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
+from .taste import TasteStore
 
 
-def _day_attributes(day: MenuDay | None) -> dict[str, Any]:
+def _day_attributes(
+    day: MenuDay | None, taste: TasteStore | None = None
+) -> dict[str, Any]:
     """Attributes describing one dinner, for dashboards and automations."""
     if day is None or day.recipe is None:
         return {}
@@ -39,6 +42,9 @@ def _day_attributes(day: MenuDay | None) -> dict[str, Any]:
         "locked": day.locked,
         "split": day.split.as_dict() if day.split else None,
         "alternatives": [{"id": c.id, "title": c.title} for c in day.candidates[1:]],
+        # member id -> stars, and the members who have it as a favorite
+        "ratings": taste.ratings_of(recipe.id) if taste else {},
+        "favorite_of": taste.favorite_of(recipe.id) if taste else [],
     }
 
 
@@ -132,8 +138,24 @@ class FamilySensor(_MenuSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         config = self.coordinator.config
+        taste = self.coordinator.taste
         return {
-            "members": [m.as_dict() for m in members_from_options(config)],
+            "members": [
+                {
+                    **m.as_dict(),
+                    "favorites": [
+                        {
+                            "id": r.id,
+                            "title": r.title,
+                            "image": r.image,
+                            "url": r.url,
+                            "rating": taste.rating(m.id, r.id),
+                        }
+                        for r in taste.favorites_of(m.id)
+                    ],
+                }
+                for m in members_from_options(config)
+            ],
             "dinner_days": dinner_days_from_options(config),
         }
 
@@ -157,7 +179,7 @@ class DinnerSensor(_MenuSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return _day_attributes(self._lookup())
+        return _day_attributes(self._lookup(), self.coordinator.taste)
 
 
 class TodaySensor(DinnerSensor):

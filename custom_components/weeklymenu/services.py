@@ -30,6 +30,8 @@ SERVICE_CONFIRM_MENU = "confirm_menu"
 SERVICE_ADD_TO_SHOPPING = "add_to_shopping"
 SERVICE_SET_MEMBER = "set_member"
 SERVICE_REMOVE_MEMBER = "remove_member"
+SERVICE_RATE_RECIPE = "rate_recipe"
+SERVICE_FAVORITE_RECIPE = "favorite_recipe"
 
 
 def _coordinator(hass: HomeAssistant) -> WeeklyMenuCoordinator:
@@ -96,6 +98,16 @@ def async_register_services(hass: HomeAssistant) -> None:
     async def remove_member(call: ServiceCall) -> None:
         async_remove_member(hass, _coordinator(hass).config_entry, call.data)
 
+    async def rate_recipe(call: ServiceCall) -> None:
+        await _coordinator(hass).async_rate_recipe(
+            call.data["member"], call.data["recipe_id"], call.data["rating"] or None
+        )
+
+    async def favorite_recipe(call: ServiceCall) -> None:
+        await _coordinator(hass).async_set_favorite(
+            call.data["member"], call.data["recipe_id"], call.data["favorite"]
+        )
+
     terms = vol.All(cv.ensure_list, [cv.string])
     member_fields = {
         vol.Optional("person"): vol.Any(None, cv.entity_id),
@@ -106,6 +118,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         vol.Optional("portion"): vol.In(PORTIONS),
         vol.Optional("attends"): vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
         vol.Optional("cook_separately"): cv.boolean,
+        vol.Optional("child"): cv.boolean,
     }
     day = {vol.Required("date"): cv.date}
     for name, handler, schema, response in (
@@ -159,6 +172,27 @@ def async_register_services(hass: HomeAssistant) -> None:
             SERVICE_REMOVE_MEMBER,
             remove_member,
             {vol.Optional("id"): cv.string, vol.Optional("name"): cv.string},
+            False,
+        ),
+        (
+            SERVICE_RATE_RECIPE,
+            rate_recipe,
+            {
+                vol.Required("member"): cv.string,
+                vol.Required("recipe_id"): cv.string,
+                # 1 to 5 stars; 0 takes the rating back
+                vol.Required("rating"): vol.All(vol.Coerce(int), vol.Range(0, 5)),
+            },
+            False,
+        ),
+        (
+            SERVICE_FAVORITE_RECIPE,
+            favorite_recipe,
+            {
+                vol.Required("member"): cv.string,
+                vol.Required("recipe_id"): cv.string,
+                vol.Optional("favorite", default=True): cv.boolean,
+            },
             False,
         ),
         (

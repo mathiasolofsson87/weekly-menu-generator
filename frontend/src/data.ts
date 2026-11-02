@@ -2,6 +2,7 @@ import {
   type Alternative,
   type Dinner,
   type FamilyModel,
+  type Favorite,
   type HomeAssistant,
   type Member,
   type MenuModel,
@@ -58,6 +59,30 @@ function readAlternatives(raw: unknown): Alternative[] {
     .map((a) => ({ id: a.id as string, title: a.title as string }));
 }
 
+function readRatings(raw: unknown): Record<string, number> {
+  const ratings: Record<string, number> = {};
+  if (isObject(raw)) {
+    for (const [member, stars] of Object.entries(raw)) {
+      if (typeof stars === "number" && stars >= 1 && stars <= 5) ratings[member] = stars;
+    }
+  }
+  return ratings;
+}
+
+function readFavorites(raw: unknown): Favorite[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(isObject)
+    .filter((f) => typeof f.id === "string" && typeof f.title === "string")
+    .map((f) => ({
+      id: f.id as string,
+      title: f.title as string,
+      image: str(f.image),
+      url: str(f.url),
+      rating: num(f.rating),
+    }));
+}
+
 /** A dinner from a sensor. Returns undefined when nothing is planned for it. */
 export function readDinner(
   hass: HomeAssistant,
@@ -85,6 +110,8 @@ export function readDinner(
     locked: a.locked === true,
     alternatives: readAlternatives(a.alternatives),
     split: readSplit(a.split),
+    ratings: readRatings(a.ratings),
+    favoriteOf: strings(a.favorite_of),
   };
 }
 
@@ -173,6 +200,8 @@ export function readFamily(hass: HomeAssistant): FamilyModel {
     portion: str(m.portion) ?? "normal",
     attends: strings(m.attends),
     cookSeparately: m.cook_separately !== false,
+    child: m.child === true,
+    favorites: readFavorites(m.favorites),
   }));
   return {
     available: true,

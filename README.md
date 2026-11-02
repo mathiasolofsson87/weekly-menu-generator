@@ -22,6 +22,7 @@ Every Friday morning (configurable) it drafts a menu for next week, for the week
 - **Recipes** come from, in this order: **ICA recipes** (popular dinner recipes from ica.se, Swedish) and an **AI Task** entity of your choice (for example Gemini). The AI is never trusted with safety: every recipe from every source passes the same checks.
 - **Family:** each person has allergies (hard rules), diet (hard rule), dislikes and likes (soft), portion size, and the days they eat dinner. Only people eating that day constrain that day.
 - **One recipe, more than one version.** If the only thing in the way for some people is an ingredient that can be swapped, the dinner is still used: the steak recipe stays, and the vegetarian gets tofu; the pasta dish stays, and the milk-allergic person gets oat cream, cooked in clean, separate pans. A dinner can have up to two extra versions, and a per-person setting lets you say that someone's allergy must **never** be handled this way. Recipes with stock, anchovies, egg, soy or nuts in the way are not split.
+- **Ratings and favorites, per person.** Give a dinner 1 to 5 stars and a heart from the Menu or Tonight's dinner card (you act as the person linked to your Home Assistant user, or pick who you rate as, for example a child). Only the people eating a day count for that day: a child's rating counts half of an adult's, a dislike weighs more than a like, and a 1-star rating from anyone at the table keeps the recipe out unless nothing else fits. Favorites and well-rated recipes are offered again from a local store, mixed with new ones, but a favorite is never served in two weeks in a row (the gap is a setting). Each person's favorites are listed in the Family card, where they can be removed. Allergies and diets are always checked first.
 - **Variety and waste:** recipes from the last six weeks are avoided, vegetarian and fish dinners per week are honoured, and recipes that share ingredients with the rest of the week rank higher so packages get finished.
 - **Shopping:** amounts are scaled by who eats each day, merged across recipes, rounded up to something you can buy, and cleaned of wording like "gärna ICAs nötfärs 12% eller hushållsfärs". Pantry staples (salt, oil...) are skipped but listed. Items a store cannot place go to a review list; nothing is dropped silently.
 - **Notifications** (through the Home Assistant app): menu ready with **Open / Confirm / Regenerate** buttons, problems, confirmed, and a Saturday-noon reminder.
@@ -73,6 +74,8 @@ More examples, including stock cards and automations, are in [docs/dashboard-exa
 | `confirm_menu` | Lock the menu and build the shopping lists. A confirmed menu cannot be changed. |
 | `add_to_shopping` | Retry what could not be delivered (or resend everything). |
 | `set_member`, `remove_member` | Edit the family. Applies to menus made from now on. |
+| `rate_recipe` | Give a recipe 1 to 5 stars from one family member (0 takes it back). |
+| `favorite_recipe` | Add a recipe to one member's favorites, or remove it. |
 
 Events: `weeklymenu_generation_due`, `weeklymenu_menu_ready`, `weeklymenu_confirmed` (with shopping counts). Entities: sensors for status, tonight's dinner, each weekday, shopping and family; a calendar of planned dinners; buttons to generate and confirm.
 

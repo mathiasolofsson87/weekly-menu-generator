@@ -14,6 +14,7 @@ CONF_GENERATION_TIME = "generation_time"
 CONF_DINNER_DAYS = "dinner_days"
 CONF_MEMBERS = "members"
 CONF_SOURCES = "sources"
+CONF_FAVORITE_GAP_WEEKS = "favorite_gap_weeks"
 CONF_STYLE_TAGS = "style_tags"
 CONF_VEGETARIAN_DAYS = "vegetarian_days"
 CONF_FISH_MIN = "fish_min"
@@ -35,6 +36,7 @@ MEMBER_DIET = "diet"
 MEMBER_PORTION = "portion"
 MEMBER_ATTENDS = "attends"
 MEMBER_COOK_SEPARATELY = "cook_separately"
+MEMBER_CHILD = "child"
 
 LANGUAGES = ["sv", "en"]
 UNITS = ["swedish", "metric"]  # swedish: dl, msk, tsk. metric: ml, g.
@@ -72,6 +74,10 @@ DEFAULT_DINNER_DAYS = ["mon", "tue", "wed", "thu", "fri"]
 DEFAULT_VEGETARIAN_DAYS = 1
 DEFAULT_FISH_MIN = 1
 DEFAULT_MAX_SPLIT_DAYS = 2
+DEFAULT_FAVORITE_GAP_WEEKS = (
+    1  # a favorite is kept out of this many weeks after it was cooked
+)
+MAX_FAVORITE_GAP_WEEKS = 4
 # Relative size of a portion, used to share a split dinner between its eaters.
 PORTION_WEIGHTS = {"small": 0.6, "normal": 1.0, "large": 1.4}
 CANDIDATES_PER_DAY = 3

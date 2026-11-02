@@ -16,6 +16,7 @@ from .constraints import has_fish, is_vegetarian
 from .eligibility import assess
 from .models import FamilyMember, Menu, MenuDay, Recipe, Split
 from .scoring import SPLIT_PENALTY, ScoreContext, score
+from .taste import Taste
 from .wishes import Wishes
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class PlannerSettings:
     candidates_per_day: int = 3
     max_split_days: int = 0  # dinners where some members get a substitute protein
     rng: random.Random = field(default_factory=random.Random, repr=False)
+    taste: Taste = field(default_factory=Taste)
 
 
 def attendees_for(settings: PlannerSettings, weekday: str) -> list[FamilyMember] | None:
@@ -113,9 +115,11 @@ async def _plan(
             _LOGGER.warning("Recipe source %s failed: %s", source.id, err)
             warnings.append(f"source_failed:{source.id}")
             continue
-        if _enough(list(pool.values()), targets, settings.candidates_per_day):
+        if "supplement" not in source.capabilities and _enough(
+            list(pool.values()), targets, settings.candidates_per_day
+        ):
             break
-    if not sources:
+    if all("supplement" in source.capabilities for source in sources):
         warnings.append("no_sources")
 
     picked: list[Recipe] = list(kept_recipes)
@@ -140,11 +144,15 @@ async def _plan(
             options = within_limit
         elif options:
             warnings.append(f"split_limit_exceeded:{weekday}")
+        # Nobody who eats that day should have given the recipe the lowest rating,
+        # unless nothing else fits.
+        if liked := [o for o in options if not settings.taste.vetoed(o[0].id, who)]:
+            options = liked
         # A quota that needs every remaining day is a hard filter, if anything qualifies.
         for needed, test in ((veg_left, is_vegetarian), (fish_left, has_fish)):
             if needed >= days_left and any(test(r) for r, _ in options):
                 options = [o for o in options if test(o[0])]
-        ctx = ScoreContext(settings.style_tags, recent_ids, picked)
+        ctx = ScoreContext(settings.style_tags, recent_ids, picked, settings.taste)
         ranked = sorted(
             options,
             key=lambda o: (
@@ -183,7 +191,10 @@ async def _plan(
             and assess(r, who).ok
         ]
         ctx = ScoreContext(
-            settings.style_tags, recent_ids, [p for p in picked if p is not recipe]
+            settings.style_tags,
+            recent_ids,
+            [p for p in picked if p is not recipe],
+            settings.taste,
         )
         alternatives.sort(
             key=lambda r: (

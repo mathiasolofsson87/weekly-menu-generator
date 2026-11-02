@@ -8,6 +8,7 @@ import {
 import { WeeklyMenuFamilyCard } from "./family-card";
 import { WeeklyMenuCard } from "./menu-card";
 import { WeeklyMenuShoppingCard } from "./shopping-card";
+import { WeeklyMenuTaste } from "./taste";
 import { WeeklyMenuTodayCard } from "./today-card";
 
 declare global {
@@ -20,6 +21,7 @@ function define(name: string, element: CustomElementConstructor): void {
   if (!customElements.get(name)) customElements.define(name, element);
 }
 
+define("weeklymenu-taste", WeeklyMenuTaste);
 define("weeklymenu-menu-card", WeeklyMenuCard);
 define("weeklymenu-menu-card-editor", WeeklyMenuCardEditor);
 define("weeklymenu-today-card", WeeklyMenuTodayCard);

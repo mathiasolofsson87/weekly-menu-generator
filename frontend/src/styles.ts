@@ -104,6 +104,59 @@ export const cardStyles = css`
     color: var(--text-primary-color, #fff);
     font-weight: 500;
   }
+  .taste {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 4px 0;
+  }
+  .taste select {
+    max-width: 10em;
+    width: auto;
+  }
+  .taste .stars {
+    display: inline-flex;
+  }
+  .taste button.icon.on ha-icon {
+    color: var(--state-icon-active-color, var(--primary-color));
+  }
+  .taste .liked {
+    color: var(--secondary-text-color);
+    font-size: 0.85em;
+  }
+  details.favorites {
+    margin-top: 6px;
+  }
+  details.favorites summary {
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    font-size: 0.9em;
+  }
+  .fav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    min-width: 0;
+  }
+  .fav .name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .fav img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex: none;
+  }
+  .fav .stars-text {
+    color: var(--secondary-text-color);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
   .title {
     font-weight: 500;
     overflow-wrap: anywhere;

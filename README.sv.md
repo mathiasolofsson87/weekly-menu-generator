@@ -22,6 +22,7 @@ Varje fredagsmorgon (kan ändras) tar den fram ett utkast till meny för nästa 
 - **Recept** kommer, i den här ordningen, från **ICA-recept** (populära middagsrecept från ica.se, på svenska) och en **AI-uppgift** (AI Task) du väljer, till exempel Gemini. AI:n får aldrig avgöra vad som är säkert: varje recept från varje källa går igenom samma kontroller.
 - **Familj:** varje person har allergier (hårda regler), kost (hård regel), ogillar och gillar (mjuka), portionsstorlek och vilka dagar hen äter middag. Bara de som äter en dag styr den dagen.
 - **Ett recept, flera versioner.** Om det bara är en ingrediens som kan bytas som hindrar några används middagen ändå: biffreceptet blir kvar och vegetarianen får tofu; pastarätten blir kvar och den mjölkallergiska får havregrädde, lagat i rena, separata pannor. En middag kan ha upp till två extra versioner, och en inställning per person låter dig bestämma att någons allergi **aldrig** får hanteras så. Recept där buljong, ansjovis, ägg, soja eller nötter är i vägen delas inte upp.
+- **Betyg och favoriter, per person.** Ge en middag 1 till 5 stjärnor och ett hjärta från menykortet eller kortet för kvällens middag (du agerar som personen som är kopplad till din Home Assistant-användare, eller väljer vem du betygsätter som, till exempel ett barn). Bara de som äter en dag räknas den dagen: ett barns betyg väger hälften av en vuxens, ett dåligt betyg väger mer än ett bra, och 1 stjärna från någon vid bordet håller receptet borta om inget annat passar. Favoriter och välbetygsatta recept erbjuds igen från ett lokalt lager, blandade med nya, men en favorit föreslås aldrig två veckor i rad (glappet går att ändra). Varje persons favoriter listas i familjekortet, där de kan tas bort. Allergier och kost kontrolleras alltid först.
 - **Omväxling och matsvinn:** recept från de senaste sex veckorna undviks, vegetariska dagar och fiskdagar per vecka följs, och recept som delar ingredienser med resten av veckan rankas högre så att förpackningar tar slut.
 - **Inköp:** mängder skalas efter vilka som äter varje dag, slås ihop mellan recept, avrundas uppåt till något du kan köpa och rensas från formuleringar som "gärna ICAs nötfärs 12% eller hushållsfärs". Skafferivaror (salt, olja...) hoppas över men listas. Varor som en butik inte kan placera hamnar på en granskningslista; inget försvinner utan att synas.
 - **Notiser** (via Home Assistant-appen): menyn är klar med knapparna **Öppna / Bekräfta / Skapa om**, problem, bekräftad, och en påminnelse lördag klockan 12.
@@ -73,6 +74,8 @@ Fler exempel, med vanliga kort och automationer, finns i [docs/dashboard-example
 | `confirm_menu` | Lås menyn och bygg inköpslistorna. En bekräftad meny kan inte ändras. |
 | `add_to_shopping` | Försök igen med det som inte kunde levereras (eller skicka allt igen). |
 | `set_member`, `remove_member` | Ändra familjen. Gäller menyer som skapas från nu. |
+| `rate_recipe` | Ge ett recept 1 till 5 stjärnor från en familjemedlem (0 tar tillbaka det). |
+| `favorite_recipe` | Lägg till ett recept bland en medlems favoriter, eller ta bort det. |
 
 Händelser: `weeklymenu_generation_due`, `weeklymenu_menu_ready`, `weeklymenu_confirmed` (med inköpsantal). Entiteter: sensorer för status, kvällens middag, varje veckodag, inköp och familj; en kalender med planerade middagar; knappar för att skapa och bekräfta.
 

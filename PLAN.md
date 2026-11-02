@@ -173,6 +173,17 @@ Frontend in `frontend/` (Lit + TypeScript, built by Vite into one 45 KB file). T
 4. Make the repository public with a description and topics (HACS needs them), write the release notes, tag `v0.1.0`, publish a release, and only then consider a pull request to the HACS default list.
 5. (Done) The README's promise that the AI is sent words and never family members' names is now guarded by a test (`test_no_family_member_name_ever_reaches_a_recipe_source`).
 
+## Favorites and ratings (built after 0.2.0)
+
+- **Per member.** `TasteStore` (`taste.py`, its own storage file) keeps each member's 1 to 5 star ratings and favorites, and a full copy of every recipe that anyone has rated or favorited, so it can be offered again after the source or the menu history has dropped it. Removing a member removes their taste on the next setup.
+- **Planner** (`planner/taste.py`, used by `planner/scoring.py`): only the people eating that day count. Stars map to points around 3, a rating below 3 weighs 1.5 times as much as one above, and the day's value is a weighted average where a child (a per-member setting) counts 0.5. A favorite adds a bonus by the share of the table that has it. A 1-star rating from anyone eating makes the recipe a veto, applied as a filter that is dropped when nothing else fits.
+- **Cool-down.** A favorite is kept out of the weeks within `favorite_gap_weeks` of where it was on a menu (default 1: never two weeks in a row, setting 1 to 4). Recipes nobody favorited keep the old rule (kept out for the whole history), so only favorites can come back sooner.
+- **Favorites source** (`sources/favorites.py`): offers favorites and recipes someone rated 4 or more, a third of a request at most, first in line. It is marked `supplement`, so the planner still asks the real sources even when the favorites alone would fill the days. It is untrusted like every source.
+- **Services:** `rate_recipe` (member id or name, recipe id, rating 0 to 5 where 0 clears) and `favorite_recipe` (member, recipe id, favorite on or off). A recipe is found on any stored menu, among its alternatives, or in the taste store, so a favorite can still be removed after its menu has aged out.
+- **Entities:** weekday and today sensors carry `ratings` (member id to stars) and `favorite_of`; the family sensor carries each member's `favorites` and the `child` flag.
+- **Cards:** a `weeklymenu-taste` element (stars, heart, "rating as" member menu) inside the Menu card's opened day and the Today card; the family card has the fold-out favorites list under each member and in their edit form, with remove buttons, and a Child setting. The "rating as" member defaults to the one whose linked Home Assistant person belongs to the logged-in user.
+- **Left over:** see `ROADMAP.md`.
+
 ## Left over from the v1 plan
 
 Not built, with where each stands:

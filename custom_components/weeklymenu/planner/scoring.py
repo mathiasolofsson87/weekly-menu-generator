@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from .constraints import preference_hits
 from .models import FamilyMember, Recipe
+from .taste import Taste
 
 STYLE_WEIGHT = 3.0
 REPEAT_PENALTY = 6.0
@@ -28,6 +29,7 @@ class ScoreContext:
     style_tags: list[str]
     recent_ids: set[str]
     picked: list[Recipe]  # recipes already chosen for other days this week
+    taste: Taste | None = None  # ratings and favorites of the family
 
 
 def _names(recipe: Recipe) -> set[str]:
@@ -37,7 +39,10 @@ def _names(recipe: Recipe) -> set[str]:
 def score(
     recipe: Recipe, attendees: Iterable[FamilyMember], ctx: ScoreContext
 ) -> float:
+    attendees = list(attendees)
     total = 0.0
+    if ctx.taste:
+        total += ctx.taste.score(recipe.id, attendees)
     if ctx.style_tags:
         matched = len(set(ctx.style_tags) & set(recipe.tags))
         total += STYLE_WEIGHT * matched / len(ctx.style_tags)

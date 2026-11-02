@@ -199,6 +199,9 @@ export class WeeklyMenuCard extends LitElement {
   private _renderMore(day: Dinner, others: Dinner[], canEdit: boolean): TemplateResult {
     const hass = this.hass;
     return html`<div class="more">
+      ${this._config.show_actions !== false
+        ? html`<weeklymenu-taste .hass=${hass} .dinner=${day}></weeklymenu-taste>`
+        : nothing}
       ${renderSplit(hass, day.split)} ${renderIngredients(hass, day.ingredients)}
       ${canEdit
         ? html`<div class="row">

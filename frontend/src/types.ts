@@ -15,6 +15,7 @@ export interface HassEntityRegistryEntry {
 
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
+  user?: { id: string };
   entities?: Record<string, HassEntityRegistryEntry>;
   language: string;
   locale?: { language: string };
@@ -66,6 +67,8 @@ export interface Dinner {
   locked: boolean;
   alternatives: Alternative[];
   split: SplitGroup[];
+  ratings: Record<string, number>; // member id -> stars
+  favoriteOf: string[]; // member ids
 }
 
 export interface MenuModel {
@@ -103,6 +106,17 @@ export interface Member {
   portion: string;
   attends: string[];
   cookSeparately: boolean;
+  child: boolean;
+  favorites: Favorite[];
+}
+
+/** A recipe a member has as a favorite. */
+export interface Favorite {
+  id: string;
+  title: string;
+  image?: string;
+  url?: string;
+  rating?: number;
 }
 
 export interface FamilyModel {

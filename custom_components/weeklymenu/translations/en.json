@@ -110,7 +110,8 @@
           "diet": "Diet",
           "portion": "Portion size",
           "attends": "Eats dinner on",
-          "cook_separately": "Allergens can be cooked separately"
+          "cook_separately": "Allergens can be cooked separately",
+          "child": "Child"
         },
         "data_description": {
           "person": "Optional. Links the member to a Home Assistant person.",
@@ -118,7 +119,8 @@
           "dislikes": "Avoided when possible. Type and press enter.",
           "likes": "Preferred when possible. Type and press enter.",
           "attends": "Days this person eats dinner at home.",
-          "cook_separately": "On: a recipe containing this person's allergen can still be used when that ingredient can be swapped and cooked in clean, separate pans. Off: such recipes are never suggested. Turn off for severe allergies."
+          "cook_separately": "On: a recipe containing this person's allergen can still be used when that ingredient can be swapped and cooked in clean, separate pans. Off: such recipes are never suggested. Turn off for severe allergies.",
+          "child": "A child's ratings count half as much as an adult's when the menu is planned."
         }
       },
       "member_edit": {
@@ -139,13 +141,15 @@
           "style_tags": "Preferred styles",
           "vegetarian_days": "Vegetarian dinners per week",
           "fish_min": "Fish dinners per week (at least)",
-          "max_split_days": "Dinners cooked in more than one version (at most)"
+          "max_split_days": "Dinners cooked in more than one version (at most)",
+          "favorite_gap_weeks": "Weeks a favorite is kept out after it was cooked"
         },
         "data_description": {
           "style_tags": "Recipes matching more of these are ranked higher.",
           "vegetarian_days": "Followed when enough suitable recipes exist.",
           "fish_min": "Followed when enough suitable recipes exist.",
-          "max_split_days": "When someone cannot eat an ingredient (meat for a vegetarian, cream for a dairy allergy, pasta for gluten), a dinner can still be used if that ingredient can be swapped: they get an adjusted version. This limits how often per week."
+          "max_split_days": "When someone cannot eat an ingredient (meat for a vegetarian, cream for a dairy allergy, pasta for gluten), a dinner can still be used if that ingredient can be swapped: they get an adjusted version. This limits how often per week.",
+          "favorite_gap_weeks": "A favorite is never served in two weeks in a row. With 1, it can come back two weeks after it was cooked; higher numbers wait longer."
         }
       },
       "sources": {
@@ -410,6 +414,9 @@
     },
     "member_no_days": {
       "message": "{name} must eat dinner on at least one day."
+    },
+    "recipe_not_found": {
+      "message": "There is no recipe {recipe_id} on any menu or in the favorites."
     }
   },
   "services": {
@@ -550,6 +557,10 @@
         "cook_separately": {
           "name": "Allergens can be cooked separately",
           "description": "Off means recipes with this person's allergens are never suggested."
+        },
+        "child": {
+          "name": "Child",
+          "description": "A child's ratings count half as much as an adult's."
         }
       }
     },
@@ -564,6 +575,42 @@
         "id": {
           "name": "ID",
           "description": "The member's id."
+        }
+      }
+    },
+    "rate_recipe": {
+      "name": "Rate recipe",
+      "description": "Gives a recipe 1 to 5 stars from one family member. Recipes with high ratings come back more often, and a 1-star rating keeps it off the days that person eats.",
+      "fields": {
+        "member": {
+          "name": "Member",
+          "description": "The family member's id or name."
+        },
+        "recipe_id": {
+          "name": "Recipe",
+          "description": "The recipe id, as shown on a dinner or in a member's favorites."
+        },
+        "rating": {
+          "name": "Rating",
+          "description": "1 to 5 stars. 0 takes the rating back."
+        }
+      }
+    },
+    "favorite_recipe": {
+      "name": "Favorite recipe",
+      "description": "Adds a recipe to one family member's favorites, or takes it off.",
+      "fields": {
+        "member": {
+          "name": "Member",
+          "description": "The family member's id or name."
+        },
+        "recipe_id": {
+          "name": "Recipe",
+          "description": "The recipe id, as shown on a dinner or in a member's favorites."
+        },
+        "favorite": {
+          "name": "Favorite",
+          "description": "On adds it, off removes it."
         }
       }
     }

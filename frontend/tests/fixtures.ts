@@ -58,7 +58,8 @@ export interface HassOptions {
   days?: DinnerSpec[];
   today?: { title: string; attrs?: Record<string, unknown> } | null;
   language?: string;
-  persons?: { id: string; name?: string; picture?: string }[];
+  persons?: { id: string; name?: string; picture?: string; user_id?: string }[];
+  userId?: string;
 }
 
 /** A Home Assistant object with the integration's entities in it. */
@@ -91,7 +92,7 @@ export function makeHass(options: HassOptions = {}): HomeAssistant & { callServi
     states[p.id] = {
       entity_id: p.id,
       state: "home",
-      attributes: { ...(p.name ? { friendly_name: p.name } : {}), ...(p.picture ? { entity_picture: p.picture } : {}) },
+      attributes: { ...(p.name ? { friendly_name: p.name } : {}), ...(p.picture ? { entity_picture: p.picture } : {}), ...(p.user_id ? { user_id: p.user_id } : {}) },
     };
   }
   // somebody else's entity that must be ignored
@@ -101,6 +102,7 @@ export function makeHass(options: HassOptions = {}): HomeAssistant & { callServi
   return {
     states,
     entities,
+    ...(options.userId ? { user: { id: options.userId } } : {}),
     language: options.language ?? "en",
     callService: vi.fn().mockResolvedValue(undefined),
   };
