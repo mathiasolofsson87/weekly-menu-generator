@@ -11,6 +11,18 @@ Per-member ratings and favorites are in (see `PLAN.md`, "Favorites and ratings")
 - **Dropping low-rated recipes** from the cache of known recipes.
 - **Favorites in the menu card's alternatives list**, with each attendee's rating next to the alternative.
 
+## Own recipes
+Let the family write their own recipes, kept in a recipe list inside the integration.
+
+- **A recipe list:** a "My recipes" list stored by the integration (its own storage file, like favorites). Each recipe has a title, ingredients with amounts and units, time, servings, tags (the same style tags the planner already uses), an optional picture and link, and notes (method, tips).
+- **Create and edit:** from a dashboard card (a form like the family card's) and through services (`add_recipe`, `update_recipe`, `remove_recipe`). Ingredients are typed one per line, such as "350 g nötfärs", and read by the same parser as other sources, with the parsed result shown so a typo is easy to see.
+- **A recipe source:** the list is a recipe source like ICA and AI Task, asked first or alongside the favorites source, with its own on/off switch and a setting for how big a share of a menu may come from it. The planner treats it exactly as any other source: allergy and diet checks, split dinners, scoring, ratings and favorites all apply, and a family recipe can be rated and favorited.
+- **Allergens are not trusted from the author:** a person writing a recipe may leave an allergen out of the ingredient list or write it as a brand name. The filter only sees the text, so the card shows which allergens and diets the recipe was recognised as containing or fitting, and a recipe with no ingredients, or with ingredients the parser could not read, is flagged instead of treated as safe.
+- **Bringing recipes in:** add a recipe from an ICA recipe (copy it to edit), from a pasted block of text, or from a link when the page has structured recipe data. Starting from a favorite or a menu dinner ("save a copy and change it") is the common case.
+- **Sharing in the family:** every member can add and edit recipes, with "added by" shown. Whether a recipe can be private to one member is an open question.
+- **Shopping:** nothing special; ingredients flow through the same scaling, merging and shopping lists as any recipe.
+- **Open questions:** whether to keep a version history for edits, what happens to a recipe that is on a confirmed menu when it is edited (the menu keeps its copy), and a size limit for the list.
+
 ## v2: Family voting
 - Each menu day offers several candidate recipes (v1 already stores candidate lists with stable recipe IDs).
 - Family members (linked to HA user IDs) vote from the dashboard card or through notification actions.
