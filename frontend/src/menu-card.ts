@@ -1,9 +1,10 @@
 import { LitElement, html, nothing, type TemplateResult } from "lit";
-import { DOMAIN, isoWeek, readMenu } from "./data";
+import { DOMAIN, isoWeek, readFamily, readMenu } from "./data";
 import { dayLabel, weekdayKeyName } from "./format";
 import { t, warning } from "./i18n";
 import { errorMessage, renderIngredients, renderMeta, renderSplit } from "./parts";
 import { cardStyles } from "./styles";
+import { currentMember } from "./taste";
 import type { Dinner, HomeAssistant, LovelaceCardConfig, MenuModel } from "./types";
 
 export interface MenuCardConfig extends LovelaceCardConfig {
@@ -108,7 +109,9 @@ export class WeeklyMenuCard extends LitElement {
     const hass = this.hass;
     const menu = readMenu(hass);
     const confirmed = menu.status === "confirmed";
-    const canEdit = this._config.show_actions !== false && !confirmed;
+    // A child can rate and favorite, but not change the menu (the backend refuses it as well).
+    const isChild = currentMember(hass, readFamily(hass).members)?.child === true;
+    const canEdit = this._config.show_actions !== false && !confirmed && !isChild;
     const warnings = [...new Set(menu.warnings.map((w) => warning(hass, w, (d) => weekdayKeyName(hass, d))))];
 
     return html`<ha-card .header=${this._config.title ?? t(hass, "menuTitle")}>
@@ -122,7 +125,7 @@ export class WeeklyMenuCard extends LitElement {
       ${menu.days.length
         ? menu.days.map((day) => this._renderDay(day, menu, canEdit))
         : html`<div class="empty">${t(hass, "noMenu")}</div>`}
-      ${confirmed && this._config.show_actions !== false
+      ${confirmed && this._config.show_actions !== false && !isChild
         ? html`<div class="banner">${t(hass, "confirmedNote")}</div>`
         : nothing}
       ${this._renderFooter(menu, canEdit)}

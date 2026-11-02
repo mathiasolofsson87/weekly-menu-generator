@@ -4,6 +4,7 @@ import { weekdayShort } from "./format";
 import { t, type Key } from "./i18n";
 import { errorMessage } from "./parts";
 import { cardStyles } from "./styles";
+import { currentMember } from "./taste";
 import { ALLERGENS, DIETS, PORTIONS, WEEKDAYS, type HomeAssistant, type LovelaceCardConfig, type Member } from "./types";
 
 export interface FamilyCardConfig extends LovelaceCardConfig {
@@ -217,12 +218,14 @@ export class WeeklyMenuFamilyCard extends LitElement {
     if (!family.available) {
       return html`<ha-card .header=${header}><div class="empty">${t(hass, "famNoFamily")}</div></ha-card>`;
     }
-    const editable = this._config.editable !== false;
+    // A child can see the family and take their own favorites off, but not edit anyone.
+    const me = currentMember(hass, family.members);
+    const editable = this._config.editable !== false && !me?.child;
     const days = family.dinnerDays.length ? family.dinnerDays : [...WEEKDAYS];
     return html`<ha-card .header=${header}>
       ${this._error ? html`<div class="banner error">${t(hass, "error", { error: this._error })}</div>` : nothing}
       ${family.members.length
-        ? family.members.map((m) => this._renderMember(m, family.dinnerDays, editable, days))
+        ? family.members.map((m) => this._renderMember(m, family.dinnerDays, editable, days, me))
         : html`<div class="empty">${t(hass, "famNone")}</div>`}
       ${this._draft && !this._draft.id ? this._renderForm(this._draft, days) : nothing}
       ${editable && !this._draft
@@ -235,7 +238,7 @@ export class WeeklyMenuFamilyCard extends LitElement {
     </ha-card>`;
   }
 
-  private _renderMember(member: Member, dinnerDays: string[], editable: boolean, days: string[]): TemplateResult {
+  private _renderMember(member: Member, dinnerDays: string[], editable: boolean, days: string[], me?: Member): TemplateResult {
     const hass = this.hass;
     const editing = this._draft?.id === member.id;
     const attends = days.filter((d) => member.attends.includes(d));
@@ -253,7 +256,9 @@ export class WeeklyMenuFamilyCard extends LitElement {
             ${member.dislikes.length ? html`<span>${member.dislikes.join(", ")}</span>` : nothing}
             <span>${every ? t(hass, "famEveryDay") : attends.map((d) => weekdayShort(hass, d)).join(", ")}</span>
           </div>
-          ${member.favorites.length ? this._renderFavorites(member, editable, false) : nothing}
+          ${member.favorites.length
+            ? this._renderFavorites(member, editable || (this._config.editable !== false && me?.id === member.id), false)
+            : nothing}
         </div>
         ${editable && !editing
           ? html`<button ?disabled=${this._busy} @click=${() => (this._draft = toDraft(member, dinnerDays))}>

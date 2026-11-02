@@ -417,6 +417,9 @@
     },
     "recipe_not_found": {
       "message": "Det finns inget recept {recipe_id} på någon meny eller bland favoriterna."
+    },
+    "child_not_allowed": {
+      "message": "{name} är barn här och kan inte ändra menyn eller familjen. Betyg och favoriter går bra."
     }
   },
   "services": {

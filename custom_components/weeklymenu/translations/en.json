@@ -417,6 +417,9 @@
     },
     "recipe_not_found": {
       "message": "There is no recipe {recipe_id} on any menu or in the favorites."
+    },
+    "child_not_allowed": {
+      "message": "{name} is a child here and cannot change the menu or the family. Ratings and favorites are fine."
     }
   },
   "services": {

@@ -249,6 +249,30 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             await self._commit(menu)
             return new
 
+    # --- who may change things -----------------------------------------------
+
+    def acting_member(self, user_id: str | None) -> FamilyMember | None:
+        """The family member behind a Home Assistant user, through their linked person.
+        None for automations, the scheduler and users who are not linked to a member."""
+        if not user_id:
+            return None
+        for member in members_from_options(self.config):
+            state = self.hass.states.get(member.person) if member.person else None
+            if state and state.attributes.get("user_id") == user_id:
+                return member
+        return None
+
+    def ensure_adult(self, user_id: str | None) -> None:
+        """Children can rate and favorite, but not generate, edit or confirm menus or edit the
+        family. A user who is not linked to a member is not restricted."""
+        member = self.acting_member(user_id)
+        if member and member.child:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="child_not_allowed",
+                translation_placeholders={"name": member.name},
+            )
+
     # --- ratings and favorites --------------------------------------------------
 
     def member(self, ref: str) -> FamilyMember:

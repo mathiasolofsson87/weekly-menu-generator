@@ -34,6 +34,7 @@ class GenerateButton(_MenuButton):
         super().__init__(coordinator, "generate")
 
     async def async_press(self) -> None:
+        self._coordinator.ensure_adult(self._context.user_id if self._context else None)
         await self._coordinator.async_generate(next_week_start(dt_util.now().date()))
 
 
@@ -44,6 +45,7 @@ class ConfirmButton(_MenuButton):
         super().__init__(coordinator, "confirm")
 
     async def async_press(self) -> None:
+        self._coordinator.ensure_adult(self._context.user_id if self._context else None)
         await self._coordinator.async_confirm()
 
 

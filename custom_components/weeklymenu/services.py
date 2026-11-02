@@ -55,48 +55,53 @@ def _summary(menu: Menu) -> dict:
 def async_register_services(hass: HomeAssistant) -> None:
     """Register services once, from async_setup."""
 
+    def adults_only(call: ServiceCall) -> WeeklyMenuCoordinator:
+        coordinator = _coordinator(hass)
+        coordinator.ensure_adult(call.context.user_id)
+        return coordinator
+
     async def generate_menu(call: ServiceCall) -> ServiceResponse:
         week: date = call.data.get("week_start") or next_week_start(
             dt_util.now().date()
         )
-        menu = await _coordinator(hass).async_generate(week, call.data.get("hint"))
+        menu = await adults_only(call).async_generate(week, call.data.get("hint"))
         return _summary(menu)
 
     async def regenerate_day(call: ServiceCall) -> ServiceResponse:
-        day = await _coordinator(hass).async_regenerate_day(
+        day = await adults_only(call).async_regenerate_day(
             call.data["date"], call.data.get("hint")
         )
         return {"date": day.date, "recipe": day.recipe.title if day.recipe else None}
 
     async def swap_days(call: ServiceCall) -> None:
-        await _coordinator(hass).async_swap_days(
+        await adults_only(call).async_swap_days(
             call.data["date"], call.data["other_date"]
         )
 
     async def lock_day(call: ServiceCall) -> None:
-        await _coordinator(hass).async_lock_day(call.data["date"], call.data["locked"])
+        await adults_only(call).async_lock_day(call.data["date"], call.data["locked"])
 
     async def set_recipe(call: ServiceCall) -> None:
-        await _coordinator(hass).async_set_recipe(
+        await adults_only(call).async_set_recipe(
             call.data["date"], call.data["recipe_id"]
         )
 
     async def confirm_menu(call: ServiceCall) -> ServiceResponse:
         return _summary(
-            await _coordinator(hass).async_confirm(call.data.get("week_start"))
+            await adults_only(call).async_confirm(call.data.get("week_start"))
         )
 
     async def add_to_shopping(call: ServiceCall) -> ServiceResponse:
-        result = await _coordinator(hass).async_add_to_shopping(
+        result = await adults_only(call).async_add_to_shopping(
             call.data.get("week_start"), call.data["everything"]
         )
         return {"counts": result.counts, "errors": result.errors}
 
     async def set_member(call: ServiceCall) -> ServiceResponse:
-        return async_set_member(hass, _coordinator(hass).config_entry, call.data)
+        return async_set_member(hass, adults_only(call).config_entry, call.data)
 
     async def remove_member(call: ServiceCall) -> None:
-        async_remove_member(hass, _coordinator(hass).config_entry, call.data)
+        async_remove_member(hass, adults_only(call).config_entry, call.data)
 
     async def rate_recipe(call: ServiceCall) -> None:
         await _coordinator(hass).async_rate_recipe(
