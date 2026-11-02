@@ -19,7 +19,7 @@ A Home Assistant integration that plans the family's dinners for the coming week
 
 Every Friday morning (configurable) it drafts a menu for next week, for the weekdays you choose, and notifies you. You review it on your dashboard: regenerate one dinner (with an optional wish), lock the ones you like, swap two days, or pick one of the alternatives. Confirming locks the menu and builds the shopping lists.
 
-- **Recipes** come from, in this order: **ICA recipes** (popular dinner recipes from ica.se, Swedish) and an **AI Task** entity of your choice (for example Gemini). The AI is never trusted with safety: every recipe from every source passes the same checks.
+- **Recipes** come from ICA recipes (popular dinner recipes from ica.se, Swedish) and, if you set one up, an **AI Task** entity (for example Gemini), plus your own favorites. The AI is never trusted with safety: every recipe from every source passes the same checks. See *How recipes are chosen* below.
 - **Family:** each person has allergies (hard rules), diet (hard rule), dislikes and likes (soft), portion size, and the days they eat dinner. Only people eating that day constrain that day.
 - **One recipe, more than one version.** If the only thing in the way for some people is an ingredient that can be swapped, the dinner is still used: the steak recipe stays, and the vegetarian gets tofu; the pasta dish stays, and the milk-allergic person gets oat cream, cooked in clean, separate pans. A dinner can have up to two extra versions, and a per-person setting lets you say that someone's allergy must **never** be handled this way. Recipes with stock, anchovies, egg, soy or nuts in the way are not split.
 - **Ratings and favorites, per person.** Give a dinner 1 to 5 stars and a heart from the Menu or Tonight's dinner card (you act as the person linked to your Home Assistant user, or pick who you rate as, for example a child). Only the people eating a day count for that day: a child's rating counts half of an adult's, a dislike weighs more than a like, and a 1-star rating from anyone at the table keeps the recipe out unless nothing else fits. Favorites and well-rated recipes are offered again from a local store, mixed with new ones, but a favorite is never served in two weeks in a row (the gap is a setting). Each person's favorites are listed in the Family card, where they can be removed. Allergies and diets are always checked first.
@@ -27,6 +27,18 @@ Every Friday morning (configurable) it drafts a menu for next week, for the week
 - **Shopping:** amounts are scaled by who eats each day, merged across recipes, rounded up to something you can buy, and cleaned of wording like "gärna ICAs nötfärs 12% eller hushållsfärs". Pantry staples (salt, oil...) are skipped but listed. Items a store cannot place go to a review list; nothing is dropped silently.
 - **Notifications** (through the Home Assistant app): menu ready with **Open / Confirm / Regenerate** buttons, problems, confirmed, and a Saturday-noon reminder.
 - **Dashboard cards:** menu, today's dinner, shopping result and family, all with visual editors and in Swedish or English.
+
+## How recipes are chosen
+
+Each time a menu or a single dinner is made, the integration collects candidate recipes and then picks from them. It asks its sources in this order:
+
+1. **Your favorites and well-rated recipes** (once someone has rated or favorited some). They are stored locally and make up at most a third of the candidates, so the menu stays a mix of known and new dinners.
+2. **Recipe source: ICA recipes.** Popular dinner recipes from ica.se, read a few pages at a time, politely, and kept in a local cache so the same pages are not fetched again. Recipes that cannot be used (an allergen in the ingredients, a diet that does not fit) are skipped before they cost a request.
+3. **AI Task, only if you chose an AI Task entity in Home Assistant** (for example Gemini) and left it switched on under *Recipe sources*. It is asked only when the sources above could not fill the week, or the single day, with enough usable recipes. It is told the family's allergies, diets, preferred styles and any wish you typed, and must answer with structured recipes: a title, ingredients with amounts, time, servings and tags. Without an AI Task entity this step is skipped, and ICA recipes alone are used.
+
+If a source fails (the site is down, the AI answers nonsense), that is logged, the menu warns about it, and the next source is tried.
+
+**The AI never decides what is safe.** Every candidate from every source goes through the same checks, in code: allergies and diets of the people eating that day are hard rules, with the option of a second version of the dinner for someone who cannot eat one ingredient. After that the candidates are ranked, using your preferred styles, likes and dislikes, ratings and favorites, how recently a recipe was used, vegetarian and fish days, and ingredients shared with the rest of the week, with a little randomness so the same dinners do not always win. A wish such as "not fish" or "gärna pasta" is applied to every source, not only the AI: what it rules out is filtered away, and what it asks for ranks higher.
 
 ## Install
 

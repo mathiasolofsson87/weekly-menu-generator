@@ -19,7 +19,7 @@ En integration för Home Assistant som planerar familjens middagar för kommande
 
 Varje fredagsmorgon (kan ändras) tar den fram ett utkast till meny för nästa vecka, för de veckodagar du valt, och meddelar dig. Du går igenom den på din dashboard: skapa om en middag (med ett valfritt önskemål), lås de du gillar, byt plats på två dagar eller välj ett av alternativen. När du bekräftar låses menyn och inköpslistorna byggs.
 
-- **Recept** kommer, i den här ordningen, från **ICA-recept** (populära middagsrecept från ica.se, på svenska) och en **AI-uppgift** (AI Task) du väljer, till exempel Gemini. AI:n får aldrig avgöra vad som är säkert: varje recept från varje källa går igenom samma kontroller.
+- **Recept** kommer från ICA-recept (populära middagsrecept från ica.se, på svenska) och, om du ställt in en, en **AI-uppgift** (AI Task) som Gemini, samt dina egna favoriter. AI:n får aldrig avgöra vad som är säkert: varje recept från varje källa går igenom samma kontroller. Se *Hur recepten väljs* nedan.
 - **Familj:** varje person har allergier (hårda regler), kost (hård regel), ogillar och gillar (mjuka), portionsstorlek och vilka dagar hen äter middag. Bara de som äter en dag styr den dagen.
 - **Ett recept, flera versioner.** Om det bara är en ingrediens som kan bytas som hindrar några används middagen ändå: biffreceptet blir kvar och vegetarianen får tofu; pastarätten blir kvar och den mjölkallergiska får havregrädde, lagat i rena, separata pannor. En middag kan ha upp till två extra versioner, och en inställning per person låter dig bestämma att någons allergi **aldrig** får hanteras så. Recept där buljong, ansjovis, ägg, soja eller nötter är i vägen delas inte upp.
 - **Betyg och favoriter, per person.** Ge en middag 1 till 5 stjärnor och ett hjärta från menykortet eller kortet för kvällens middag (du agerar som personen som är kopplad till din Home Assistant-användare, eller väljer vem du betygsätter som, till exempel ett barn). Bara de som äter en dag räknas den dagen: ett barns betyg väger hälften av en vuxens, ett dåligt betyg väger mer än ett bra, och 1 stjärna från någon vid bordet håller receptet borta om inget annat passar. Favoriter och välbetygsatta recept erbjuds igen från ett lokalt lager, blandade med nya, men en favorit föreslås aldrig två veckor i rad (glappet går att ändra). Varje persons favoriter listas i familjekortet, där de kan tas bort. Allergier och kost kontrolleras alltid först.
@@ -27,6 +27,18 @@ Varje fredagsmorgon (kan ändras) tar den fram ett utkast till meny för nästa 
 - **Inköp:** mängder skalas efter vilka som äter varje dag, slås ihop mellan recept, avrundas uppåt till något du kan köpa och rensas från formuleringar som "gärna ICAs nötfärs 12% eller hushållsfärs". Skafferivaror (salt, olja...) hoppas över men listas. Varor som en butik inte kan placera hamnar på en granskningslista; inget försvinner utan att synas.
 - **Notiser** (via Home Assistant-appen): menyn är klar med knapparna **Öppna / Bekräfta / Skapa om**, problem, bekräftad, och en påminnelse lördag klockan 12.
 - **Dashboardkort:** meny, kvällens middag, inköpsresultat och familj, alla med visuella redigerare och på svenska eller engelska.
+
+## Hur recepten väljs
+
+Varje gång en meny eller en enskild middag tas fram samlar integrationen kandidatrecept och väljer sedan bland dem. Den frågar sina källor i den här ordningen:
+
+1. **Dina favoriter och välbetygsatta recept** (när någon har betygsatt eller favoritmarkerat några). De sparas lokalt och utgör högst en tredjedel av kandidaterna, så att menyn blir en blandning av kända och nya middagar.
+2. **Receptkälla: ICA-recept.** Populära middagsrecept från ica.se, som läses några sidor i taget och försiktigt, och sparas i ett lokalt lager så att samma sidor inte hämtas igen. Recept som inte kan användas (ett allergen bland ingredienserna, en kost som inte passar) hoppas över innan de kostar en förfrågan.
+3. **AI-uppgift (AI Task), bara om du valt en AI Task-entitet i Home Assistant** (till exempel Gemini) och lämnat den på under *Receptkällor*. Den frågas bara när källorna ovan inte kunde fylla veckan, eller den enskilda dagen, med tillräckligt många användbara recept. Den får veta familjens allergier, kost, önskade stilar och eventuellt önskemål du skrivit, och måste svara med strukturerade recept: titel, ingredienser med mängder, tid, portioner och taggar. Utan en AI Task-entitet hoppas det här steget över och enbart ICA-recept används.
+
+Om en källa misslyckas (sidan ligger nere, AI:n svarar nonsens) loggas det, menyn varnar för det och nästa källa provas.
+
+**AI:n avgör aldrig vad som är säkert.** Varje kandidat från varje källa går igenom samma kontroller, i kod: allergier och kost hos de som äter den dagen är hårda regler, med möjlighet till en andra version av middagen för den som inte kan äta en ingrediens. Därefter rankas kandidaterna efter önskade stilar, gillar och ogillar, betyg och favoriter, hur nyligen receptet använts, vegetariska dagar och fiskdagar samt ingredienser som delas med resten av veckan, med lite slump så att inte samma middagar alltid vinner. Ett önskemål som "inte fisk" eller "gärna pasta" gäller alla källor, inte bara AI:n: det som utesluts filtreras bort och det som önskas rankas högre.
 
 ## Installera
 
