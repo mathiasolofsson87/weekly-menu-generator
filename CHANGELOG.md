@@ -2,6 +2,19 @@
 
 All notable changes to Weekly Menu Generator. Versions match the git tags and the GitHub releases.
 
+## 0.3.0 – 2026-11-02
+
+### Added
+- **Ratings and favorites, per family member.** Give a dinner 1 to 5 stars and a heart from the Menu card (in an opened day, also after the menu is confirmed) and the Tonight's dinner card. You act as the family member linked to your Home Assistant person, or pick who you rate as, for example a child. The services `rate_recipe` and `favorite_recipe` do the same.
+- **The planner uses them.** Only the people eating a day count for that day. A child's rating counts half of an adult's, a dislike weighs more than a like, and a 1-star rating from anyone eating keeps the recipe out unless nothing else fits. Favorites get a bonus in proportion to how much of the table has them as a favorite. Allergies and diets are still checked first.
+- **Favorites and well-rated recipes come back.** They are kept in a local store and offered again, at most a third of the candidates, mixed with new recipes. A favorite is never served in two weeks in a row; the gap is a new setting under *Meal styles* (1 to 4 weeks, default 1).
+- **Favorites list in the Family card.** Each member has a fold-out list of their favorites, under their name and in their edit form, with a link to each recipe, their rating and a button to remove it.
+- **Child setting.** Mark a member as a child (options, the Family card, or `set_member`). A child, when logged in as the linked Home Assistant user, can rate and favorite but cannot generate, change, lock, swap or confirm the menu, add to the shopping list or edit the family. The cards hide those controls and the services refuse them. Users not linked to a member, automations, the schedule and the notification buttons are not restricted.
+- The README explains how recipes are chosen: favorites, then ICA recipes, then AI Task if one is set up, with the same safety checks for every source.
+
+### Changed
+- Removing a family member now also removes their ratings and favorites.
+
 ## 0.2.0 – 2026-10-29
 
 ### Added
