@@ -2,6 +2,11 @@
 
 All notable changes to Weekly Menu Generator. Versions match the git tags and the GitHub releases.
 
+## 0.3.1 – 2026-11-07
+
+### Fixed
+- **Swaps show only the share that is swapped.** When one of three people eats a vegetarian version, the Menu and Tonight's dinner cards used to say to replace the full amount of meat or fish with tofu. They now show the amount for that person's share (for example 1 can of tuna and 150 g tofu instead of 4 cans and 600 g). Shopping already bought the right amounts.
+
 ## 0.3.0 – 2026-11-02
 
 ### Added
