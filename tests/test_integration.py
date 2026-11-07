@@ -179,6 +179,17 @@ async def test_button_generates_next_weeks_menu(hass: HomeAssistant, entry) -> N
     )  # today is Wed 11-04
 
 
+async def test_today_keeps_the_current_dinner_when_next_week_is_generated(
+    hass: HomeAssistant, entry
+) -> None:
+    current = await _generate(hass)  # today is Wed 11-04
+    await _generate(hass, week="2026-11-09")
+    await hass.async_block_till_done()
+
+    assert _state(hass, entry, "today").state == current["days"]["2026-11-04"]
+    assert _state(hass, entry, "status").attributes["week_start"] == "2026-11-09"
+
+
 async def test_calendar_lists_dinners(hass: HomeAssistant, entry) -> None:
     response = await _generate(hass)
     calendar_id = _entity_id(hass, entry, "calendar", "calendar")

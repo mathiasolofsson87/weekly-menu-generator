@@ -53,6 +53,33 @@ describe("readMenu", () => {
     ]);
   });
 
+  it("shows a swap at the group's share, not the full recipe", () => {
+    const hass = makeHass({
+      days: [
+        {
+          ...WEEK[0],
+          attrs: {
+            split: {
+              groups: [
+                {
+                  members: ["Anna"],
+                  share: 0.25,
+                  substitutions: [
+                    {
+                      original: { raw: "4 burkar tonfisk", name: "tonfisk", amount: 4, unit: "burkar" },
+                      replacement: { raw: "600 g tofu", name: "tofu", amount: 600, unit: "g" },
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    });
+    expect(readMenu(hass).days[0].split[0].swaps).toEqual([{ original: "1 burkar tonfisk", replacement: "150 g tofu" }]);
+  });
+
   it.each([["unknown"], ["unavailable"], [""]])("skips a day whose sensor is %j", (state) => {
     const hass = makeHass({ days: WEEK });
     hass.states["sensor.weekly_menu_weekday_tue"].state = state;

@@ -37,11 +37,21 @@ function readSplit(raw: unknown): SplitGroup[] {
   const groups = isObject(raw) && Array.isArray(raw.groups) ? raw.groups : [];
   return groups.filter(isObject).map((group) => {
     const swaps = Array.isArray(group.substitutions) ? group.substitutions : [];
-    const text = (ingredient: unknown): string =>
-      isObject(ingredient) ? (str(ingredient.raw) ?? str(ingredient.name) ?? "") : "";
+    const share = num(group.share) ?? 0;
+    // Swaps are stored at the recipe's full scale; show only what this group eats.
+    const text = (ingredient: unknown): string => {
+      if (!isObject(ingredient)) return "";
+      const amount = num(ingredient.amount);
+      const name = str(ingredient.name);
+      if (amount === undefined || !name || share <= 0 || share >= 1) {
+        return str(ingredient.raw) ?? name ?? "";
+      }
+      const scaled = Math.round(amount * share * 10) / 10;
+      return [scaled, str(ingredient.unit), name].filter((part) => part !== undefined).join(" ");
+    };
     return {
       members: strings(group.members),
-      share: num(group.share) ?? 0,
+      share,
       separatePans: group.separate_pans === true,
       swaps: swaps.filter(isObject).map((swap) => ({
         original: text(swap.original),
