@@ -2,6 +2,17 @@
 
 All notable changes to Weekly Menu Generator. Versions match the git tags and the GitHub releases.
 
+## 0.4.0 – 2026-11-08
+
+### Added
+- **"How was it?" notification.** At 19:00 on each dinner day of a confirmed menu, every person who ate and has a notify service of their own is asked how dinner was, with three buttons: Loved it (5 stars), Okay (3) and Not again (1). Set the service per person (for example `mobile_app_annas_phone`) in the options, the Family card or `set_member`. Switch it on or off with the new *How was it?* notification event; existing setups need to add it under the notification options.
+- **A share of new dinners.** A new setting under *Meal styles*, "New dinners per week (at least)" (0 to 7, default 1), keeps room for recipes nobody in the family has rated or favorited, so menus do not only repeat known dishes.
+- **Favorites in the Menu card's other options.** Favorites are listed first, with a heart and each member's stars next to the title.
+
+### Changed
+- **Favorites are spread over the week.** When members have different favorites, a favorite that only repeats the people who already have one that week ranks lower, so everyone gets a favorite dinner now and then.
+- **Low-rated recipes are not kept.** A recipe that everyone who rated it gave 2 stars or less, and nobody favorited, is no longer stored. The ratings stay, so it is still avoided.
+
 ## 0.3.1 – 2026-11-07
 
 ### Fixed
