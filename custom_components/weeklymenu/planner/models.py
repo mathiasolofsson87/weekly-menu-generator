@@ -21,6 +21,7 @@ from ..const import (
     MEMBER_ID,
     MEMBER_LIKES,
     MEMBER_NAME,
+    MEMBER_NOTIFY,
     MEMBER_PERSON,
     MEMBER_PORTION,
     WEEKDAYS,
@@ -52,6 +53,7 @@ class FamilyMember:
     # Allergen may be cooked separately (clean pans) so the dinner can still be used.
     cook_separately: bool = True
     child: bool = False  # a child's rating counts half of an adult's
+    notify: str | None = None  # notify service (without "notify.") that reaches them
     attends: list[str] = field(default_factory=lambda: list(DEFAULT_DINNER_DAYS))
 
     def as_dict(self) -> dict[str, Any]:
@@ -72,6 +74,8 @@ class FamilyMember:
             portion=data.get(MEMBER_PORTION) or "normal",
             cook_separately=data.get(MEMBER_COOK_SEPARATELY, True),
             child=bool(data.get(MEMBER_CHILD, False)),
+            notify=str(data.get(MEMBER_NOTIFY) or "").strip().removeprefix("notify.")
+            or None,
             attends=[
                 d
                 for d in data.get(MEMBER_ATTENDS, DEFAULT_DINNER_DAYS)

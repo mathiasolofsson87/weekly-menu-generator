@@ -3,13 +3,27 @@ import { DOMAIN, readFamily } from "./data";
 import { t } from "./i18n";
 import { errorMessage } from "./parts";
 import { cardStyles } from "./styles";
-import type { Dinner, HomeAssistant, Member } from "./types";
+import type { Alternative, Dinner, HomeAssistant, Member } from "./types";
 
 /** The family member behind the logged-in Home Assistant user, through their linked person. */
 export function currentMember(hass: HomeAssistant, members: Member[]): Member | undefined {
   const userId = hass.user?.id;
   if (!userId) return undefined;
   return members.find((m) => m.person && hass.states[m.person]?.attributes?.user_id === userId);
+}
+
+/** An option's text: a heart for a favorite and each member's stars, such as "♥ Gryta (Anna ★5, Bo ★2)". */
+export function alternativeLabel(alt: Alternative, members: Member[]): string {
+  const stars = members
+    .filter((m) => alt.ratings[m.id])
+    .map((m) => `${m.name} ★${alt.ratings[m.id]}`)
+    .join(", ");
+  return `${alt.favoriteOf.length ? "♥ " : ""}${alt.title}${stars ? ` (${stars})` : ""}`;
+}
+
+/** Favorites first, otherwise in the planner's order. */
+export function favoritesFirst(alternatives: Alternative[]): Alternative[] {
+  return [...alternatives].sort((a, b) => Number(b.favoriteOf.length > 0) - Number(a.favoriteOf.length > 0));
 }
 
 /** Stars and a heart for one dinner, for one family member. Calls rate_recipe and favorite_recipe. */

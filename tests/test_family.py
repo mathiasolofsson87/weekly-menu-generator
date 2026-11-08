@@ -144,3 +144,13 @@ async def test_a_change_applies_to_the_next_menu(hass: HomeAssistant, entry) -> 
         for line in state(hass, entry, f"weekday_{weekday}").attributes["ingredients"]
     ]
     assert response["days"] and lines and not any("ägg" in line for line in lines)
+
+
+async def test_a_member_can_have_a_notify_service(hass: HomeAssistant, entry) -> None:
+    await edit(hass, "set_member", name="Anna", notify=" notify.mobile_app_anna ")
+    assert members(entry)["Anna"]["notify"] == "mobile_app_anna"
+    assert state(hass, entry, "family").attributes["members"][0]["notify"] == (
+        "mobile_app_anna"
+    )
+    await edit(hass, "set_member", name="Anna", notify="")  # clears it
+    assert members(entry)["Anna"]["notify"] is None

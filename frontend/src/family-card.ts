@@ -28,6 +28,7 @@ interface Draft {
   attends: string[];
   cookSeparately: boolean;
   child: boolean;
+  notify: string;
 }
 
 const KNOWN = new Set<string>(ALLERGENS);
@@ -76,6 +77,7 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
       attends: [...defaultDays],
       cookSeparately: true,
       child: false,
+      notify: "",
     };
   }
   return {
@@ -93,6 +95,7 @@ function toDraft(member: Member | undefined, defaultDays: string[]): Draft {
     attends: [...member.attends],
     cookSeparately: member.cookSeparately,
     child: member.child,
+    notify: member.notify,
   };
 }
 
@@ -191,6 +194,7 @@ export class WeeklyMenuFamilyCard extends LitElement {
       attends: WEEKDAYS.filter((d) => draft.attends.includes(d)),
       cook_separately: draft.cookSeparately,
       child: draft.child,
+      notify: draft.notify.trim(),
     };
     if (draft.id) data.id = draft.id;
     if (draft.person) data.person = draft.person;
@@ -340,7 +344,7 @@ export class WeeklyMenuFamilyCard extends LitElement {
         </div>
       </fieldset>
       ${text("famOtherAllergies", draft.otherAllergies, "otherAllergies")} ${text("famDislikes", draft.dislikes, "dislikes")}
-      ${text("famLikes", draft.likes, "likes")}
+      ${text("famLikes", draft.likes, "likes")} ${text("famNotify", draft.notify, "notify")}
       <div class="row">
         <label class="field">
           <span>${t(hass, "famDiet")}</span>

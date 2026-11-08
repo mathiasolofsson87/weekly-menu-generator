@@ -66,7 +66,12 @@ function readAlternatives(raw: unknown): Alternative[] {
   return raw
     .filter(isObject)
     .filter((a) => typeof a.id === "string" && typeof a.title === "string")
-    .map((a) => ({ id: a.id as string, title: a.title as string }));
+    .map((a) => ({
+      id: a.id as string,
+      title: a.title as string,
+      ratings: readRatings(a.ratings),
+      favoriteOf: strings(a.favorite_of),
+    }));
 }
 
 function readRatings(raw: unknown): Record<string, number> {
@@ -211,6 +216,7 @@ export function readFamily(hass: HomeAssistant): FamilyModel {
     attends: strings(m.attends),
     cookSeparately: m.cook_separately !== false,
     child: m.child === true,
+    notify: str(m.notify) ?? "",
     favorites: readFavorites(m.favorites),
   }));
   return {

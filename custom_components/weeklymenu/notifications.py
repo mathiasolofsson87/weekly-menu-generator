@@ -27,10 +27,11 @@ from .const import (
     EVENT_CONFIRMED,
     EVENT_MENU_READY,
     NOTIFY_EVENTS,
+    RATING_HOUR,
     WEEKDAYS,
 )
 from .coordinator import WeeklyMenuCoordinator
-from .planner.models import Menu
+from .planner.models import FamilyMember, Menu, members_from_options
 from .scheduler import next_week_start
 from .shopping.delivery import REAUTH
 from .shopping.models import ADDED, FAILED, PENDING, REVIEW, SKIPPED, ShoppingResult
@@ -40,6 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 MOBILE_ACTION_EVENT = "mobile_app_notification_action"
 ACTION_CONFIRM = "WEEKLYMENU_CONFIRM"
 ACTION_REGENERATE = "WEEKLYMENU_REGENERATE"
+# "How was it?" buttons: action name -> stars. The rest of the action is "<date>:<member id>".
+RATING_ACTIONS = {
+    "WEEKLYMENU_RATE_5": 5,
+    "WEEKLYMENU_RATE_3": 3,
+    "WEEKLYMENU_RATE_1": 1,
+}
 TAG = "weeklymenu"
 # Warnings worth a "problems" notification, with a message per language.
 PROBLEM_WARNINGS = ("source_failed", "no_recipe", "no_sources", "no_days")
@@ -59,6 +66,10 @@ TEXT = {
         "shop_geo_blocked": "{store} svarar bara på anslutningar från Sverige.",
         "shop_no_review_list": "Varor som inte kunde placeras hade ingen granskningslista att hamna på.",
         "shop_error": "Fel: {error}",
+        "rating_title": "Hur var middagen?",
+        "rating_loved": "Älskade den",
+        "rating_okay": "Helt okej",
+        "rating_never": "Aldrig igen",
         "reminder_title": "Menyn väntar på dig",
         "reminder": "Utkastet för veckan som börjar {week} är inte bekräftat.",
         "problems_title": "Veckomenyn behöver uppmärksamhet",
@@ -91,6 +102,10 @@ TEXT = {
         "shop_geo_blocked": "{store} only answers connections from Sweden.",
         "shop_no_review_list": "Items that could not be placed had no review list to go to.",
         "shop_error": "Error: {error}",
+        "rating_title": "How was dinner?",
+        "rating_loved": "Loved it",
+        "rating_okay": "Okay",
+        "rating_never": "Not again",
         "reminder_title": "Your menu is waiting",
         "reminder": "The draft for the week starting {week} is not confirmed.",
         "problems_title": "The weekly menu needs attention",
@@ -151,6 +166,9 @@ class Notifier:
             async_track_time_change(
                 self.hass, self._on_reminder_time, hour=12, minute=0, second=0
             ),
+            async_track_time_change(
+                self.hass, self._on_rating_time, hour=RATING_HOUR, minute=0, second=0
+            ),
         ):
             self.entry.async_on_unload(unsub)
 
@@ -185,9 +203,65 @@ class Notifier:
             message = self._text["reminder"].format(week=menu.week_start)
             await self._send_menu(menu, "reminder_title", message, actions=True)
 
+    async def _on_rating_time(self, now: datetime) -> None:
+        """Ask each person who ate tonight's confirmed dinner, and has a notify service of
+        their own, how it was. Someone who already rated it is not asked."""
+        if not self._enabled("rating"):
+            return
+        today = now.date().isoformat()
+        for menu in self.coordinator.data.values():
+            day = menu.day(today) if menu.status == "confirmed" else None
+            if day is None or day.recipe is None:
+                continue
+            for member in members_from_options(self._config):
+                if (
+                    member.notify
+                    and day.weekday in member.attends
+                    and self.coordinator.taste.rating(member.id, day.recipe.id) is None
+                ):
+                    await self._ask_rating(member, today, day.recipe.title)
+
+    async def _ask_rating(self, member: FamilyMember, day: str, title: str) -> None:
+        text = self._text
+        suffix = f"{day}:{member.id}"
+        await self._send(
+            text["rating_title"],
+            title,
+            targets=[member.notify],
+            tag=f"{TAG}_rate_{suffix}",
+            actions=[
+                {
+                    "action": f"WEEKLYMENU_RATE_5:{suffix}",
+                    "title": text["rating_loved"],
+                },
+                {"action": f"WEEKLYMENU_RATE_3:{suffix}", "title": text["rating_okay"]},
+                {
+                    "action": f"WEEKLYMENU_RATE_1:{suffix}",
+                    "title": text["rating_never"],
+                },
+            ],
+        )
+
+    async def _on_rating_action(self, name: str, rest: str) -> None:
+        """A rating button: the stars come from the button, the dinner from its date and
+        the person from the member id, so nothing depends on who tapped."""
+        day, _, member_id = rest.partition(":")
+        try:
+            found = self.coordinator.day_for(date.fromisoformat(day))
+            if found is None or found.recipe is None:
+                return
+            await self.coordinator.async_rate_recipe(
+                member_id, found.recipe.id, RATING_ACTIONS[name]
+            )
+        except (ValueError, HomeAssistantError) as err:
+            _LOGGER.warning("Rating action %s failed: %s", name, err)
+
     async def _on_action(self, event: Event) -> None:
         """A button on one of our notifications was tapped."""
         name, _, week = str(event.data.get("action", "")).partition(":")
+        if name in RATING_ACTIONS and week:
+            await self._on_rating_action(name, week)
+            return
         if name not in (ACTION_CONFIRM, ACTION_REGENERATE) or not week:
             return
         try:
@@ -289,8 +363,19 @@ class Notifier:
             data["clickAction"] = path
         await self._send(text[title_key], message, **data)
 
-    async def _send(self, title: str, message: str, **data: Any) -> None:
-        for target in self._config.get(CONF_NOTIFY_TARGETS, []):
+    async def _send(
+        self,
+        title: str,
+        message: str,
+        *,
+        targets: list[str] | None = None,
+        **data: Any,
+    ) -> None:
+        for target in (
+            targets
+            if targets is not None
+            else self._config.get(CONF_NOTIFY_TARGETS, [])
+        ):
             try:
                 await self.hass.services.async_call(
                     "notify", target, {"title": title, "message": message, "data": data}

@@ -46,6 +46,7 @@ describe("readFamily", () => {
       attends: ["mon", "tue", "wed", "thu", "fri"],
       cookSeparately: false,
       child: false,
+      notify: "",
       favorites: [],
     });
     expect(family.members[1].cookSeparately).toBe(true);
@@ -58,6 +59,7 @@ describe("readFamily", () => {
           {
             ...FAMILY[0],
             child: true,
+            notify: "mobile_app_anna",
             favorites: [
               { id: "r1", title: "Gryta", image: "/i.jpg", url: "https://x/y", rating: 4 },
               { id: "r2", title: "Soppa", rating: null },
@@ -70,6 +72,7 @@ describe("readFamily", () => {
     });
     const [anna] = readFamily(hass).members;
     expect(anna.child).toBe(true);
+    expect(anna.notify).toBe("mobile_app_anna");
     expect(anna.favorites).toEqual([
       { id: "r1", title: "Gryta", image: "/i.jpg", url: "https://x/y", rating: 4 },
       { id: "r2", title: "Soppa", image: undefined, url: undefined, rating: undefined },

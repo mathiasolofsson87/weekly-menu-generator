@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CANDIDATES_PER_DAY,
+    CONF_EXPLORE_DAYS,
     CONF_FAVORITE_GAP_WEEKS,
     CONF_FISH_MIN,
     CONF_LANGUAGE,
@@ -25,6 +26,7 @@ from .const import (
     CONF_STYLE_TAGS,
     CONF_UNITS,
     CONF_VEGETARIAN_DAYS,
+    DEFAULT_EXPLORE_DAYS,
     DEFAULT_FAVORITE_GAP_WEEKS,
     DEFAULT_FISH_MIN,
     DEFAULT_LANGUAGE,
@@ -121,6 +123,7 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             fish_min=int(config.get(CONF_FISH_MIN, DEFAULT_FISH_MIN)),
             candidates_per_day=CANDIDATES_PER_DAY,
             max_split_days=int(config.get(CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS)),
+            explore_days=int(config.get(CONF_EXPLORE_DAYS, DEFAULT_EXPLORE_DAYS)),
             taste=self.taste.snapshot(),
         )
 

@@ -111,7 +111,8 @@
           "portion": "Portion size",
           "attends": "Eats dinner on",
           "cook_separately": "Allergens can be cooked separately",
-          "child": "Child"
+          "child": "Child",
+          "notify": "Notify service"
         },
         "data_description": {
           "person": "Optional. Links the member to a Home Assistant person.",
@@ -120,7 +121,8 @@
           "likes": "Preferred when possible. Type and press enter.",
           "attends": "Days this person eats dinner at home.",
           "cook_separately": "On: a recipe containing this person's allergen can still be used when that ingredient can be swapped and cooked in clean, separate pans. Off: such recipes are never suggested. Turn off for severe allergies.",
-          "child": "A child's ratings count half as much as an adult's when the menu is planned."
+          "child": "A child's ratings count half as much as an adult's when the menu is planned.",
+          "notify": "Optional. A notify service such as mobile_app_annas_phone. This person is asked \"How was it?\" there after a dinner they ate (needs that notification switched on)."
         }
       },
       "member_edit": {
@@ -142,6 +144,8 @@
           "vegetarian_days": "Vegetarian dinners per week",
           "fish_min": "Fish dinners per week (at least)",
           "max_split_days": "Dinners cooked in more than one version (at most)",
+          "explore_days": "New dinners per week (at least)",
+          "explore_days": "Dinners nobody in the family has rated or favorited yet, so the menu doesn't only repeat known dishes. Followed when enough suitable recipes exist.",
           "favorite_gap_weeks": "Weeks a favorite is kept out after it was cooked"
         },
         "data_description": {
@@ -299,7 +303,8 @@
         "menu_ready": "Menu ready",
         "confirmed": "Menu confirmed",
         "problems": "Problems",
-        "reminder": "Saturday reminder"
+        "reminder": "Saturday reminder",
+        "rating": "How was it? (evening of a dinner day)"
       }
     },
     "provider": {
@@ -564,6 +569,10 @@
         "child": {
           "name": "Child",
           "description": "A child's ratings count half as much as an adult's."
+        },
+        "notify": {
+          "name": "Notify service",
+          "description": "The notify service that reaches this person, such as mobile_app_annas_phone. Used for the \"How was it?\" question."
         }
       }
     },

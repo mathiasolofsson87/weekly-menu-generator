@@ -48,6 +48,8 @@ export interface SplitGroup {
 export interface Alternative {
   id: string;
   title: string;
+  ratings: Record<string, number>; // member id -> stars
+  favoriteOf: string[]; // member ids
 }
 
 /** One planned dinner, as read from a weekday (or today) sensor. */
@@ -107,6 +109,7 @@ export interface Member {
   attends: string[];
   cookSeparately: boolean;
   child: boolean;
+  notify: string; // notify service that reaches them, for "How was it?"
   favorites: Favorite[];
 }
 

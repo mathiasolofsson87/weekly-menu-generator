@@ -38,6 +38,7 @@ class PlannerSettings:
     fish_min: int = 0
     candidates_per_day: int = 3
     max_split_days: int = 0  # dinners where some members get a substitute protein
+    explore_days: int = 0  # dinners nobody has rated or favorited, at least
     rng: random.Random = field(default_factory=random.Random, repr=False)
     taste: Taste = field(default_factory=Taste)
 
@@ -127,6 +128,14 @@ async def _plan(
     veg_left = max(0, settings.vegetarian_days - sum(map(is_vegetarian, kept_recipes)))
     fish_left = max(0, settings.fish_min - sum(map(has_fish, kept_recipes)))
     splits_used = sum(d.split is not None for d in kept)
+    explore_left = max(
+        0,
+        settings.explore_days
+        - sum(not settings.taste.known(r.id) for r in kept_recipes),
+    )
+
+    def new(recipe: Recipe) -> bool:
+        return not settings.taste.known(recipe.id)
 
     for index, (weekday, who) in enumerate(targets):
         days_left = len(targets) - index
@@ -149,7 +158,11 @@ async def _plan(
         if liked := [o for o in options if not settings.taste.vetoed(o[0].id, who)]:
             options = liked
         # A quota that needs every remaining day is a hard filter, if anything qualifies.
-        for needed, test in ((veg_left, is_vegetarian), (fish_left, has_fish)):
+        for needed, test in (
+            (veg_left, is_vegetarian),
+            (fish_left, has_fish),
+            (explore_left, new),
+        ):
             if needed >= days_left and any(test(r) for r, _ in options):
                 options = [o for o in options if test(o[0])]
         ctx = ScoreContext(settings.style_tags, recent_ids, picked, settings.taste)
@@ -164,6 +177,7 @@ async def _plan(
                     * (
                         (veg_left > 0 and is_vegetarian(o[0]))
                         + (fish_left > 0 and has_fish(o[0]))
+                        + (explore_left > 0 and new(o[0]))
                     )
                     + settings.rng.random() * JITTER
                 ),
@@ -179,6 +193,7 @@ async def _plan(
         splits_used += split is not None
         veg_left -= is_vegetarian(best)
         fish_left -= has_fish(best)
+        explore_left -= new(best)
 
     planned: dict[str, _Planned] = {}
     for weekday, who in targets:

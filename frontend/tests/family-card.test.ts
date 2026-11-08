@@ -270,6 +270,7 @@ describe("adding a person", () => {
       attends: ["mon", "tue", "wed", "thu"],
       cook_separately: false,
       child: false,
+      notify: "",
     });
     expect($(card, "form")).toBeNull(); // closed after saving
   });

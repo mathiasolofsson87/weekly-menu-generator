@@ -137,6 +137,11 @@ set_member:
       required: false
       selector:
         boolean:
+    notify:
+      required: false
+      example: mobile_app_annas_phone
+      selector:
+        text:
 remove_member:
   fields:
     name:

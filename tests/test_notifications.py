@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.weeklymenu.notifications import MOBILE_ACTION_EVENT
-from tests.helpers import generate, state
+from tests.helpers import call, generate, state
 
 
 @pytest.fixture
@@ -240,6 +240,126 @@ async def test_no_reminder_on_other_days(
     async_fire_time_changed(hass, datetime(2026, 11, 5, 12, 0, 0, tzinfo=UTC))
     await settle(hass)
     assert sent == []
+
+
+# --- "How was it?" ----------------------------------------------------------------------
+
+
+@pytest.fixture
+def asked(hass: HomeAssistant, entry) -> dict[str, list[dict]]:
+    """Each member's own notify service, by service name. Olle has none."""
+    calls: dict[str, list[dict]] = {"mobile_app_anna": [], "mobile_app_bo": []}
+
+    def register(name: str):
+        async def handler(call) -> None:
+            calls[name].append(dict(call.data))
+
+        hass.services.async_register("notify", name, handler)
+
+    for name in calls:
+        register(name)
+    members = [
+        {
+            **entry.options["members"][0],
+            "notify": "notify.mobile_app_anna",
+        },
+        {"id": "2", "name": "Bo", "attends": ["mon"], "notify": "mobile_app_bo"},
+        {"id": "3", "name": "Olle", "attends": ["mon", "tue", "wed"]},
+    ]
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "members": members}
+    )
+    return calls
+
+
+async def evening(
+    hass: HomeAssistant, entry, freezer: FrozenDateTimeFactory, day: str = "2026-11-02"
+) -> None:
+    freezer.move_to(f"{day} 18:59:59+00:00")
+    await hass.config_entries.async_reload(entry.entry_id)
+    await settle(hass)
+    freezer.move_to(f"{day} 19:00:00+00:00")
+    async_fire_time_changed(hass, datetime.fromisoformat(f"{day}T19:00:00+00:00"))
+    await settle(hass)
+
+
+async def test_everyone_who_ate_is_asked_on_their_own_service(
+    hass: HomeAssistant, entry, asked, freezer: FrozenDateTimeFactory
+) -> None:
+    await generate(hass)
+    await tap(hass, "WEEKLYMENU_CONFIRM:2026-11-02")
+    await evening(hass, entry, freezer)
+
+    [anna] = asked["mobile_app_anna"]
+    [bo] = asked["mobile_app_bo"]
+    first = state(hass, entry, "weekday_mon").state
+    assert anna["title"] == "Hur var middagen?" and anna["message"] == first
+    assert actions(anna) == {
+        "Älskade den": "WEEKLYMENU_RATE_5:2026-11-02:1",
+        "Helt okej": "WEEKLYMENU_RATE_3:2026-11-02:1",
+        "Aldrig igen": "WEEKLYMENU_RATE_1:2026-11-02:1",
+    }
+    assert bo["data"]["actions"][0]["action"].endswith(":2026-11-02:2")
+
+
+async def test_nobody_is_asked_about_a_dinner_they_did_not_eat(
+    hass: HomeAssistant, entry, asked, freezer: FrozenDateTimeFactory
+) -> None:
+    await generate(hass)
+    await tap(hass, "WEEKLYMENU_CONFIRM:2026-11-02")
+    await evening(hass, entry, freezer, "2026-11-03")  # Tuesday: Bo is away
+    assert len(asked["mobile_app_anna"]) == 1 and asked["mobile_app_bo"] == []
+
+
+async def test_a_draft_or_a_rated_dinner_is_not_asked_about(
+    hass: HomeAssistant, entry, asked, freezer: FrozenDateTimeFactory
+) -> None:
+    await generate(hass)  # not confirmed
+    await evening(hass, entry, freezer)
+    assert asked["mobile_app_anna"] == []
+
+    await tap(hass, "WEEKLYMENU_CONFIRM:2026-11-02")
+    recipe_id = state(hass, entry, "weekday_mon").attributes["recipe_id"]
+    await call(hass, "rate_recipe", member="1", recipe_id=recipe_id, rating=4)
+    await evening(hass, entry, freezer)
+    assert asked["mobile_app_anna"] == [] and len(asked["mobile_app_bo"]) == 1
+
+
+async def test_it_can_be_switched_off(
+    hass: HomeAssistant, entry, asked, freezer: FrozenDateTimeFactory
+) -> None:
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "notify_events": ["menu_ready"]}
+    )
+    await generate(hass)
+    await tap(hass, "WEEKLYMENU_CONFIRM:2026-11-02")
+    await evening(hass, entry, freezer)
+    assert asked["mobile_app_anna"] == [] and asked["mobile_app_bo"] == []
+
+
+@pytest.mark.parametrize(("name", "stars"), [("5", 5), ("3", 3), ("1", 1)])
+async def test_a_button_rates_for_the_member_in_the_action(
+    hass: HomeAssistant, entry, asked, name: str, stars: int
+) -> None:
+    await generate(hass)
+    await tap(hass, "WEEKLYMENU_CONFIRM:2026-11-02")
+    await tap(hass, f"WEEKLYMENU_RATE_{name}:2026-11-02:2")
+    attrs = state(hass, entry, "weekday_mon").attributes
+    assert attrs["ratings"] == {"2": stars}
+
+
+async def test_bad_rating_actions_are_ignored(
+    hass: HomeAssistant, entry, asked
+) -> None:
+    await generate(hass)
+    for action in (
+        "WEEKLYMENU_RATE_5:not-a-date:2",
+        "WEEKLYMENU_RATE_5:2026-11-02:nobody",
+        "WEEKLYMENU_RATE_5:2026-12-25:2",
+        "WEEKLYMENU_RATE_5",
+    ):
+        await tap(hass, action)
+    assert state(hass, entry, "weekday_mon").attributes["ratings"] == {}
 
 
 # --- options ------------------------------------------------------------------------------

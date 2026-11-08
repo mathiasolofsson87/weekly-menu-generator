@@ -15,6 +15,7 @@ CONF_DINNER_DAYS = "dinner_days"
 CONF_MEMBERS = "members"
 CONF_SOURCES = "sources"
 CONF_FAVORITE_GAP_WEEKS = "favorite_gap_weeks"
+CONF_EXPLORE_DAYS = "explore_days"
 CONF_STYLE_TAGS = "style_tags"
 CONF_VEGETARIAN_DAYS = "vegetarian_days"
 CONF_FISH_MIN = "fish_min"
@@ -37,6 +38,7 @@ MEMBER_PORTION = "portion"
 MEMBER_ATTENDS = "attends"
 MEMBER_COOK_SEPARATELY = "cook_separately"
 MEMBER_CHILD = "child"
+MEMBER_NOTIFY = "notify"  # notify service that reaches this person, for "How was it?"
 
 LANGUAGES = ["sv", "en"]
 UNITS = ["swedish", "metric"]  # swedish: dl, msk, tsk. metric: ml, g.
@@ -78,6 +80,7 @@ DEFAULT_FAVORITE_GAP_WEEKS = (
     1  # a favorite is kept out of this many weeks after it was cooked
 )
 MAX_FAVORITE_GAP_WEEKS = 4
+DEFAULT_EXPLORE_DAYS = 1  # dinners a week that nobody has rated or favorited
 # Relative size of a portion, used to share a split dinner between its eaters.
 PORTION_WEIGHTS = {"small": 0.6, "normal": 1.0, "large": 1.4}
 CANDIDATES_PER_DAY = 3
@@ -88,5 +91,6 @@ EVENT_MENU_READY = "weeklymenu_menu_ready"
 EVENT_CONFIRMED = "weeklymenu_confirmed"
 
 # What can be notified about
-NOTIFY_EVENTS = ["menu_ready", "confirmed", "problems", "reminder"]
+NOTIFY_EVENTS = ["menu_ready", "confirmed", "problems", "reminder", "rating"]
+RATING_HOUR = 19  # when each person who ate is asked how dinner was
 DEFAULT_OPEN_PATH = "/"

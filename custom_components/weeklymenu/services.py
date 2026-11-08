@@ -124,6 +124,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         vol.Optional("attends"): vol.All(cv.ensure_list, [vol.In(WEEKDAYS)]),
         vol.Optional("cook_separately"): cv.boolean,
         vol.Optional("child"): cv.boolean,
+        vol.Optional("notify"): vol.Any(None, cv.string),
     }
     day = {vol.Required("date"): cv.date}
     for name, handler, schema, response in (

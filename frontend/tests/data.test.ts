@@ -41,7 +41,7 @@ describe("readMenu", () => {
       ingredients: ["400 g pasta", "2 dl grädde"],
       locked: true,
       source: "ica",
-      alternatives: [{ id: "alt:2026-11-02", title: "Alternativ 2026-11-02" }],
+      alternatives: [{ id: "alt:2026-11-02", title: "Alternativ 2026-11-02", ratings: {}, favoriteOf: [] }],
     });
     expect(mon.split).toEqual([
       {
@@ -104,7 +104,7 @@ describe("readMenu", () => {
     });
     const [mon] = readMenu(hass).days;
     expect(mon.split).toEqual([]);
-    expect(mon.alternatives).toEqual([{ id: "a", title: "T" }]);
+    expect(mon.alternatives).toEqual([{ id: "a", title: "T", ratings: {}, favoriteOf: [] }]);
     expect(mon.tags).toEqual([]);
     expect(mon.ingredients).toEqual(["ok"]);
     expect(mon.totalTime).toBeUndefined();

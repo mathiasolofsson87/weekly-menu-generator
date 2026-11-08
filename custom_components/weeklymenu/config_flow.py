@@ -32,6 +32,7 @@ from .const import (
     ALLERGENS,
     CONF_AI_TASK,
     CONF_DINNER_DAYS,
+    CONF_EXPLORE_DAYS,
     CONF_FAVORITE_GAP_WEEKS,
     CONF_FISH_MIN,
     CONF_GENERATION_DAY,
@@ -50,6 +51,7 @@ from .const import (
     CONF_UNITS,
     CONF_VEGETARIAN_DAYS,
     DEFAULT_DINNER_DAYS,
+    DEFAULT_EXPLORE_DAYS,
     DEFAULT_FAVORITE_GAP_WEEKS,
     DEFAULT_FISH_MIN,
     DEFAULT_GENERATION_DAY,
@@ -72,6 +74,7 @@ from .const import (
     MEMBER_ID,
     MEMBER_LIKES,
     MEMBER_NAME,
+    MEMBER_NOTIFY,
     MEMBER_PERSON,
     MEMBER_PORTION,
     NOTIFY_EVENTS,
@@ -159,6 +162,7 @@ STYLES_SCHEMA = vol.Schema(
         vol.Required(CONF_VEGETARIAN_DAYS): _days_selector(),
         vol.Required(CONF_FISH_MIN): _days_selector(),
         vol.Required(CONF_MAX_SPLIT_DAYS): _days_selector(),
+        vol.Optional(CONF_EXPLORE_DAYS, default=DEFAULT_EXPLORE_DAYS): _days_selector(),
         vol.Optional(
             CONF_FAVORITE_GAP_WEEKS, default=DEFAULT_FAVORITE_GAP_WEEKS
         ): NumberSelector(
@@ -194,6 +198,7 @@ MEMBER_SCHEMA = vol.Schema(
         vol.Required(MEMBER_ATTENDS): _select(WEEKDAYS, "weekday", multiple=True),
         vol.Required(MEMBER_COOK_SEPARATELY): BooleanSelector(),
         vol.Optional(MEMBER_CHILD, default=False): BooleanSelector(),
+        vol.Optional(MEMBER_NOTIFY): TextSelector(),
     }
 )
 
@@ -429,6 +434,9 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
                     CONF_VEGETARIAN_DAYS: int(user_input[CONF_VEGETARIAN_DAYS]),
                     CONF_FISH_MIN: int(user_input[CONF_FISH_MIN]),
                     CONF_MAX_SPLIT_DAYS: int(user_input[CONF_MAX_SPLIT_DAYS]),
+                    CONF_EXPLORE_DAYS: int(
+                        user_input.get(CONF_EXPLORE_DAYS, DEFAULT_EXPLORE_DAYS)
+                    ),
                     CONF_FAVORITE_GAP_WEEKS: int(
                         user_input.get(
                             CONF_FAVORITE_GAP_WEEKS, DEFAULT_FAVORITE_GAP_WEEKS
@@ -447,6 +455,7 @@ class WeeklyMenuOptionsFlow(OptionsFlow):
             CONF_MAX_SPLIT_DAYS: config.get(
                 CONF_MAX_SPLIT_DAYS, DEFAULT_MAX_SPLIT_DAYS
             ),
+            CONF_EXPLORE_DAYS: config.get(CONF_EXPLORE_DAYS, DEFAULT_EXPLORE_DAYS),
             CONF_FAVORITE_GAP_WEEKS: config.get(
                 CONF_FAVORITE_GAP_WEEKS, DEFAULT_FAVORITE_GAP_WEEKS
             ),

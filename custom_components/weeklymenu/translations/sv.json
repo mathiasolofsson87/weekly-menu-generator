@@ -111,7 +111,8 @@
           "portion": "Portionsstorlek",
           "attends": "Äter middag på",
           "cook_separately": "Allergener kan lagas separat",
-          "child": "Barn"
+          "child": "Barn",
+          "notify": "Notistjänst"
         },
         "data_description": {
           "person": "Valfritt. Kopplar medlemmen till en person i Home Assistant.",
@@ -120,7 +121,8 @@
           "likes": "Föredras när det går. Skriv och tryck enter.",
           "attends": "Dagar då personen äter middag hemma.",
           "cook_separately": "På: ett recept med personens allergen kan ändå användas när ingrediensen kan bytas och lagas i rena, separata pannor. Av: sådana recept föreslås aldrig. Stäng av vid svåra allergier.",
-          "child": "Ett barns betyg väger hälften så mycket som en vuxens när menyn planeras."
+          "child": "Ett barns betyg väger hälften så mycket som en vuxens när menyn planeras.",
+          "notify": "Valfritt. En notistjänst som mobile_app_annas_telefon. Personen får frågan \"Hur var det?\" där efter en middag hen åt (kräver att den aviseringen är på)."
         }
       },
       "member_edit": {
@@ -142,6 +144,8 @@
           "vegetarian_days": "Vegetariska middagar per vecka",
           "fish_min": "Fiskmiddagar per vecka (minst)",
           "max_split_days": "Middagar som lagas i flera versioner (högst)",
+          "explore_days": "Nya middagar per vecka (minst)",
+          "explore_days": "Middagar som ingen i familjen har betygsatt eller favoritmarkerat än, så att menyn inte bara upprepar kända rätter. Följs när det finns tillräckligt många lämpliga recept.",
           "favorite_gap_weeks": "Veckor ett favoritrecept hålls borta efter att det lagats"
         },
         "data_description": {
@@ -299,7 +303,8 @@
         "menu_ready": "Menyn är klar",
         "confirmed": "Menyn bekräftad",
         "problems": "Problem",
-        "reminder": "Påminnelse på lördag"
+        "reminder": "Påminnelse på lördag",
+        "rating": "Hur var det? (kvällen en middagsdag)"
       }
     },
     "provider": {
@@ -564,6 +569,10 @@
         "child": {
           "name": "Barn",
           "description": "Ett barns betyg väger hälften så mycket som en vuxens."
+        },
+        "notify": {
+          "name": "Notistjänst",
+          "description": "Notistjänsten som når personen, till exempel mobile_app_annas_telefon. Används för frågan \"Hur var det?\"."
         }
       }
     },

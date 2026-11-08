@@ -155,6 +155,63 @@ async def test_new_dinner_uses_the_ratings_too() -> None:
     assert new.recipe.id == pool[7].id
 
 
+async def test_favorites_are_spread_over_the_people_at_the_table() -> None:
+    a, b = member("A", id="a"), member("B", id="b")
+    a1, a2 = recipe("Aaa1", "1 st lök"), recipe("Aaa2", "1 st lök")
+    b1 = recipe("Bbb", "1 st lök")
+    taste = Taste(favorites={a1.id: {"a"}, a2.id: {"a"}, b1.id: {"b"}})
+    menu = await async_generate_menu(
+        [FakeSource([a1, a2, b1])],
+        _settings(taste, [a, b], dinner_days=["mon", "tue"]),
+        MONDAY,
+        set(),
+    )
+    assert {d.recipe.id for d in menu.days} == {a1.id, b1.id}
+
+
+def test_a_favorite_new_to_the_week_scores_more() -> None:
+    a = member("A", id="a")
+    taste = Taste(favorites={"r": {"a"}})
+    assert taste.score("r", [a], served=set()) > taste.score("r", [a], served={"a"})
+
+
+async def test_the_week_keeps_room_for_a_new_dinner() -> None:
+    a = member("A", id="a")
+    liked = [recipe(f"Kand {n}", "1 st lök") for n in range(3)]
+    fresh = recipe("Ny", "1 st lök")
+    taste = Taste(ratings={r.id: {"a": 5} for r in liked})
+    days = ["mon", "tue", "wed"]
+    menu = await async_generate_menu(
+        [FakeSource([*liked, fresh])],
+        _settings(taste, [a], dinner_days=days, explore_days=1),
+        MONDAY,
+        set(),
+    )
+    assert fresh.id in {d.recipe.id for d in menu.days}
+    menu = await async_generate_menu(
+        [FakeSource([*liked, fresh])],
+        _settings(taste, [a], dinner_days=days, explore_days=0),
+        MONDAY,
+        set(),
+    )
+    assert fresh.id not in {d.recipe.id for d in menu.days}
+
+
+async def test_a_new_dinner_that_is_rated_low_is_still_known() -> None:
+    a = member("A", id="a")
+    low = recipe("Aaa", "1 st lök")
+    other = recipe("Bbb", "1 st lök")
+    taste = Taste(ratings={low.id: {"a": 2}, other.id: {"a": 4}})
+    assert taste.known(low.id) and taste.known(other.id) and not taste.known("x")
+    menu = await async_generate_menu(
+        [FakeSource([low, other])],
+        _settings(taste, [a], explore_days=1),
+        MONDAY,
+        set(),
+    )  # nothing is new, so the quota cannot be met and the best-rated one wins
+    assert menu.days[0].recipe.id == other.id
+
+
 # --- the store and the favorites source ------------------------------------------------
 
 
@@ -174,6 +231,26 @@ async def test_store_keeps_recipes_only_while_somebody_refers_to_them(
     store.set_rating("b", r, None)
     await store.async_save()
     assert store.recipes == {} and store.ratings == {} and store.favorites == {}
+
+
+async def test_store_lets_go_of_recipes_that_are_only_rated_low(
+    hass: HomeAssistant,
+) -> None:
+    store = TasteStore(hass, "e1")
+    r = recipe("Gryta", "400 g nötfärs")
+    store.set_rating("a", r, 2)
+    store.set_rating("b", r, 1)
+    await store.async_save()
+    assert store.recipes == {} and store.ratings_of(r.id) == {"a": 2, "b": 1}
+    assert store.snapshot().vetoed(r.id, [member("B", id="b")])
+
+    store.set_rating("b", r, 4)  # someone likes it: the copy is kept again
+    await store.async_save()
+    assert r.id in store.recipes
+    store.set_rating("b", r, 2)
+    store.set_favorite("a", r, True)  # a favorite is always kept
+    await store.async_save()
+    assert r.id in store.recipes
 
 
 async def test_store_survives_a_restart(hass: HomeAssistant) -> None:

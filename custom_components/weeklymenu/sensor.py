@@ -41,7 +41,15 @@ def _day_attributes(
         "ingredients": [i.raw or i.name for i in recipe.ingredients],
         "locked": day.locked,
         "split": day.split.as_dict() if day.split else None,
-        "alternatives": [{"id": c.id, "title": c.title} for c in day.candidates[1:]],
+        "alternatives": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "ratings": taste.ratings_of(c.id) if taste else {},
+                "favorite_of": taste.favorite_of(c.id) if taste else [],
+            }
+            for c in day.candidates[1:]
+        ],
         # member id -> stars, and the members who have it as a favorite
         "ratings": taste.ratings_of(recipe.id) if taste else {},
         "favorite_of": taste.favorite_of(recipe.id) if taste else [],

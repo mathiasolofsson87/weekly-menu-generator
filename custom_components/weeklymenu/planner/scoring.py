@@ -42,7 +42,8 @@ def score(
     attendees = list(attendees)
     total = 0.0
     if ctx.taste:
-        total += ctx.taste.score(recipe.id, attendees)
+        served = {m for r in ctx.picked for m in ctx.taste.favorites.get(r.id, ())}
+        total += ctx.taste.score(recipe.id, attendees, served)
     if ctx.style_tags:
         matched = len(set(ctx.style_tags) & set(recipe.tags))
         total += STYLE_WEIGHT * matched / len(ctx.style_tags)

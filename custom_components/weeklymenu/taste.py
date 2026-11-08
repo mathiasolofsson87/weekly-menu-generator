@@ -2,7 +2,8 @@
 
 Kept apart from the menus, which are dropped after a few weeks. A recipe is stored in full
 as long as anyone has it as a favorite or has rated it, so it can be offered again even when
-its source no longer lists it. When nobody refers to a recipe any more, the copy goes.
+its source no longer lists it. When nobody refers to a recipe any more, or everyone who rated
+it gave 2 stars or less and nobody favorited it, the copy goes (the ratings stay).
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from .planner.taste import Taste
 
 STORAGE_VERSION = 1
 LIKED_STARS = 4  # a rating at or above this makes a recipe worth offering again
+DISLIKED_STARS = 2  # a recipe rated this or lower by everyone who rated it is let go
 
 
 class TasteStore:
@@ -82,7 +84,13 @@ class TasteStore:
     def _collect_garbage(self) -> None:
         self.ratings = {m: g for m, g in self.ratings.items() if g}
         self.favorites = {m: ids for m, ids in self.favorites.items() if ids}
-        used = {r for g in self.ratings.values() for r in g} | {
+        # A recipe that is only rated low is not worth keeping a copy of. The ratings stay,
+        # so the planner still avoids it when a source offers it again.
+        best: dict[str, int] = {}
+        for given in self.ratings.values():
+            for recipe_id, stars in given.items():
+                best[recipe_id] = max(stars, best.get(recipe_id, 0))
+        used = {r for r, stars in best.items() if stars > DISLIKED_STARS} | {
             r for ids in self.favorites.values() for r in ids
         }
         self.recipes = {r: v for r, v in self.recipes.items() if r in used}

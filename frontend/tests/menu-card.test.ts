@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "../src/index";
 import type { WeeklyMenuCard } from "../src/menu-card";
-import { SPLIT, WEEK, makeHass, settle, type HassOptions } from "./fixtures";
+import { FAMILY, SPLIT, WEEK, makeHass, settle, type HassOptions } from "./fixtures";
 
 async function mount(options: HassOptions = {}, config: Record<string, unknown> = {}) {
   const hass = makeHass({ days: WEEK, ...options });
@@ -183,6 +183,26 @@ describe("changing the menu", () => {
       recipe_id: "alt:2026-11-02",
     });
     expect(select.value).toBe("");
+  });
+
+  it("shows favorites first, with a heart and each member's stars", async () => {
+    const alternatives = [
+      { id: "a", title: "Soppa", ratings: {}, favorite_of: [] },
+      { id: "b", title: "Gryta", ratings: { "1": 5 }, favorite_of: ["1"] },
+      { id: "c", title: "Pasta", ratings: { "1": 2 }, favorite_of: [] },
+    ];
+    const { card } = await mount({
+      days: [{ ...WEEK[0], attrs: { alternatives } }, WEEK[1]],
+      family: { members: FAMILY },
+    });
+    button(card, "Show details").click();
+    await settle(card);
+    const select = $(card, 'select[aria-label="Other options"]') as HTMLSelectElement;
+    expect([...select.options].slice(1).map((o) => o.textContent!.trim())).toEqual([
+      "♥ Gryta (Anna ★5)",
+      "Soppa",
+      "Pasta (Anna ★2)",
+    ]);
   });
 
   it("swaps with another unlocked day", async () => {

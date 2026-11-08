@@ -4,7 +4,7 @@ import { dayLabel, weekdayKeyName } from "./format";
 import { t, warning } from "./i18n";
 import { errorMessage, renderIngredients, renderMeta, renderSplit } from "./parts";
 import { cardStyles } from "./styles";
-import { currentMember } from "./taste";
+import { alternativeLabel, currentMember, favoritesFirst } from "./taste";
 import type { Dinner, HomeAssistant, LovelaceCardConfig, MenuModel } from "./types";
 
 export interface MenuCardConfig extends LovelaceCardConfig {
@@ -201,6 +201,7 @@ export class WeeklyMenuCard extends LitElement {
 
   private _renderMore(day: Dinner, others: Dinner[], canEdit: boolean): TemplateResult {
     const hass = this.hass;
+    const members = readFamily(hass).members;
     return html`<div class="more">
       ${this._config.show_actions !== false
         ? html`<weeklymenu-taste .hass=${hass} .dinner=${day}></weeklymenu-taste>`
@@ -229,7 +230,9 @@ export class WeeklyMenuCard extends LitElement {
                     @change=${(ev: Event) => this._pick(day, ev)}
                   >
                     <option value="">${t(hass, "alternatives")}: ${t(hass, "choose")}</option>
-                    ${day.alternatives.map((alt) => html`<option value=${alt.id}>${alt.title}</option>`)}
+                    ${favoritesFirst(day.alternatives).map(
+                      (alt) => html`<option value=${alt.id}>${alternativeLabel(alt, members)}</option>`,
+                    )}
                   </select>`
                 : nothing}
               ${others.length && !day.locked

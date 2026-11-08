@@ -2,14 +2,8 @@
 
 Ideas after the v1 release described in `PLAN.md`.
 
-## Favorites and ratings: built, with these left over
-Per-member ratings and favorites are in (see `PLAN.md`, "Favorites and ratings"). Still open:
-
-- **Spreading favorites over the week** when members have different favorites, so everyone gets one now and then. Today a recipe's bonus follows the share of the table that has it as a favorite, which tends to do this by itself but does not guarantee it.
-- **An explicit "explore" share**, so the menu never ends up only repeating known dishes. Today unrated recipes are neutral and ties are broken at random.
-- **A "How was it?" notification** after a dinner day, asking each person who ate it for stars.
-- **Dropping low-rated recipes** from the cache of known recipes.
-- **Favorites in the menu card's alternatives list**, with each attendee's rating next to the alternative.
+## Favorites and ratings: built
+Per-member ratings and favorites, with the follow-ups (spreading favorites, an explore share, the "How was it?" notification, dropping low-rated recipes and favorites in the card's alternatives), are in. See `PLAN.md`, "Favorites and ratings". Nothing is left open from the first list.
 
 ## Own recipes
 Let the family write their own recipes, kept in a recipe list inside the integration.
