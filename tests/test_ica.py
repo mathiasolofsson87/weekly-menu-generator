@@ -12,6 +12,11 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import (
     AiohttpClientMockResponse,
 )
 
+from custom_components.weeklymenu.const import WEEKDAYS
+from custom_components.weeklymenu.planner.eligibility import assess
+from custom_components.weeklymenu.planner.generator import PlannerSettings
+from custom_components.weeklymenu.planner.models import Menu, MenuDay
+from custom_components.weeklymenu.shopping.aggregate import DEFAULT_PANTRY, aggregate
 from custom_components.weeklymenu.sources.base import CandidateRequest, SourceError
 from custom_components.weeklymenu.sources.ica import IcaRecipeSource
 from custom_components.weeklymenu.sources.ica import source as ica_source
@@ -21,6 +26,7 @@ from custom_components.weeklymenu.sources.ica.parser import (
     parse_recipe,
     recipe_id_from_url,
 )
+from tests.helpers import member
 
 FIXTURES = Path(__file__).parent / "fixtures"
 RECIPE_HTML = (FIXTURES / "ica_recipe.html").read_text(encoding="utf-8")
@@ -164,6 +170,42 @@ def test_unusable_pages_give_none() -> None:
         )
         is None
     )
+
+
+def test_a_real_week_makes_a_clean_shopping_list() -> None:
+    """Five real recipes (their structured data, saved from ica.se) on one list."""
+    pages = json.loads((FIXTURES / "ica_week.json").read_text(encoding="utf-8"))
+    olle, anna = member("Olle"), member("Anna", diet="vegetarian")
+    days = []
+    for index, (url, node) in enumerate(pages.items()):
+        html = f'<script type="application/ld+json">{json.dumps(node)}</script>'
+        rec = parse_recipe(html, url).recipe
+        split = assess(rec, [olle, anna]).split
+        days.append(
+            MenuDay(f"2026-11-0{2 + index}", WEEKDAYS[index], rec, [], split=split)
+        )
+    settings = PlannerSettings(dinner_days=WEEKDAYS[:5], members=[olle, anna])
+    result = aggregate(Menu("2026-11-02", days=days), settings, DEFAULT_PANTRY)
+    bought = {i.name: i.text("sv") for i in result.items}
+
+    assert bought["udon- eller äggnudlar"] == "125 g udon- eller äggnudlar"
+    assert bought["citron"] == "1 citron"  # "1/2 citron" and "1/2 citron i klyftor"
+    assert bought["sesamfrö"] == "2 msk sesamfrö"  # "rostade sesamfrön" + "sesamfrö"
+    # "1/2 förp salladslök" and "2 finskurna salladslök": the pieces fit in the pack
+    assert bought["salladslök"] == "1 förp salladslök"
+    assert bought["dill"] == "1 kruka dill"  # half a pot, and "2 msk hackad dill"
+    assert bought["ost"] == "50 g ost"  # "100 g ost i skivor"
+    assert bought["fisk"] == "100 g fisk"  # "fisk i tärningar": Olle's half of 2 of 4
+    assert bought["mjölk"] == "1 l mjölk"
+    assert bought["smör"] == "20 g smör"  # 12.5 g + 0.5 msk
+    # Anna's tofu for the fish (g), the salmon (förp) and the crayfish (burk): one line
+    assert bought["tofu"] == "220 g tofu"  # (400 + 300 + 170) g / 4, rounded up
+    assert not any(
+        re.search(r"hackad|rostade|finskurna|i klyftor|-$", n) for n in bought
+    )
+    assert sorted(i.name for i in result.skipped) == [
+        "olivolja", "olja", "peppar", "rapsolja", "salt", "vatten", "vetemjöl",
+    ]  # fmt: skip
 
 
 # --- the source, with ica.se mocked -------------------------------------------------

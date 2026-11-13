@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from ..const import PORTION_WEIGHTS
 from .constraints import hard_violations
+from .ingredients import PACK_UNITS, pack_size
 from .models import FamilyMember, Ingredient, Recipe, Split, SplitGroup, Substitution
 from .substitutes import FLAVOURING, Replacement, SwapKind, kind_of
 
@@ -64,9 +65,14 @@ def _replacement(
         if not _safe_for(option, members, name):
             continue
         amount, unit = original.amount, original.unit
+        size = pack_size(original.raw) if unit in PACK_UNITS else None
         if amount is not None:
             if unit == "st" and kind.piece_grams and not kind.keep_pieces:
                 amount, unit = amount * kind.piece_grams, "g"
+            elif (
+                size
+            ):  # "1 burk kräftstjärtar (à 170 g)" -> 170 g tofu, not "1 burk tofu"
+                amount, unit = amount * size[0], size[1]
             amount = round(amount * option.factor, 3)
         text = " ".join(
             part

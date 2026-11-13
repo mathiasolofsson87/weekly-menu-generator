@@ -26,8 +26,17 @@ _UNITS: dict[str, tuple[str, float]] = {
     "styck": ("st", 1),
     "förp": ("förp", 1),
     "förpackning": ("förp", 1),
+    "förpackningar": ("förp", 1),
     "burk": ("burk", 1),
     "burkar": ("burk", 1),
+    "paket": ("paket", 1),
+    "pkt": ("paket", 1),
+    "påse": ("påse", 1),
+    "påsar": ("påse", 1),
+    "kruka": ("kruka", 1),
+    "krukor": ("kruka", 1),
+    "flaska": ("flaska", 1),
+    "flaskor": ("flaska", 1),
     "klyfta": ("klyfta", 1),
     "klyftor": ("klyfta", 1),
     "port": ("port", 1),
@@ -44,6 +53,12 @@ _UNITS: dict[str, tuple[str, float]] = {
     "clove": ("klyfta", 1),
     "cloves": ("klyfta", 1),
 }
+# Units that are a whole pack of something, whatever its size.
+PACK_UNITS = frozenset({"förp", "burk", "paket", "påse", "kruka", "flaska", "knippe"})
+# "(à 400 g)": the size of one pack or piece.
+_PACK_SIZE = re.compile(
+    r"\bà\s*(?:ca\.?\s*)?(\d+(?:[.,]\d+)?)\s*(g|kg|ml|cl|dl|l)\b", re.IGNORECASE
+)
 _FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 
 _NUM = r"(?:\d+\s+\d+/\d+|\d+/\d+|\d+(?:[.,]\d+)?|[½¼¾⅓⅔])"
@@ -62,6 +77,12 @@ def _number(text: str) -> float:
         num, den = frac.split("/")
         return (float(whole) if whole else 0.0) + float(num) / float(den)
     return float(text.replace(",", "."))
+
+
+def pack_size(text: str) -> tuple[float, str] | None:
+    """(amount, unit) of one pack when the line says, as in "1 förp tomater (à 400 g)"."""
+    match = _PACK_SIZE.search(text)
+    return (_number(match[1]), match[2].casefold()) if match else None
 
 
 def _clean_name(text: str) -> str:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -9,9 +10,11 @@ from dataclasses import dataclass, field
 
 from ..const import PORTION_WEIGHTS
 from ..planner.generator import PlannerSettings, attendees_for
+from ..planner.ingredients import PACK_UNITS, pack_size
 from ..planner.models import FamilyMember, Ingredient, Menu, MenuDay
 from .models import SKIPPED, ShoppingItem
-from .units import dimension, display, to_base
+from .names import counted, singular, strip_preparation
+from .units import DENSITY, dimension, display, last_word, to_base, to_packs
 
 DEFAULT_PANTRY = (
     "salt", "peppar", "svartpeppar", "vitpeppar", "vatten", "olja", "olivolja", "rapsolja",
@@ -20,8 +23,9 @@ DEFAULT_PANTRY = (
 )  # fmt: skip
 
 # Where the shopping wording ends and remarks begin ("nötfärs gärna 12%...", "A eller B").
+# Not after a hyphen: "udon- eller äggnudlar" is one wording, not "udon-".
 _CUT = re.compile(
-    r"\s+(?:gärna|eller|alt\.?|alternativt|t\.?\s?ex\.?|typ|à|ca\.?|helst|or|such as|preferably)\s+",
+    r"(?<!-)\s+(?:gärna|eller|alt\.?|alternativt|t\.?\s?ex\.?|typ|à|ca\.?|helst|or|such as|preferably)\s+",
 )
 _PERCENT = re.compile(r"\s*\d+([.,]\d+)?\s*%")
 _MIN_SHARE = 0.001
@@ -34,10 +38,12 @@ class Aggregation:
 
 
 def clean_name(name: str) -> tuple[str, str]:
-    """(short name, note). The note keeps the original wording when something was cut."""
+    """(short name, note). The note keeps the original wording when something was cut.
+
+    Remarks ("gärna ...", "eller ...") and preparation ("hackad", "i klyftor") are cut."""
     short = _PERCENT.sub("", name).strip()
     short = _CUT.split(f" {short} ", maxsplit=1)[0].strip(" ,;:.")
-    short = re.sub(r"\s+", " ", short)
+    short = strip_preparation(re.sub(r"\s+", " ", short))
     return (
         (short, name.strip()) if short and short != name.strip() else (name.strip(), "")
     )
@@ -82,6 +88,93 @@ def _lines(day: MenuDay, factor: float) -> list[tuple[Ingredient, float, bool]]:
     return lines + extra
 
 
+@dataclass
+class _Part:
+    """One product's amounts that add up in one dimension (weight, volume, a unit)."""
+
+    item: ShoppingItem
+    unit: str | None = None  # of the first contribution
+    total: float = 0.0  # in base units
+    all_st: bool = True  # every contribution was counted with "st"
+
+
+@dataclass
+class _Product:
+    name: str  # as first written
+    parts: dict[str, _Part] = field(default_factory=dict)
+    pack: dict[str, float] = field(default_factory=dict)  # dimension -> one pack
+
+
+def _split_staples(name: str, pantry: Iterable[str]) -> list[str]:
+    """ "salt och peppar" -> ["salt", "peppar"], when every part is a staple."""
+    parts = re.split(r"\s+(?:och|and|&)\s+", name)
+    if len(parts) > 1 and all(is_pantry(part, pantry) for part in parts):
+        return parts
+    return [name]
+
+
+def _add_note(item: ShoppingItem, note: str) -> None:
+    if note and note not in item.note:
+        item.note = f"{item.note}; {note}" if item.note else note
+
+
+def _fold(parts: dict[str, _Part], source: str, target: str, amount: float) -> None:
+    """Move `source` into `target`, which grows by `amount` (in its own base units)."""
+    gone, into = parts.pop(source), parts[target]
+    into.total += amount
+    into.all_st = into.all_st and gone.all_st
+    for title in gone.item.recipes:
+        if title not in into.item.recipes:
+            into.item.recipes.append(title)
+    _add_note(into.item, gone.item.note)
+
+
+def _finish(product: _Product, metric_only: bool) -> list[ShoppingItem]:
+    """The product's lines: as few as can be bought without inventing amounts."""
+    parts = product.parts
+    if len(parts) > 1 and "none" in parts:  # "salt" beside "1 tsk salt" adds nothing
+        _fold(parts, "none", next(d for d in parts if d != "none"), 0.0)
+    density = DENSITY.get(last_word(product.name))
+    if density and "volume" in parts and "weight" in parts:  # spoons of butter
+        _fold(parts, "volume", "weight", parts["volume"].total * density)
+    packs = [d for d in parts if d.removeprefix("unit:") in PACK_UNITS]
+    if packs:
+        # Packs take in everything else: by the pack's size when a recipe gave it.
+        # Amounts of unknown size (kept in the note) fit in what rounding up leaves
+        # over when that is at least half a pack; otherwise they take one more pack.
+        unknown = False
+        for dim in [d for d in parts if d != packs[0]]:
+            part, size = parts[dim], product.pack.get(dim)
+            if dim in packs:
+                amount = part.total
+            else:
+                shown = ShoppingItem(part.item.name)
+                shown.amount, shown.unit = display(
+                    part.total, dim, part.unit, metric_only
+                )
+                if dim == "count":
+                    shown.name = counted(shown.name, shown.amount)
+                _add_note(part.item, f"+ {shown.text()}")
+                amount = part.total / size if size else 0.0
+                unknown = unknown or not size
+            _fold(parts, dim, packs[0], amount)
+        main = parts[packs[0]]
+        if unknown and math.ceil(round(main.total, 6)) - main.total < 0.5:
+            main.total += 1
+
+    items = []
+    for dim, part in parts.items():
+        item = part.item
+        if dim != "none":
+            total = to_packs(part.total, item.name) if dim == "volume" else part.total
+            item.amount, item.unit = display(total, dim, part.unit, metric_only)
+            if dim == "count":
+                item.unit = "st" if part.all_st else None
+                item.name = counted(item.name, item.amount)
+        items.append(item)
+    return items
+
+
 def aggregate(
     menu: Menu,
     settings: PlannerSettings,
@@ -89,50 +182,42 @@ def aggregate(
     *,
     metric_only: bool = False,
 ) -> Aggregation:
-    """Everything the menu's dinners need, merged and rounded up."""
-    # key -> [total in base units, first unit, item skeleton]
-    merged: dict[tuple[str, str, bool], list] = {}
+    """Everything the menu's dinners need, merged and rounded up.
+
+    Lines are merged by product (singular and plural alike), whatever their units."""
+    products: dict[tuple[str, bool], _Product] = {}
     for day in menu.days:
         if day.recipe is None:
             continue
         who = attendees_for(settings, day.weekday) or []
         factor = portions_factor(day.recipe.servings, who)
         for ingredient, multiplier, special in _lines(day, factor):
-            name, note = clean_name(ingredient.name)
-            if not name:
-                continue
-            dim = (
-                dimension(ingredient.unit) if ingredient.amount is not None else "none"
-            )
-            key = (name.casefold(), dim, special)
-            entry = merged.get(key)
-            if entry is None:
-                entry = merged[key] = [
-                    0.0,
-                    ingredient.unit,
-                    ShoppingItem(name=name, special=special),
-                    True,  # every contribution so far was counted with "st"
-                ]
-            item: ShoppingItem = entry[2]
-            if day.recipe.title not in item.recipes:
-                item.recipes.append(day.recipe.title)
-            if note and note not in item.note:
-                item.note = f"{item.note}; {note}" if item.note else note
-            if ingredient.amount is not None:
-                entry[0] += to_base(ingredient.amount * multiplier, ingredient.unit)
-                entry[3] = entry[3] and ingredient.unit == "st"
+            full, note = clean_name(ingredient.name)
+            for name in _split_staples(full, pantry) if full else ():
+                product = products.setdefault((singular(name), special), _Product(name))
+                unit = ingredient.unit
+                dim = dimension(unit) if ingredient.amount is not None else "none"
+                part = product.parts.get(dim)
+                if part is None:
+                    item = ShoppingItem(name=name, special=special)
+                    part = product.parts[dim] = _Part(item, unit)
+                if day.recipe.title not in part.item.recipes:
+                    part.item.recipes.append(day.recipe.title)
+                _add_note(part.item, note)
+                if ingredient.amount is not None:
+                    part.total += to_base(ingredient.amount * multiplier, unit)
+                    part.all_st = part.all_st and unit == "st"
+                if unit in PACK_UNITS and (size := pack_size(ingredient.raw or "")):
+                    product.pack.setdefault(dimension(size[1]), to_base(*size))
 
     result = Aggregation()
-    for (_, dim, _), (total, unit, item, all_st) in merged.items():
-        if dim != "none":
-            item.amount, item.unit = display(total, dim, unit, metric_only)
-            if dim == "count":
-                item.unit = "st" if all_st else None
-        if not item.special and is_pantry(item.name, pantry):
-            item.status = SKIPPED
-            result.skipped.append(item)
-        else:
-            result.items.append(item)
+    for (_, special), product in products.items():
+        for item in _finish(product, metric_only):
+            if not special and is_pantry(item.name, pantry):
+                item.status = SKIPPED
+                result.skipped.append(item)
+            else:
+                result.items.append(item)
     result.items.sort(key=lambda i: i.name.casefold())
     result.skipped.sort(key=lambda i: i.name.casefold())
     return result

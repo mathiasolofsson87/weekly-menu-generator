@@ -1,0 +1,114 @@
+{
+ "https://www.ica.se/recept/dilldoftande-fiskgratang-med-blomkal-och-spenat-713747/": {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Dilldoftande fiskgratäng med blomkål och spenat",
+  "recipeYield": "4",
+  "recipeCategory": "Huvudrätt,Middag",
+  "recipeIngredient": [
+   "400 g fisk i tärningar, t ex lax eller sej",
+   "400 g bladspenat",
+   "1 msk smör eller margarin",
+   "3 msk vetemjöl",
+   "3 dl mjölk (3%)",
+   "2 dl grönsaksbuljong (vatten och buljongtärning eller fond)",
+   "2 msk hackad dill",
+   "3 tomater",
+   "1/2 blomkålshuvud",
+   "1/2 tsk salt",
+   "1 krm peppar",
+   "100 g ost i skivor",
+   "4 port ris",
+   "1/2 citron i klyftor",
+   "ev bröd"
+  ]
+ },
+ "https://www.ica.se/recept/kimchi-fried-rice-med-agg-727941/": {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Kimchi fried rice med ägg",
+  "recipeYield": "4",
+  "recipeCategory": "Huvudrätt,Middag",
+  "recipeIngredient": [
+   "4 port ris (gärna fullkorn)",
+   "3 morötter (à ca 100 g)",
+   "100 g solrosskott eller ärtskott",
+   "1/2 förp salladslök (à 125 g)",
+   "250 g grön sparris",
+   "1 msk olja",
+   "250 g sojabönor",
+   "100 g kimchi",
+   "2 msk sesamfrö",
+   "8 ägg",
+   "1 msk olja",
+   "salt",
+   "peppar",
+   "1 kruka koriander"
+  ]
+ },
+ "https://www.ica.se/recept/kraft-och-laxpasta-714639/": {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Kräft- och laxpasta",
+  "recipeYield": "4",
+  "recipeCategory": "Huvudrätt,Middag",
+  "recipeIngredient": [
+   "1 förp frysta laxtärningar (à 300 g)",
+   "4 port spaghetti",
+   "250 g broccoli",
+   "1/2 purjolök",
+   "2 msk olja",
+   "2 1/2 dl matlagningsgrädde",
+   "1 burk kräftstjärtar i lake (à 170 g)",
+   "2 tsk majsstärkelse (Maizena)",
+   "salt och peppar (att smaka av såsen med)",
+   "1/2 tsk salt",
+   "1 krm peppar",
+   "65 g färsk bladspenat",
+   "1/2 citron",
+   "1 kruka dill"
+  ]
+ },
+ "https://www.ica.se/recept/nudlar-med-kimchi-och-majs-729361/": {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Nudlar med kimchi och majs",
+  "recipeYield": "4",
+  "recipeCategory": "Huvudrätt,Middag",
+  "recipeIngredient": [
+   "3 dl kimchi",
+   "4 dl majskorn",
+   "2 msk rapsolja",
+   "4 ägg",
+   "250 g udon- eller äggnudlar",
+   "25 g smör",
+   "2 msk japansk soja",
+   "2 finskurna salladslök",
+   "1 1/2 msk rostade sesamfrön"
+  ]
+ },
+ "https://www.ica.se/recept/vegetarisk-moussaka-713872/": {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "Vegetarisk moussaka",
+  "recipeYield": "4",
+  "recipeCategory": "Huvudrätt,Middag",
+  "recipeIngredient": [
+   "1 gul lök",
+   "3 vitlöksklyftor",
+   "500 g potatis",
+   "1 1/2 dl olivolja",
+   "2 förp pastasås med basilika (à 390 g)",
+   "2 msk tomatpuré",
+   "2 dl svarta urkärnade oliver",
+   "1 dl vatten",
+   "1 tsk salt",
+   "1 krm peppar",
+   "2 auberginer (à 300 g)",
+   "2 förp fetaost (à 150 g)",
+   "3 dl mild naturell yoghurt (3%)",
+   "3 ägg",
+   "1 krm peppar"
+  ]
+ }
+}

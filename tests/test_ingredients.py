@@ -2,7 +2,7 @@
 
 import pytest
 
-from custom_components.weeklymenu.planner.ingredients import parse_ingredient
+from custom_components.weeklymenu.planner.ingredients import pack_size, parse_ingredient
 
 
 @pytest.mark.parametrize(
@@ -25,6 +25,9 @@ from custom_components.weeklymenu.planner.ingredients import parse_ingredient
         ("4 oz cheese", "cheese", 113.4, "g"),
         ("salt", "salt", None, None),
         ("Salt och peppar", "salt och peppar", None, None),
+        ("1 kruka koriander", "koriander", 1, "kruka"),
+        ("2 paket tofu", "tofu", 2, "paket"),
+        ("250 g udon- eller äggnudlar", "udon- eller äggnudlar", 250, "g"),
     ],
 )
 def test_parse(line, name, amount, unit) -> None:
@@ -37,3 +40,16 @@ def test_bare_number_is_not_an_ingredient() -> None:
     parsed = parse_ingredient("4")
     assert parsed.amount is None
     assert parsed.name == "4"
+
+
+@pytest.mark.parametrize(
+    ("line", "size"),
+    [
+        ("1 förp frysta laxtärningar (à 300 g)", (300, "g")),
+        ("3 morötter (à ca 100 g)", (100, "g")),
+        ("1 burk kokosmjölk (à 4 dl)", (4, "dl")),
+        ("1 förp tofu", None),
+    ],
+)
+def test_pack_size(line, size) -> None:
+    assert pack_size(line) == size
