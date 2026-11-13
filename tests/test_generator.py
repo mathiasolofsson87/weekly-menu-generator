@@ -204,7 +204,7 @@ async def test_a_meat_recipe_is_used_with_a_split_when_it_ranks_best() -> None:
     assert day.recipe.title == "Biff med potatis"
     [group] = day.split.groups
     assert group.members == ["Anna"]
-    assert group.substitutions[0].replacement.raw == "600 g tofu"
+    assert group.substitutions[0].replacement.raw == "600 g portobellosvamp"
 
 
 async def test_recipes_everyone_can_eat_win_over_splits() -> None:

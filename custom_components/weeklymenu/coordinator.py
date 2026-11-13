@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Sequence
 from datetime import date
 from typing import Any
 
@@ -37,7 +38,7 @@ from .const import (
     EVENT_MENU_READY,
     MAX_FAVORITE_GAP_WEEKS,
 )
-from .planner.eligibility import assess
+from .planner.eligibility import assess, substitutes_in
 from .planner.generator import (
     PlannerSettings,
     async_generate_day,
@@ -189,11 +190,17 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
         self.async_set_updated_data(dict(self.store.menus))
 
     def _place(
-        self, target: MenuDay, recipe: Recipe, alternatives: list[Recipe]
+        self,
+        target: MenuDay,
+        recipe: Recipe,
+        alternatives: list[Recipe],
+        others: Sequence[MenuDay] = (),
     ) -> None:
-        """Put `recipe` on `target`, re-checking it against who eats that day."""
+        """Put `recipe` on `target`, re-checking it against who eats that day.
+
+        Substitutes on `others` (the week's settled days) are avoided when there is a choice."""
         who = attendees_for(self._settings(), target.weekday) or []
-        eligibility = assess(recipe, who)
+        eligibility = assess(recipe, who, substitutes_in(others))
         if not eligibility.ok:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -360,7 +367,8 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
                         "date": current.date,
                     },
                 )
-            self._place(current, recipe, current.candidates)
+            others = [d for d in menu.days if d is not current]
+            self._place(current, recipe, current.candidates, others)
             current.locked = True
             await self._commit(menu)
             return current
@@ -390,8 +398,9 @@ class WeeklyMenuCoordinator(DataUpdateCoordinator[dict[str, Menu]]):
             recipe_a, recipe_b = a.recipe, b.recipe
             before = (a.recipe, a.split, a.candidates, b.recipe, b.split, b.candidates)
             try:
-                self._place(a, recipe_b, a.candidates)
-                self._place(b, recipe_a, b.candidates)
+                others = [d for d in menu_a.days if d is not a and d is not b]
+                self._place(a, recipe_b, a.candidates, others)
+                self._place(b, recipe_a, b.candidates, others)
             except ServiceValidationError:
                 a.recipe, a.split, a.candidates = before[:3]
                 b.recipe, b.split, b.candidates = before[3:]

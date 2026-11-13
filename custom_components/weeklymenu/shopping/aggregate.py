@@ -12,6 +12,7 @@ from ..const import PORTION_WEIGHTS
 from ..planner.generator import PlannerSettings, attendees_for
 from ..planner.ingredients import PACK_UNITS, pack_size
 from ..planner.models import FamilyMember, Ingredient, Menu, MenuDay
+from ..planner.substitutes import substitute_note
 from .models import SKIPPED, ShoppingItem
 from .names import counted, singular, strip_preparation
 from .units import DENSITY, dimension, display, last_word, to_base, to_packs
@@ -28,6 +29,15 @@ _CUT = re.compile(
     r"(?<!-)\s+(?:gärna|eller|alt\.?|alternativt|t\.?\s?ex\.?|typ|à|ca\.?|helst|or|such as|preferably)\s+",
 )
 _PERCENT = re.compile(r"\s*\d+([.,]\d+)?\s*%")
+# "ev bröd": optional, but still worth having on the list.
+_OPTIONAL = re.compile(r"^(?:ev\.?|eventuellt|valfritt|optional)\s+", re.IGNORECASE)
+# A line without an amount often lists several things: "bröd, stekt bacon, persilja",
+# "limeklyftor och riven ost". Not after a hyphen ("ärt- och nötfärs").
+_LIST = re.compile(r"\s*,\s*|(?<!-)\s+(?:och|and|&)\s+")
+# Zest and wedges are bought as the fruit: about 1 msk zest or 6 wedges from one.
+_FRUIT_PART = re.compile(r"^(citron|lime|apelsin)s?(skal|klyfta|klyftor)$")
+ZEST_ML_PER_FRUIT = 15
+WEDGES_PER_FRUIT = 6
 _MIN_SHARE = 0.001
 
 
@@ -41,7 +51,7 @@ def clean_name(name: str) -> tuple[str, str]:
     """(short name, note). The note keeps the original wording when something was cut.
 
     Remarks ("gärna ...", "eller ...") and preparation ("hackad", "i klyftor") are cut."""
-    short = _PERCENT.sub("", name).strip()
+    short = _OPTIONAL.sub("", _PERCENT.sub("", name).strip())
     short = _CUT.split(f" {short} ", maxsplit=1)[0].strip(" ,;:.")
     short = strip_preparation(re.sub(r"\s+", " ", short))
     return (
@@ -103,6 +113,36 @@ class _Product:
     name: str  # as first written
     parts: dict[str, _Part] = field(default_factory=dict)
     pack: dict[str, float] = field(default_factory=dict)  # dimension -> one pack
+
+
+def _names(ingredient: Ingredient, pantry: Iterable[str]) -> list[tuple[str, str]]:
+    """(shopping name, note) for each product on the line.
+
+    A line without an amount is split into its listed parts; "salt och peppar" is
+    split when every part is a staple."""
+    if ingredient.amount is None and ingredient.raw:
+        text = re.sub(r"\(.*?\)", " ", ingredient.raw).casefold()
+        parts = [p for p in _LIST.split(text) if p.strip()]
+        if len(parts) > 1:
+            return [cleaned for part in parts if (cleaned := clean_name(part))[0]]
+    full, note = clean_name(ingredient.name)
+    return [(name, note) for name in (_split_staples(full, pantry) if full else ())]
+
+
+def _fruit(name: str, amount: float | None, unit: str | None):
+    """ "1 msk citronskal", "limeklyftor": bought as the fruit. (name, amount, unit, note)"""
+    match = _FRUIT_PART.match(name)
+    if not match:
+        return name, amount, unit, ""
+    zest = match[2] == "skal"
+    if amount is not None:
+        if zest and dimension(unit) == "volume":
+            amount = to_base(amount, unit) / ZEST_ML_PER_FRUIT
+        elif not zest and dimension(unit) == "count":
+            amount /= WEDGES_PER_FRUIT
+        else:
+            return name, amount, unit, ""
+    return match[1], amount, None, name
 
 
 def _split_staples(name: str, pantry: Iterable[str]) -> list[str]:
@@ -192,20 +232,29 @@ def aggregate(
         who = attendees_for(settings, day.weekday) or []
         factor = portions_factor(day.recipe.servings, who)
         for ingredient, multiplier, special in _lines(day, factor):
-            full, note = clean_name(ingredient.name)
-            for name in _split_staples(full, pantry) if full else ():
-                product = products.setdefault((singular(name), special), _Product(name))
-                unit = ingredient.unit
-                dim = dimension(unit) if ingredient.amount is not None else "none"
+            for name, note in _names(ingredient, pantry):
+                amount = ingredient.amount
+                if amount is not None:
+                    amount *= multiplier
+                name, amount, unit, part_of = _fruit(name, amount, ingredient.unit)
+                note = note or part_of
+                # A substitute joins the same product bought anyway ("tofu"), but is
+                # kept apart from staples, so "glutenfritt mjöl" is never skipped.
+                key = (singular(name), special and is_pantry(name, pantry))
+                product = products.setdefault(key, _Product(name))
+                dim = dimension(unit) if amount is not None else "none"
                 part = product.parts.get(dim)
                 if part is None:
                     item = ShoppingItem(name=name, special=special)
                     part = product.parts[dim] = _Part(item, unit)
+                part.item.special = part.item.special or special
                 if day.recipe.title not in part.item.recipes:
                     part.item.recipes.append(day.recipe.title)
                 _add_note(part.item, note)
-                if ingredient.amount is not None:
-                    part.total += to_base(ingredient.amount * multiplier, unit)
+                if special:
+                    _add_note(part.item, substitute_note(name))
+                if amount is not None:
+                    part.total += to_base(amount, unit)
                     part.all_st = part.all_st and unit == "st"
                 if unit in PACK_UNITS and (size := pack_size(ingredient.raw or "")):
                     product.pack.setdefault(dimension(size[1]), to_base(*size))

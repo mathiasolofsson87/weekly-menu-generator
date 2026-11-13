@@ -164,7 +164,7 @@ async def test_split_shows_up_on_the_weekday_sensor(
     assert monday.state == "Biff med potatis"
     [group] = monday.attributes["split"]["groups"]
     assert group["members"] == ["Anna"] and group["share"] == 0.5
-    assert group["substitutions"][0]["replacement"]["raw"] == "600 g tofu"
+    assert group["substitutions"][0]["replacement"]["raw"] == "600 g portobellosvamp"
 
 
 async def test_button_generates_next_weeks_menu(hass: HomeAssistant, entry) -> None:

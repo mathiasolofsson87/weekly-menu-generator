@@ -48,7 +48,7 @@ def test_everyone_can_eat_it_means_no_split() -> None:
 def test_steak_with_vegetarian_sides_is_split() -> None:
     group = only_group(assess(STEAK, [OLLE, ANNA_VEG]))
     assert group.members == ["Anna"] and group.share == 0.5
-    assert swaps(group) == [("entrecote", "600 g tofu")]
+    assert swaps(group) == [("entrecote", "600 g portobellosvamp")]  # suits a steak
     assert group.separate_pans is False  # a diet, not an allergy
 
 
@@ -76,13 +76,24 @@ def test_nobody_eating_the_original_is_not_a_split() -> None:
     assert not assess(STEAK, [ANNA_VEG, member("Eva", diet="vegan")]).ok
 
 
-def test_meat_stock_or_anchovies_block_the_split() -> None:
-    assert not assess(
-        recipe("Gryta", "600 g nötkött", "1 st kalvfond"), [OLLE, ANNA_VEG]
-    ).ok
-    assert not assess(
+def test_meat_stock_becomes_vegetable_stock_but_anchovies_block_the_split() -> None:
+    stew = assess(
+        recipe("Gryta", "600 g nötkött", "2 msk konc kalvfond"), [OLLE, ANNA_VEG]
+    )
+    assert swaps(only_group(stew)) == [
+        ("nötkött", "600 g champinjoner"),  # mushrooms suit a stew
+        ("konc kalvfond", "2 msk konc grönsaksfond"),
+    ]
+    soup = assess(
         recipe("Soppa", "300 g kycklingfilé", "1 st kycklingbuljongtärning"),
         [OLLE, ANNA_VEG],
+    )
+    assert swaps(only_group(soup))[1] == (
+        "kycklingbuljongtärning",
+        "1 st grönsaksbuljongtärning",
+    )
+    assert not assess(
+        recipe("Pasta", "400 g pasta", "2 msk fisksås"), [OLLE, ANNA_VEG]
     ).ok
     assert not assess(
         recipe("Pasta", "400 g pasta", "4 st ansjovisfilé"), [OLLE, ANNA_VEG]
@@ -92,7 +103,10 @@ def test_meat_stock_or_anchovies_block_the_split() -> None:
 def test_vegan_dairy_is_swapped_but_egg_is_not() -> None:
     vegan = member("Vera", diet="vegan")
     group = only_group(assess(STEAK_CREAM, [OLLE, vegan]))
-    assert swaps(group) == [("entrecote", "600 g tofu"), ("grädde", "2 dl havregrädde")]
+    assert swaps(group) == [
+        ("entrecote", "600 g portobellosvamp"),
+        ("grädde", "2 dl havregrädde"),
+    ]
     assert not assess(recipe("Stek", "400 g oxfilé", "3 ägg"), [OLLE, vegan]).ok
 
 
@@ -112,18 +126,26 @@ def test_title_alone_never_justifies_a_split() -> None:
 
 
 def test_replacement_is_safe_for_the_people_getting_it() -> None:
-    steak = recipe("Biff", "400 g entrecote", "1 kg potatis")
-    soy = member("Anna", diet="vegetarian", allergies=["soy"])
-    assert swaps(only_group(assess(steak, [OLLE, soy]))) == [
-        ("entrecote", "400 g portobellosvamp")
+    wok = recipe("Kycklingwok", "400 g kycklingfilé", "300 g broccoli")
+    assert swaps(only_group(assess(wok, [OLLE, ANNA_VEG]))) == [
+        ("kycklingfilé", "400 g tofu")  # tofu suits a wok
     ]
+    soy = member("Anna", diet="vegetarian", allergies=["soy"])
+    # no tofu, no soy-based chicken pieces; halloumi does not suit a wok
+    assert swaps(only_group(assess(wok, [OLLE, soy]))) == [
+        ("kycklingfilé", "400 g kikärtor")
+    ]
+    grill = recipe("Grillad kyckling", "400 g kycklingfilé")
     vegan = member("Vera", diet="vegan")
-    assert swaps(only_group(assess(steak, [OLLE, vegan]))) == [
-        ("entrecote", "400 g tofu")
+    assert swaps(only_group(assess(grill, [OLLE, ANNA_VEG]))) == [
+        ("kycklingfilé", "240 g halloumi")
+    ]
+    assert swaps(only_group(assess(grill, [OLLE, vegan]))) == [
+        ("kycklingfilé", "400 g vegetariska kycklingbitar")  # no halloumi for a vegan
     ]
     dairy_soy = member("Dan", diet="vegetarian", allergies=["soy", "milk"])
-    assert swaps(only_group(assess(steak, [OLLE, dairy_soy]))) == [
-        ("entrecote", "400 g portobellosvamp")
+    assert swaps(only_group(assess(grill, [OLLE, dairy_soy]))) == [
+        ("kycklingfilé", "400 g kikärtor")
     ]
 
 
@@ -137,9 +159,9 @@ def test_declared_allergens_exclude_a_product_whose_name_does_not_show_them() ->
         ("nötfärs", "500 g vegofärs")
     ]
     egg_free = member("Eva", diet="vegetarian", allergies=["egg"])
-    assert not assess(
-        recipe("Korv", "6 st korv"), [OLLE, egg_free]
-    ).ok  # vegokorv may hold egg
+    assert swaps(only_group(assess(recipe("Korv", "6 st korv"), [OLLE, egg_free]))) == [
+        ("korv", "336 g rökt tofu")  # vegokorv may hold egg: 6 x 80 g x 0.7
+    ]
 
 
 # --- allergies: cooked separately -------------------------------------------------
@@ -214,7 +236,7 @@ def test_diet_and_allergy_can_need_two_different_versions() -> None:
     assert result.ok
     by_member = {g.members[0]: g for g in result.split.groups}
     assert (
-        swaps(by_member["Anna"]) == [("entrecote", "600 g tofu")]
+        swaps(by_member["Anna"]) == [("entrecote", "600 g portobellosvamp")]
         and not by_member["Anna"].separate_pans
     )
     assert (

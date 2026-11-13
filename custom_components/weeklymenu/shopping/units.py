@@ -19,6 +19,7 @@ DENSITY = {"smör": 0.9, "margarin": 0.9}
 # whose packs are the same in every shop; a liquid amount is rounded up to whole packs.
 PACK_SIZES = {
     "mjölk": (1000, 1500), "filmjölk": (1000,), "yoghurt": (500, 1000),
+    "matyoghurt": (500, 1000),
     "vispgrädde": (200, 300, 500), "grädde": (200, 300, 500),
     "matlagningsgrädde": (250, 500), "gräddfil": (300, 500),
     "kokosmjölk": (400,), "havredryck": (1000,),

@@ -16,21 +16,35 @@ PREPARATION = frozenset(
         "strimlad", "strimlade", "strimlat", "tärnad", "tärnade", "tärnat",
         "skuren", "skurna", "skuret", "finskuren", "finskurna", "finskuret",
         "riven", "rivna", "rivet", "finriven", "finrivna", "finrivet", "grovriven",
-        "grovrivna", "rostad", "rostade", "rostat", "smulad", "smulade", "smulat",
+        "grovrivna", "rostad", "rostade", "rostat", "stekt", "stekta", "smulad", "smulade", "smulat",
         "pressad", "pressade", "pressat", "kokt", "kokta", "mosad", "mosade",
-        "skalad", "skalade", "skalat", "urkärnad", "delad", "delade", "halverad",
+        "skalad", "skalade", "skalat", "grovskuren", "grovskurna", "grovskuret",
+        "nymalen", "nymald", "nymalet", "nymalda", "färskmalen", "färskmald", "urkärnad", "delad", "delade", "halverad",
         "halverade", "klyftad", "klyftade", "sköljd", "sköljda", "avrunnen", "avrunna",
         "chopped", "sliced", "diced", "grated", "minced", "crushed", "shredded", "toasted",
     }
 )  # fmt: skip
 _ADVERBS = frozenset({"fint", "grovt", "tunt", "finely", "thinly", "roughly"})
+# Sizes: "1 liten gul lök" is bought with the other onions (the note keeps the size).
+_SIZES = frozenset(
+    {"liten", "litet", "små", "stor", "stort", "stora", "medelstor", "medelstort",
+     "medelstora", "mellanstor", "mellanstora", "small", "medium", "large"}
+)  # fmt: skip
+# Where it comes from, not what it is: "salt från kvarnen", "peppar ur kvarnen".
+_FROM = re.compile(r"\s+(?:från|ur)\s+(?:kvarnen|burk(?:en)?)\b")
+# "nöt- eller blandfärs": the alternatives share the last word's head ("nötfärs").
+_SHARED_HEAD = re.compile(
+    r"^(\w+)-\s+(?:eller|or)\s+\w*?(färs|nudlar|filé|filéer|kött|bönor|lök)\b"
+)
 # "citron i klyftor", "ost i skivor". Product forms such as "i lake" or "i tomatsås" stay.
 _CUT_INTO = re.compile(
     r"\s+i\s+(?:(?:små|mindre|stora|tunna|grova|fina)\s+)?"
     r"(?:klyftor|tärningar|skivor|bitar|strimlor|ringar|kuber|halvor|stavar|stänger)\b"
 )
 # Whole names where the preparation is the product: you buy fried onion, not onion.
-_PRODUCTS = frozenset({"rostad lök", "riven ost", "kokt skinka", "krossade tomater"})
+_PRODUCTS = frozenset(
+    {"rostad lök", "stekt lök", "riven ost", "kokt skinka", "krossade tomater"}
+)
 
 # Singular -> plural, also matched at the end of a compound ("salladslök", "kålrot").
 _NOUNS = {
@@ -39,7 +53,7 @@ _NOUNS = {
     "klyfta": "klyftor", "huvud": "huvuden", "avokado": "avokador", "äpple": "äpplen",
     "banan": "bananer", "potatis": "potatisar", "frö": "frön", "böna": "bönor",
     "ärta": "ärtor", "beta": "betor", "räka": "räkor", "oliv": "oliver",
-    "squash": "squashar", "frukt": "frukter", "nacka": "nackor", "stång": "stänger",
+    "squash": "squashar", "frukt": "frukter", "filé": "filéer", "nacka": "nackor", "stång": "stänger",
 }  # fmt: skip
 _ADJECTIVES = {
     "gul": "gula",
@@ -57,11 +71,13 @@ def strip_preparation(name: str) -> str:
     """The name without preparation words; unchanged if nothing would be left."""
     if name.casefold() in _PRODUCTS:
         return name
+    name = _SHARED_HEAD.sub(r"\1\2", _FROM.sub("", name))
     words = _CUT_INTO.sub("", name).split()
     kept = [
         word
         for index, word in enumerate(words)
         if word.casefold() not in PREPARATION
+        and word.casefold() not in _SIZES
         and not (
             word.casefold() in _ADVERBS
             and index + 1 < len(words)

@@ -338,6 +338,7 @@ MEAT = Rule(
         "korv",
         r"\bank|anka\b",
         "kyckling",
+        "höns",  # hönsbuljong, hönsfond
         "kalkon",
         "lamm",
         r"\box",

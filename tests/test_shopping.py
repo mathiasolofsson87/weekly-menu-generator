@@ -251,7 +251,11 @@ async def test_split_dinners_are_bought_for_each_version(
     )
     await hass.async_block_till_done()
     await confirm(hass)
-    assert sorted(lists.items()) == ["300 g entrecote", "300 g tofu", "800 g potatis"]
+    assert sorted(lists.items()) == [
+        "300 g entrecote",
+        "300 g portobellosvamp",
+        "800 g potatis",
+    ]
 
 
 # --- a second provider, and the review list ------------------------------------------------

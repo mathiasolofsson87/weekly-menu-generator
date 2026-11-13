@@ -188,7 +188,7 @@ def test_a_real_week_makes_a_clean_shopping_list() -> None:
     result = aggregate(Menu("2026-11-02", days=days), settings, DEFAULT_PANTRY)
     bought = {i.name: i.text("sv") for i in result.items}
 
-    assert bought["udon- eller äggnudlar"] == "125 g udon- eller äggnudlar"
+    assert bought["udonnudlar"] == "125 g udonnudlar"
     assert bought["citron"] == "1 citron"  # "1/2 citron" and "1/2 citron i klyftor"
     assert bought["sesamfrö"] == "2 msk sesamfrö"  # "rostade sesamfrön" + "sesamfrö"
     # "1/2 förp salladslök" and "2 finskurna salladslök": the pieces fit in the pack
@@ -198,8 +198,10 @@ def test_a_real_week_makes_a_clean_shopping_list() -> None:
     assert bought["fisk"] == "100 g fisk"  # "fisk i tärningar": Olle's half of 2 of 4
     assert bought["mjölk"] == "1 l mjölk"
     assert bought["smör"] == "20 g smör"  # 12.5 g + 0.5 msk
-    # Anna's tofu for the fish (g), the salmon (förp) and the crayfish (burk): one line
-    assert bought["tofu"] == "220 g tofu"  # (400 + 300 + 170) g / 4, rounded up
+    # Anna's swaps suit the dish: cauliflower in the fish gratin, tofu for both the
+    # salmon (förp) and the crayfish (burk) of the pasta, on one line in grams
+    assert bought["blomkål"] == "100 g blomkål"  # 400 g / 4
+    assert bought["tofu"] == "120 g tofu"  # (300 + 170) g / 4, rounded up
     assert not any(
         re.search(r"hackad|rostade|finskurna|i klyftor|-$", n) for n in bought
     )

@@ -10,6 +10,8 @@ from custom_components.weeklymenu.planner.constraints import (
     is_vegetarian,
     preference_hits,
 )
+from custom_components.weeklymenu.planner.eligibility import assess
+from custom_components.weeklymenu.planner.substitutes import kind_of
 from tests.helpers import CURRY, LAX, PASTA, STEW, STIR, TACOS, member, recipe
 
 
@@ -153,6 +155,12 @@ def test_preferences_are_soft() -> None:
         ("500 g blandfärs", True),
         ("500 g färsk nötfärs", True),
         ("2 st färsk kyckling", True),
+        ("1 st hönsbuljongtärning", True),
+        ("5 dl hönsbuljong", True),
+        ("1 st grönsaksbuljongtärning", False),
+        ("400 g vegetariska kycklingbitar", False),
+        ("300 g vegobullar", False),
+        ("140 g vegetariskt bacon", False),
     ],
 )
 def test_meat_cuts_and_lookalikes(text, is_meat) -> None:
@@ -184,3 +192,92 @@ def test_wish_groups_use_the_food_rules() -> None:
     assert not Wishes.parse("inte kött").allows(recipe("Gryta", "400 g nötfärs"))
     assert Wishes.parse("inte fisk").allows(recipe("Gryta", "400 g nötfärs"))
     assert Wishes.parse("pasta").bonus(recipe("Pastagratäng", "400 g pasta")) > 0
+
+
+# --- substitutes respect the allergen filter (planner/substitutes.py) -------------
+
+
+def _swaps(rec, *members):
+    """(original, replacement) of the split, or None when the recipe is refused."""
+    result = assess(rec, [member("Olle"), *members])
+    if not result.ok:
+        return None
+    return [
+        (s.original, s.replacement)
+        for g in result.split.groups
+        for s in g.substitutions
+    ]
+
+
+def _swapped(rec, *members):
+    """Every replacement name the split gives, or None when the recipe is refused."""
+    swaps = _swaps(rec, *members)
+    return None if swaps is None else [new.name for _, new in swaps]
+
+
+SPLIT_DISHES = [
+    recipe("Pasta bolognese", "500 g nötfärs", "400 g pasta"),
+    recipe("Tacos", "500 g nötfärs", "8 st tortillabröd"),
+    recipe("Pasta med köttbullar", "20 st köttbullar", "400 g pasta"),
+    recipe("Korvstroganoff", "500 g falukorv", "3 dl ris"),
+    recipe("Carbonara", "2 förp bacon (à 140 g)", "400 g pasta"),
+    recipe("Kycklingwok", "600 g kycklingfilé", "300 g broccoli"),
+    recipe("Kycklinggryta", "600 g kycklinglårfilé", "2 dl kokosmjölk"),
+    recipe("Lax i ugn", "600 g laxfilé", "1 kg potatis"),
+    recipe("Räkpasta", "300 g räkor", "400 g pasta"),
+    recipe("Kalops", "1 kg nötkött", "2 msk konc kalvfond"),
+    recipe("Fiskpinnar med mos", "16 st fiskpinnar", "1 kg potatis"),
+]
+
+
+@pytest.mark.parametrize("rec", SPLIT_DISHES, ids=lambda r: r.title)
+@pytest.mark.parametrize(
+    "allergy", ["soy", "gluten", "egg", "milk", "celery", "sesame"]
+)
+def test_a_substitute_never_holds_the_vegetarians_allergen(rec, allergy) -> None:
+    swaps = _swaps(rec, member("Anna", diet="vegetarian", allergies=[allergy]))
+    if swaps is None:
+        return  # refused is safe
+    rule = ALLERGEN_RULES[allergy]
+    for original, new in swaps:
+        assert not rule.match(new.name), new.name
+        option = next(
+            o
+            for o in kind_of(original.raw).replacements
+            if o.render(original.name) == new.name
+        )
+        assert allergy not in option.contains + option.traces, new.name
+
+
+@pytest.mark.parametrize(
+    ("allergy", "never"),
+    [
+        ("soy", {"tofu", "rökt tofu", "vegofärs", "vegetariska kycklingbitar", "vegokorv",
+                 "vegobullar", "vegetariskt bacon", "vegetariska fiskpinnar"}),
+        ("gluten", {"vegofärs", "vegetariska kycklingbitar", "vegokorv", "vegobullar",
+                    "vegetariskt bacon", "falafel"}),
+        ("egg", {"vegofärs", "vegetariska kycklingbitar", "vegokorv", "vegobullar"}),
+        ("milk", {"halloumi", "vegetariska kycklingbitar"}),
+        ("celery", {"grönsaksbuljongtärning", "konc grönsaksfond"}),
+    ],
+)  # fmt: skip
+def test_processed_substitutes_are_kept_from_allergies_by_what_they_declare(
+    allergy, never
+) -> None:
+    for rec in SPLIT_DISHES:
+        names = _swapped(rec, member("Anna", diet="vegetarian", allergies=[allergy]))
+        assert not set(names or ()) & never, (rec.title, names)
+
+
+def test_celery_allergy_refuses_a_meat_stock_swap() -> None:
+    # vegetable stock usually holds celery, and the stock cannot be left out
+    kalops = recipe("Kalops", "1 kg nötkött", "1 st köttbuljongtärning")
+    vegetarian = member("Anna", diet="vegetarian", allergies=["celery"])
+    assert _swapped(kalops, vegetarian) is None
+
+
+def test_a_vegan_may_get_a_vegan_brand_but_never_halloumi() -> None:
+    vegan = member("Vera", diet="vegan")
+    assert _swapped(SPLIT_DISHES[0], vegan) == ["vegofärs"]  # traces are not a diet
+    grill = recipe("Grillad kyckling", "600 g kycklingfilé")
+    assert "halloumi" not in (_swapped(grill, vegan) or [])

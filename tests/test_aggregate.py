@@ -61,8 +61,8 @@ def lines(result):
         ("gul lök", "gul lök", ""),
         ("mjölk 3%", "mjölk", "mjölk 3%"),
         ("riven ost, gärna lagrad", "riven ost", "riven ost, gärna lagrad"),
-        # a hyphen joins the alternatives: "udon-" alone would be no product
-        ("udon- eller äggnudlar", "udon- eller äggnudlar", ""),
+        # a hyphen shares the head word: "udon-" alone would be no product
+        ("udon- eller äggnudlar", "udonnudlar", "udon- eller äggnudlar"),
         ("solrosskott eller ärtskott", "solrosskott", "solrosskott eller ärtskott"),
         # preparation is cut
         ("hackad dill", "dill", "hackad dill"),
@@ -83,6 +83,18 @@ def lines(result):
         ("grovt salt", "grovt salt", ""),
         ("tofu", "tofu", ""),
         ("hackad", "hackad", ""),  # nothing would be left
+        # sizes, mills and serving hints are not part of what you buy
+        ("liten gul lök", "gul lök", "liten gul lök"),
+        ("2 stora potatisar", "2 potatisar", "2 stora potatisar"),
+        ("salt från kvarnen", "salt", "salt från kvarnen"),
+        ("nymalen svartpeppar", "svartpeppar", "nymalen svartpeppar"),
+        ("grovskuren vitkål", "vitkål", "grovskuren vitkål"),
+        ("stekt bacon", "bacon", "stekt bacon"),
+        ("stekt lök", "stekt lök", ""),
+        ("ev bröd", "bröd", "ev bröd"),
+        # alternatives that share a head word: the first one
+        ("nöt- eller blandfärs", "nötfärs", "nöt- eller blandfärs"),
+        ("ärt- och nötfärs", "ärt- och nötfärs", ""),  # a blend, not a choice
     ],
 )
 def test_clean_name(raw, short, note) -> None:
@@ -315,14 +327,33 @@ def test_pantry_staples_are_reported_not_bought() -> None:
 
 def test_salt_and_pepper_are_split_and_listed_once() -> None:
     a = servings(recipe("A", "salt och peppar", "1/2 tsk salt", "1 krm peppar"), 1)
-    b = servings(recipe("B", "salt", "peppar", "1 krm peppar", "dill och persilja"), 1)
+    b = servings(
+        recipe("B", "salt", "peppar", "1 krm peppar", "1 msk dill och persilja"), 1
+    )
     result = aggregate(menu_of(a, b), settings(member("X")), DEFAULT_PANTRY)
     assert sorted(i.text("en") for i in result.skipped) == [
         "0.5 tsk peppar",  # 2 krm
         "0.5 tsk salt",
     ]
-    # only staples are split: other lines are bought as written
+    # only staples are split from a measured line: others are bought as written
     assert [i.name for i in result.items] == ["dill och persilja"]
+
+
+def test_a_line_without_an_amount_is_split_into_its_parts() -> None:
+    rec = servings(
+        recipe(
+            "A",
+            "bröd , stekt bacon, finhackad persilja",
+            "limeklyftor och riven ost",
+            "ärt- och nötfärs",
+            "ev bröd",
+        ),
+        1,
+    )
+    result = aggregate(menu_of(rec), settings(member("X")), ())
+    assert sorted(i.name for i in result.items) == [
+        "bacon", "bröd", "lime", "persilja", "riven ost", "ärt- och nötfärs",
+    ]  # fmt: skip
 
 
 def test_an_empty_pantry_buys_everything() -> None:
@@ -359,9 +390,9 @@ def test_a_split_buys_the_original_and_the_substitute_for_their_shares() -> None
     assert lines(result) == {
         "entrecote": "300 g entrecote",  # Olle's half
         "potatis": "800 g potatis",
-        "tofu": "300 g tofu",  # Anna's half
+        "portobellosvamp": "300 g portobellosvamp",  # Anna's half
     }
-    assert next(i for i in result.items if i.name == "tofu").special is True
+    assert next(i for i in result.items if i.name == "portobellosvamp").special
 
 
 def test_two_groups_replacing_the_same_line_share_it() -> None:
@@ -375,7 +406,7 @@ def test_two_groups_replacing_the_same_line_share_it() -> None:
     assert len(split.groups) == 1  # same needs, one version
     result = aggregate(menu_of((steak, split)), settings(olle, anna, vera), ())
     assert lines(result)["entrecote"] == "200 g entrecote"  # only Olle eats it
-    assert lines(result)["tofu"] == "400 g tofu"  # Anna and Vera
+    assert lines(result)["portobellosvamp"] == "400 g portobellosvamp"  # Anna, Vera
 
 
 def test_diet_and_allergy_versions_each_get_their_swap() -> None:
@@ -390,7 +421,7 @@ def test_diet_and_allergy_versions_each_get_their_swap() -> None:
     assert lines(result) == {
         "entrecote": "400 g entrecote",  # Olle and Kim
         "grädde": "2 dl grädde",  # Olle and Anna: 2 dl * 2/3, a 2 dl pack
-        "tofu": "200 g tofu",
+        "portobellosvamp": "200 g portobellosvamp",
         "havregrädde": "1 dl havregrädde",  # 67 ml, rounded up
     }
 
@@ -414,3 +445,51 @@ def test_small_spice_amounts_become_teaspoons() -> None:
         "kanel": "1 krm kanel",
         "kummin": "2 krm kummin",  # 1.95 ml stays in krm
     }
+
+
+def test_zest_and_wedges_are_bought_as_the_fruit() -> None:
+    a = servings(recipe("A", "1 msk finrivet citronskal", "1/2 citron"), 1)
+    b = servings(recipe("B", "limeklyftor", "2 tsk limeskal"), 1)
+    result = aggregate(menu_of(a, b), settings(member("X")), ())
+    # one lemon for a tablespoon of zest, plus the half lemon
+    assert lines(result) == {"citroner": "2 citroner", "lime": "1 lime"}
+
+
+def test_sizes_merge_into_one_line() -> None:
+    rec = servings(recipe("A", "1 liten gul lök", "2 gula lökar"), 1)
+    assert lines(aggregate(menu_of(rec), settings(member("X")), ())) == {
+        "gula lökar": "3 gula lökar"
+    }
+
+
+def test_alternatives_with_a_shared_head_merge_with_the_plain_product() -> None:
+    a = servings(recipe("A", "500 g nötfärs eller hushållsfärs"), 1)
+    b = servings(recipe("B", "500 g nöt- eller blandfärs"), 1)
+    assert lines(aggregate(menu_of(a, b), settings(member("X")), ())) == {
+        "nötfärs": "1 kg nötfärs"
+    }
+
+
+def test_matyoghurt_is_rounded_to_a_pack() -> None:
+    rec = servings(recipe("A", "2 dl matyoghurt"), 1)
+    assert lines(aggregate(menu_of(rec), settings(member("X")), ())) == {
+        "matyoghurt": "5 dl matyoghurt"
+    }
+
+
+def test_pantry_lists_each_staple_once_whatever_the_wording() -> None:
+    rec = servings(
+        recipe(
+            "A",
+            "salt från kvarnen",
+            "1 tsk salt",
+            "2 krm nymalen svartpeppar",
+            "1 krm svartpeppar",
+        ),
+        1,
+    )
+    result = aggregate(menu_of(rec), settings(member("X")), DEFAULT_PANTRY)
+    assert sorted(i.text("en") for i in result.skipped) == [
+        "1 tsk salt",
+        "1 tsk svartpeppar",  # 3 ml
+    ]

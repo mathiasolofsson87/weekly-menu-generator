@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from ..const import WEEKDAYS
 from ..sources.base import CandidateRequest, RecipeSource, SourceError
 from .constraints import has_fish, is_vegetarian
-from .eligibility import assess
+from .eligibility import assess, substitutes_in
 from .models import FamilyMember, Menu, MenuDay, Recipe, Split
 from .scoring import SPLIT_PENALTY, ScoreContext, score
 from .taste import Taste
@@ -128,6 +128,8 @@ async def _plan(
     veg_left = max(0, settings.vegetarian_days - sum(map(is_vegetarian, kept_recipes)))
     fish_left = max(0, settings.fish_min - sum(map(has_fish, kept_recipes)))
     splits_used = sum(d.split is not None for d in kept)
+    # Substitutes already on the week, so the next split day picks a different one.
+    subs_used = set(substitutes_in(kept))
     explore_left = max(
         0,
         settings.explore_days
@@ -143,7 +145,9 @@ async def _plan(
         options = [
             (r, a.split)
             for r in pool.values()
-            if r.id not in taken and wishes.allows(r) and (a := assess(r, who)).ok
+            if r.id not in taken
+            and wishes.allows(r)
+            and (a := assess(r, who, subs_used)).ok
         ]
         # The split limit is kept unless it would leave the day empty.
         within_limit = [
@@ -191,6 +195,12 @@ async def _plan(
         chosen[weekday] = (best, split)
         picked.append(best)
         splits_used += split is not None
+        if split:
+            subs_used |= {
+                swap.replacement.name
+                for group in split.groups
+                for swap in group.substitutions
+            }
         veg_left -= is_vegetarian(best)
         fish_left -= has_fish(best)
         explore_left -= new(best)
