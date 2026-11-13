@@ -2,6 +2,24 @@
 
 All notable changes to Weekly Menu Generator. Versions match the git tags and the GitHub releases.
 
+## 0.5.0 – 2026-11-13
+
+### Added
+- **Varied vegetarian substitutes.** The swap for meat, chicken and fish is no longer almost always tofu. It depends on the dish: vegofärs, lentils or beans for mince, vegobullar for meatballs, vegokorv for sausage, vegetarian bacon or smoked tofu for bacon, vegetarian chicken pieces, tofu, halloumi or chickpeas for chicken, tofu, halloumi or cauliflower for fish, and mushrooms, strips or jackfruit for other meat. A substitute already used on another day of the week is passed over when another one suits. Allergies and diets are still checked: for example no soy-based substitute for a soy allergy.
+- **Brand examples in the note.** The shopping list uses generic names ("vegofärs"); product examples such as Anamma or Hälsans Kök appear only in the item's note.
+
+### Changed
+- **Stock no longer blocks the vegetarian version.** Meat, chicken and fish stock is swapped for vegetable stock, so many stews and soups can now be served to a vegetarian. Anchovies, fish sauce, oyster sauce and gelatin still block it. "Hönsbuljong" now counts as meat.
+- **Smarter shopping list.** Products bought for several dinners are merged ("1 citron" and "1 citron i klyftor" become "2 citroner", 2,5 dl and 4 dl milk become 1 l). Amounts in different units are folded together, also when a product comes as both a weight and a package. Liquids such as milk, cream and yoghurt are rounded up to a real package size. Zest and wedges are bought as the whole fruit.
+- **Cleaner item names.** Preparation words (hackad, skivad, finskurna, "i klyftor" and similar) and size words are left out. Lines without an amount are split into their listed parts.
+- **Pantry list.** Salt and pepper show up once each; "salt och peppar" is split, and "salt från kvarnen" and similar are no longer listed separately.
+
+### Fixed
+- "udon- eller äggnudlar" lost the word "nudlar" in the shopping list.
+- Fresh salmon ("färsk laxfilé") was mistaken for mince and swapped for vegofärs.
+- A swapped amount is now bought on the same line as the same product for another dinner, so tofu appears once.
+- "1 kruka koriander" and similar lines are read as an amount of pots.
+
 ## 0.4.0 – 2026-11-08
 
 ### Added
